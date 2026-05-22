@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Analista — Complejo Agroindustrial Beta</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#5212A0;--p2:#6B28C0;--p3:#8B4DD8;--pl:#EDE5FF;--pll:#F8F4FF;
+  --g:#5BAD1E;--g2:#79CC38;--gl:#EBF7DC;--gll:#F5FBF0;
+  --w:#FFFFFF;--bg:#F0EDF8;--s1:#1C0840;--s2:#5C4880;--s3:#9B89B8;--s4:#D4CBE8;--s5:#EDE8F8;
+  --r:#E02020;--rl:#FEE8E8;--amber:#F59E0B;--amberl:#FFFBEB;
+  --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace;
+  --r8:8px;--r12:12px;--r16:16px;
+  --shadow:0 1px 3px rgba(82,18,160,.07),0 4px 20px rgba(82,18,160,.1);
+}
+body{font-family:var(--f);background:var(--bg);color:var(--s1);min-height:100vh}
+
+/* ── NAV ── */
+nav{background:var(--p);border-bottom:3px solid var(--g);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(82,18,160,.4)}
+.nav-logo-name{font-size:24px;font-weight:800;letter-spacing:-.03em;color:#fff}
+.nav-logo-name span{color:var(--g2)}
+.nav-logo-sub{font-size:8.5px;font-weight:500;letter-spacing:.08em;color:rgba(255,255,255,.5);text-transform:lowercase}
+.nav-pill{font-size:11px;font-weight:600;letter-spacing:.05em;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2)}
+.nav-user{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 14px 5px 8px;cursor:pointer}
+.nav-user:hover{background:rgba(255,255,255,.18)}
+.nav-avatar{width:26px;height:26px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--p)}
+.nav-name{font-size:11.5px;font-weight:600;color:#fff}
+
+/* ── SCREENS ── */
+.screen{display:none}.screen.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+.login-box{width:100%;max-width:380px}
+.login-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 32px rgba(82,18,160,.3)}
+.login-icon svg{width:32px;height:32px;color:#fff}
+.login-title{font-size:1.5rem;font-weight:800;text-align:center;color:var(--s1);margin-bottom:.4rem;letter-spacing:-.02em}
+.login-sub{font-size:13px;color:var(--s2);text-align:center;line-height:1.6;margin-bottom:2rem}
+
+/* ── CARDS ── */
+.card{background:var(--w);border:1.5px solid var(--s4);border-radius:var(--r16);padding:1.5rem;box-shadow:var(--shadow)}
+.field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1rem}
+label{font-size:11.5px;font-weight:600;color:var(--s2)}
+label .req{color:var(--p);margin-left:2px}
+input,select{font-family:var(--f);font-size:13.5px;color:var(--s1);background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r8);padding:.55rem .875rem;outline:none;transition:border-color .15s,box-shadow .15s;width:100%;appearance:none}
+input:focus,select:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
+input[type="password"]{letter-spacing:.15em;font-size:16px}
+
+/* ── BTN ── */
+.btn{width:100%;padding:.85rem;border:none;border-radius:var(--r12);font-family:var(--f);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-p{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;box-shadow:0 4px 16px rgba(82,18,160,.3)}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(82,18,160,.4)}
+.btn-p:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-g{background:linear-gradient(135deg,var(--g),var(--g2));color:#fff;box-shadow:0 4px 16px rgba(91,173,30,.3)}
+.btn-g:hover{transform:translateY(-2px)}
+.btn-sm{padding:.5rem 1rem;width:auto;font-size:12px;border-radius:var(--r8)}
+.btn-outline{background:transparent;border:1.5px solid var(--s4);color:var(--s2);width:auto;padding:.5rem 1rem;font-size:12px;border-radius:var(--r8)}
+.btn-outline:hover{border-color:var(--p3);color:var(--p);background:var(--pll)}
+.btn svg{width:15px;height:15px;flex-shrink:0}
+
+/* ── ALERT ── */
+.alert{display:none;padding:.875rem 1rem;border-radius:var(--r12);border:1.5px solid;font-size:12.5px;line-height:1.55;margin-bottom:1rem;align-items:center;gap:10px}
+.alert.success{display:flex;background:var(--gl);border-color:var(--g);color:#2d6010}
+.alert.error{display:flex;background:var(--rl);border-color:var(--r);color:var(--r)}
+.alert.loading{display:flex;background:var(--pl);border-color:var(--p);color:var(--p)}
+.alert.warning{display:flex;background:var(--amberl);border-color:var(--amber);color:#7a4f00}
+.spin{width:14px;height:14px;flex-shrink:0;border:2px solid rgba(82,18,160,.2);border-top-color:var(--p);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── DASHBOARD ── */
+.dash-wrap{max-width:1100px;margin:0 auto;padding:2rem 1.5rem 5rem}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem}
+.dash-title{font-size:1.4rem;font-weight:800;color:var(--s1);letter-spacing:-.02em}
+.dash-sub{font-size:12.5px;color:var(--s3);margin-top:2px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+@media(max-width:700px){.stats-row{grid-template-columns:1fr 1fr}}
+.stat-card{background:var(--w);border:1.5px solid var(--s4);border-radius:var(--r16);padding:1.1rem 1.25rem;box-shadow:var(--shadow)}
+.stat-val{font-size:2rem;font-weight:900;color:var(--p);letter-spacing:-.03em;line-height:1}
+.stat-val.green{color:var(--g)}
+.stat-val.amber{color:var(--amber)}
+.stat-val.red{color:var(--r)}
+.stat-lbl{font-size:11.5px;color:var(--s3);margin-top:4px;font-weight:500}
+
+/* ── FILTROS ── */
+.filters{display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+.filter-pill{padding:5px 14px;border-radius:999px;font-size:12px;font-weight:600;border:1.5px solid var(--s4);background:var(--w);color:var(--s2);cursor:pointer;transition:.15s}
+.filter-pill:hover{border-color:var(--p3);color:var(--p)}
+.filter-pill.active{background:var(--p);border-color:var(--p);color:#fff}
+.search-input{flex:1;min-width:200px;padding:.5rem .875rem;font-size:13px;border:1.5px solid var(--s4);border-radius:var(--r8);background:var(--w);font-family:var(--f);outline:none;color:var(--s1)}
+.search-input:focus{border-color:var(--p);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
+
+/* ── TABLA PROVEEDORES ── */
+.tabla-wrap{background:var(--w);border:1.5px solid var(--s4);border-radius:var(--r16);overflow:hidden;box-shadow:var(--shadow)}
+.tabla-head{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr 1fr;gap:0;background:var(--s5);border-bottom:1.5px solid var(--s4);padding:.75rem 1.25rem;font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.06em;text-transform:uppercase}
+.tabla-row{display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr 1fr;gap:0;padding:.875rem 1.25rem;border-bottom:1px solid var(--s5);align-items:center;transition:background .1s;cursor:pointer}
+.tabla-row:last-child{border-bottom:none}
+.tabla-row:hover{background:var(--pll)}
+.tabla-row.selected{background:var(--pl);border-left:3px solid var(--p)}
+.prov-name{font-size:13px;font-weight:700;color:var(--s1)}
+.prov-ruc{font-size:11px;font-family:var(--m);color:var(--s3);margin-top:2px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:700}
+.badge.pendiente{background:var(--amberl);color:#7a4f00;border:1px solid rgba(245,158,11,.3)}
+.badge.aprobado{background:var(--gl);color:#2d6010;border:1px solid rgba(91,173,30,.3)}
+.badge.rechazado{background:var(--rl);color:var(--r);border:1px solid rgba(224,32,32,.2)}
+.badge.revision{background:var(--pl);color:var(--p);border:1px solid rgba(82,18,160,.2)}
+.venc-ok{color:var(--g);font-size:12px;font-weight:600;font-family:var(--m)}
+.venc-warn{color:var(--amber);font-size:12px;font-weight:600;font-family:var(--m)}
+.venc-exp{color:var(--r);font-size:12px;font-weight:600;font-family:var(--m)}
+
+/* ── PANEL DETALLE ── */
+.detalle-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(28,8,64,.5);backdrop-filter:blur(4px);animation:fadeIn .2s ease}
+.detalle-overlay.open{display:flex;align-items:stretch;justify-content:flex-end}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.detalle-panel{width:min(720px,100%);background:var(--w);box-shadow:-8px 0 48px rgba(28,8,64,.2);display:flex;flex-direction:column;animation:slideIn .3s cubic-bezier(.4,0,.2,1)}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.detalle-nav{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1.5px solid var(--s4);background:var(--s5)}
+.detalle-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--s4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.detalle-close:hover{background:var(--rl);color:var(--r)}
+.detalle-body{flex:1;overflow-y:auto;padding:1.5rem}
+.detalle-footer{padding:1.25rem 1.5rem;border-top:1.5px solid var(--s4);background:var(--s5);display:flex;gap:.75rem;flex-wrap:wrap}
+
+/* ── DOC REVIEW CARD ── */
+.doc-review{background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r12);padding:1rem;margin-bottom:.75rem;transition:border-color .15s}
+.doc-review.ok{border-color:var(--g);background:var(--gll)}
+.doc-review.warn{border-color:var(--amber);background:var(--amberl)}
+.doc-review.error{border-color:var(--r);background:var(--rl)}
+.doc-review-head{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.doc-review-name{font-size:13px;font-weight:700;color:var(--s1);flex:1}
+.doc-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--s4);background:var(--w);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.doc-check:hover{border-color:var(--g)}
+.doc-check.checked{background:var(--g);border-color:var(--g)}
+.doc-check.checked svg{display:block}
+.doc-check svg{display:none;width:13px;height:13px;color:#fff}
+.ai-fields{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+@media(max-width:480px){.ai-fields{grid-template-columns:1fr}}
+.ai-field{display:flex;flex-direction:column;gap:2px}
+.ai-field label{font-size:10px;font-weight:700;color:var(--s3);text-transform:uppercase;letter-spacing:.06em}
+.ai-field input{font-size:12.5px;padding:.4rem .7rem;background:var(--w);border-color:var(--s4)}
+.ai-field input.venc-ok{border-color:var(--g);background:var(--gl);color:#2d6010}
+.ai-field input.venc-warn{border-color:var(--amber);background:var(--amberl);color:#7a4f00}
+.ai-field input.venc-exp{border-color:var(--r);background:var(--rl);color:var(--r)}
+.ai-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--p);border:1.5px solid var(--p3);background:var(--pl);border-radius:var(--r8);padding:4px 10px;cursor:pointer;transition:.15s;font-family:var(--f)}
+.ai-btn:hover{background:var(--p);color:#fff}
+.ai-btn.loading{opacity:.6;cursor:not-allowed}
+.ai-spin{width:11px;height:11px;border:1.5px solid rgba(82,18,160,.2);border-top-color:var(--p);border-radius:50%;animation:sp .7s linear infinite}
+
+/* ── SECCIONES DETALLE ── */
+.section-title{font-size:11px;font-weight:700;color:var(--s3);text-transform:uppercase;letter-spacing:.1em;margin:1.5rem 0 .75rem;display:flex;align-items:center;gap:8px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--s4)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .75rem;margin-bottom:1rem}
+@media(max-width:480px){.info-grid{grid-template-columns:1fr}}
+.info-item label{font-size:10px;font-weight:700;color:var(--s3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:2px}
+.info-item span{font-size:13px;font-weight:600;color:var(--s1);font-family:var(--m)}
+.obs-box{background:var(--s5);border:1px solid var(--s4);border-radius:var(--r8);padding:.75rem 1rem;font-size:12.5px;color:var(--s2);line-height:1.6;font-style:italic}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--s3)}
+.empty svg{width:48px;height:48px;margin:0 auto .75rem;opacity:.4}
+.empty p{font-size:13px}
+
+/* ── MODAL APROBAR ── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:900;background:rgba(28,8,64,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--w);border-radius:var(--r16);padding:2rem;max-width:420px;width:90%;box-shadow:0 24px 80px rgba(28,8,64,.3);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.modal-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem}
+.modal-icon.green{background:var(--gl);color:var(--g)}
+.modal-icon.red{background:var(--rl);color:var(--r)}
+.modal-title{font-size:1.1rem;font-weight:800;color:var(--s1);text-align:center;margin-bottom:.4rem}
+.modal-sub{font-size:12.5px;color:var(--s2);text-align:center;line-height:1.6;margin-bottom:1.5rem}
+.modal-actions{display:flex;gap:.75rem}
+
+@media(max-width:768px){
+  .tabla-head,.tabla-row{grid-template-columns:2fr 1fr 1fr}
+  .tabla-head>*:nth-child(3),.tabla-head>*:nth-child(5),
+  .tabla-row>*:nth-child(3),.tabla-row>*:nth-child(5){display:none}
+}
+@media(max-width:480px){
+  .tabla-head,.tabla-row{grid-template-columns:2fr 1fr}
+  .tabla-head>*:nth-child(4),.tabla-row>*:nth-child(4){display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div>
+    <div class="nav-logo-name">bet<span>a</span></div>
+    <div class="nav-logo-sub">panel analista</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="nav-pill" id="nav-analista-pill" style="display:none"></span>
+    <div class="nav-user" id="nav-user" style="display:none" onclick="cerrarSesion()">
+      <div class="nav-avatar" id="nav-avatar">A</div>
+      <span class="nav-name" id="nav-name">Analista</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ LOGIN ══ -->
+<div id="screen-login" class="screen active">
+  <div class="login-wrap">
+    <div class="login-box">
+      <div class="login-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      </div>
+      <h1 class="login-title">Panel Analista</h1>
+      <p class="login-sub">Acceso exclusivo para analistas de Complejo Agroindustrial Beta</p>
+      <div class="card">
+        <div class="field">
+          <label>Analista <span class="req">*</span></label>
+          <select id="login-analista">
+            <option value="">Seleccionar analista...</option>
+            <option value="CREGALADO">C. Regalado</option>
+            <option value="MHUANCA">M. Huanca</option>
+            <option value="LFLORES">L. Flores</option>
+            <option value="ADMIN">Administrador (todos)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Contraseña <span class="req">*</span></label>
+          <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+        </div>
+        <div id="login-alert" class="alert"></div>
+        <button class="btn btn-p" onclick="login()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Ingresar al panel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="screen-dash" class="screen">
+  <div class="dash-wrap">
+    <div class="dash-header">
+      <div>
+        <div class="dash-title" id="dash-title">Mis Proveedores</div>
+        <div class="dash-sub" id="dash-sub">Cargando datos...</div>
+      </div>
+      <button class="btn btn-p btn-sm" onclick="cargarProveedores()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Actualizar
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-total">—</div>
+        <div class="stat-lbl">Total proveedores</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val amber" id="stat-pendiente">—</div>
+        <div class="stat-lbl">Pendientes de revisión</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val green" id="stat-aprobado">—</div>
+        <div class="stat-lbl">Aprobados</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val red" id="stat-vencidos">—</div>
+        <div class="stat-lbl">Docs por vencer / vencidos</div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters">
+      <input class="search-input" type="text" placeholder="🔍 Buscar por nombre o RUC..." oninput="filtrar()" id="search-input">
+      <div class="filter-pill active" onclick="setFiltro('todos',this)">Todos</div>
+      <div class="filter-pill" onclick="setFiltro('pendiente',this)">Pendientes</div>
+      <div class="filter-pill" onclick="setFiltro('revision',this)">En revisión</div>
+      <div class="filter-pill" onclick="setFiltro('aprobado',this)">Aprobados</div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="tabla-wrap">
+      <div class="tabla-head">
+        <div>Proveedor</div>
+        <div>Categoría</div>
+        <div>Estado</div>
+        <div>Docs</div>
+        <div>Próx. vencimiento</div>
+        <div>Acción</div>
+      </div>
+      <div id="tabla-body">
+        <div class="empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p>Cargando proveedores...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANEL DETALLE (slide-in) ══ -->
+<div class="detalle-overlay" id="detalle-overlay" onclick="cerrarDetalle(event)">
+  <div class="detalle-panel" id="detalle-panel">
+    <div class="detalle-nav">
+      <div>
+        <div style="font-size:14px;font-weight:800;color:var(--s1)" id="det-nombre">—</div>
+        <div style="font-size:11px;color:var(--s3);font-family:var(--m)" id="det-ruc">—</div>
+      </div>
+      <button class="detalle-close" onclick="cerrarDetalle()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="detalle-body" id="detalle-body"><!-- se llena dinámicamente --></div>
+    <div class="detalle-footer">
+      <button class="btn btn-g btn-sm" onclick="abrirModalAprobar()" id="btn-aprobar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Aprobar y dar acceso
+      </button>
+      <button class="btn btn-sm" style="background:var(--rl);color:var(--r);border:1.5px solid rgba(224,32,32,.3)" onclick="abrirModalRechazar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Rechazar
+      </button>
+      <button class="btn-outline btn-sm" onclick="guardarObservaciones()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar notas
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL APROBAR ══ -->
+<div class="modal-overlay" id="modal-aprobar">
+  <div class="modal">
+    <div class="modal-icon green">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="modal-title">Aprobar proveedor</div>
+    <div class="modal-sub" id="modal-aprobar-sub">Se enviará el link de ingreso al correo del proveedor para que pueda subir sus documentos complementarios.</div>
+    <div class="field" style="margin-bottom:1.25rem">
+      <label>Mensaje adicional (opcional)</label>
+      <input type="text" id="modal-msg" placeholder="Ej: Favor completar SOAT antes del viernes">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-aprobar')">Cancelar</button>
+      <button class="btn btn-g" onclick="confirmarAprobar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Confirmar y enviar link
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL RECHAZAR ══ -->
+<div class="modal-overlay" id="modal-rechazar">
+  <div class="modal">
+    <div class="modal-icon red">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </div>
+    <div class="modal-title">Rechazar proveedor</div>
+    <div class="modal-sub">Indica el motivo del rechazo. Se notificará al proveedor por correo.</div>
+    <div class="field" style="margin-bottom:1.25rem">
+      <label>Motivo del rechazo <span class="req">*</span></label>
+      <input type="text" id="modal-motivo" placeholder="Ej: Documentos ilegibles o incompletos">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-rechazar')">Cancelar</button>
+      <button class="btn btn-sm" style="background:var(--r);color:#fff;border:none;flex:1;padding:.85rem;border-radius:var(--r12);font-family:var(--f);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" onclick="confirmarRechazar()">
+        Confirmar rechazo
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   ⚙ CONFIGURACIÓN
+══════════════════════════════════════════ */
+const CFG = {
+  // URL del Google Apps Script (mismo que registro.html)
+  GSHEET_URL: 'https://script.google.com/macros/s/AKfycbw_Fwj-pT-2NBB0w87h0dp2od9vWa4jMglXC773ThwqbrTsf3IRij-tx4amd4_RrF4eKg/exec',
+
+  // Worker Cloudflare (para enviar notificaciones)
+  FLOW_ENVIAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
+  FLOW_NOTIFICAR:  'https://portalbeta.betayazmingps.workers.dev/notificar',
+
+  // Link que se manda al proveedor aprobado
+  LINK_INGRESAR: 'https://betayazmingps-max.github.io/PORTAL_BETA/ingresar.html',
+
+  DEMO: false // ← cambiar a false en producción
+};
+
+/* ══════════════════════════════════════════
+   🔐 ANALISTAS Y CONTRASEÑAS
+   Cambia las contraseñas antes de publicar
+══════════════════════════════════════════ */
+const ANALISTAS_AUTH = {
+  'CREGALADO': { pass: 'beta2026', nombre: 'C. Regalado' },
+  'MHUANCA':   { pass: 'beta2026', nombre: 'M. Huanca'   },
+  'LFLORES':   { pass: 'beta2026', nombre: 'L. Flores'   },
+  'ADMIN':     { pass: 'admin2026', nombre: 'Administrador' },
+};
+
+/* ══ ESTADO ══ */
+let SESSION_ADMIN = { analista: '', nombre: '', esAdmin: false };
+let PROVEEDORES = [];       // todos los cargados del Sheet
+let PROVEEDOR_ACTUAL = null; // el que está abierto en el panel
+let filtroActivo = 'todos';
+
+/* ══════════════════════════════════════════
+   DATOS DEMO (cuando DEMO=true)
+══════════════════════════════════════════ */
+const DEMO_DATA = [
+  { fila:2, fecha:'22/05/2026', ruc:'20494269253', razonSocial:'CORPORACION DE SERVICIOS AGRO INDUSTRIALES DEL SUR S.A.C.', contacto:'Pedro Flores', email:'pedro@agroindus.pe', telefono:'987654321', categoria:'TRANSPORTE DE SERVICIOS NORTE Y SUR', analista:'CREGALADO', estadoSunat:'ACTIVO', direccion:'Av. Industrial 456, Lima', obs:'Primera empresa del grupo', estado:'pendiente', carpeta:'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/NORTE/CREGALADO/20494269253_CORP SERV AGROIN SUR SAC', docs:{ reg_brochure:{nombre:'Brochure.pdf',b64:null}, reg_ficha:{nombre:'FichaRUC.pdf',b64:null} }, ai_extraido:{} },
+  { fila:3, fecha:'21/05/2026', ruc:'20612307599', razonSocial:'TRANSPORTES DEL NORTE E.I.R.L.', contacto:'María López', email:'mlopez@transnorte.pe', telefono:'976543210', categoria:'TRANSPORTE DE SERVICIOS NORTE Y SUR', analista:'CREGALADO', estadoSunat:'ACTIVO', direccion:'Jr. Los Olivos 123, Trujillo', obs:'', estado:'revision', carpeta:'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/NORTE/CREGALADO/20612307599_TRANSP DEL NORTE EIRL', docs:{ reg_brochure:{nombre:'Brochure.pdf',b64:null}, reg_ficha:{nombre:'FichaRUC.pdf',b64:null}, reg_vigencia:{nombre:'VigenciaPoder.pdf',b64:null} }, ai_extraido:{ reg_ficha:{ estado:'ACTIVO', condicion:'HABIDO', domicilio:'Jr. Los Olivos 123, Trujillo', vencimiento:'' }, reg_vigencia:{ vencimiento:'2027-03-15', titular:'María López' } } },
+  { fila:4, fecha:'20/05/2026', ruc:'20100070970', razonSocial:'INVERSIONES BETA S.A.C.', contacto:'Carlos Ríos', email:'carlos@invbeta.pe', telefono:'965432109', categoria:'TRANSPORTE DE SERVICIOS SUR', analista:'MHUANCA', estadoSunat:'ACTIVO', direccion:'Av. La Marina 890, Lima', obs:'Referido por gerencia', estado:'aprobado', carpeta:'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/SUR/MHUANCA/20100070970_INV BETA SAC', docs:{ reg_brochure:{nombre:'Brochure.pdf',b64:null} }, ai_extraido:{ reg_brochure:{ estado:'Vigente', vencimiento:'2026-12-31' } } },
+  { fila:5, fecha:'19/05/2026', ruc:'20543210987', razonSocial:'LOGÍSTICA AGRARIA PERÚ S.R.L.', contacto:'Rosa Mamani', email:'rmamani@logagra.pe', telefono:'954321098', categoria:'TRANSPORTE DE SERVICIOS NORTE Y SUR', analista:'CREGALADO', estadoSunat:'ACTIVO', direccion:'Calle Las Flores 77, Arequipa', obs:'', estado:'pendiente', carpeta:'', docs:{ reg_ficha:{nombre:'FichaRUC.pdf',b64:null} }, ai_extraido:{} },
+];
+
+/* ══════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════ */
+function login() {
+  const analista = document.getElementById('login-analista').value;
+  const pass     = document.getElementById('login-pass').value;
+  if (!analista) return showAlert('login-alert','error','Selecciona tu nombre.');
+  if (!pass)     return showAlert('login-alert','error','Ingresa tu contraseña.');
+
+  const auth = ANALISTAS_AUTH[analista];
+  if (!auth || auth.pass !== pass) {
+    return showAlert('login-alert','error','Contraseña incorrecta.');
+  }
+
+  SESSION_ADMIN = { analista, nombre: auth.nombre, esAdmin: analista === 'ADMIN' };
+  document.getElementById('nav-user').style.display = 'flex';
+  document.getElementById('nav-avatar').textContent = auth.nombre.charAt(0);
+  document.getElementById('nav-name').textContent = auth.nombre;
+  document.getElementById('nav-analista-pill').style.display = '';
+  document.getElementById('nav-analista-pill').textContent = SESSION_ADMIN.esAdmin ? '👑 Admin' : '📋 Analista';
+
+  irA('screen-dash');
+  cargarProveedores();
+}
+
+function cerrarSesion() {
+  SESSION_ADMIN = { analista:'', nombre:'', esAdmin:false };
+  document.getElementById('nav-user').style.display = 'none';
+  document.getElementById('nav-analista-pill').style.display = 'none';
+  document.getElementById('login-pass').value = '';
+  hideAlert('login-alert');
+  irA('screen-login');
+}
+
+/* ══════════════════════════════════════════
+   CARGAR PROVEEDORES DEL SHEET
+══════════════════════════════════════════ */
+async function cargarProveedores() {
+  if (CFG.DEMO) {
+    PROVEEDORES = SESSION_ADMIN.esAdmin
+      ? DEMO_DATA
+      : DEMO_DATA.filter(p => p.analista === SESSION_ADMIN.analista);
+    renderDash();
+    return;
+  }
+
+  try {
+    // Lee del Google Sheet vía GET
+    const url = CFG.GSHEET_URL + `?action=listar&analista=${SESSION_ADMIN.esAdmin ? 'TODOS' : SESSION_ADMIN.analista}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    PROVEEDORES = data.proveedores || [];
+    renderDash();
+  } catch(e) {
+    console.error('Error cargando Sheet:', e);
+    // Fallback a demo si falla
+    PROVEEDORES = DEMO_DATA.filter(p => SESSION_ADMIN.esAdmin || p.analista === SESSION_ADMIN.analista);
+    renderDash();
+  }
+}
+
+/* ══ RENDER DASHBOARD ══ */
+function renderDash() {
+  const analista = SESSION_ADMIN.esAdmin ? 'todos los proveedores' : `proveedores de ${SESSION_ADMIN.nombre}`;
+  document.getElementById('dash-title').textContent = SESSION_ADMIN.esAdmin ? 'Todos los Proveedores' : 'Mis Proveedores';
+  document.getElementById('dash-sub').textContent = `${PROVEEDORES.length} ${analista}`;
+
+  // Stats
+  document.getElementById('stat-total').textContent    = PROVEEDORES.length;
+  document.getElementById('stat-pendiente').textContent = PROVEEDORES.filter(p => p.estado === 'pendiente').length;
+  document.getElementById('stat-aprobado').textContent  = PROVEEDORES.filter(p => p.estado === 'aprobado').length;
+
+  // Vencidos / por vencer
+  let alertas = 0;
+  PROVEEDORES.forEach(p => {
+    Object.values(p.ai_extraido || {}).forEach(d => {
+      if (d.vencimiento) {
+        const dias = diasParaVencer(d.vencimiento);
+        if (dias !== null && dias < 30) alertas++;
+      }
+    });
+  });
+  document.getElementById('stat-vencidos').textContent = alertas;
+
+  renderTabla(PROVEEDORES);
+}
+
+function filtrar() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let lista = PROVEEDORES;
+  if (filtroActivo !== 'todos') lista = lista.filter(p => p.estado === filtroActivo);
+  if (q) lista = lista.filter(p => p.razonSocial.toLowerCase().includes(q) || p.ruc.includes(q));
+  renderTabla(lista);
+}
+
+function setFiltro(filtro, el) {
+  filtroActivo = filtro;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  filtrar();
+}
+
+function renderTabla(lista) {
+  const body = document.getElementById('tabla-body');
+  if (!lista.length) {
+    body.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay proveedores en esta categoría</p></div>`;
+    return;
+  }
+  body.innerHTML = lista.map((p, i) => {
+    const badgeMap = { pendiente:'pendiente', revision:'revision', aprobado:'aprobado', rechazado:'rechazado' };
+    const badgeLbl = { pendiente:'Pendiente', revision:'En revisión', aprobado:'Aprobado', rechazado:'Rechazado' };
+    const ndocs = Object.keys(p.docs || {}).length;
+    const proxVenc = getProxVencimiento(p);
+
+    return `<div class="tabla-row" onclick="abrirDetalle(${PROVEEDORES.indexOf(p)})">
+      <div>
+        <div class="prov-name">${p.razonSocial}</div>
+        <div class="prov-ruc">${p.ruc} · ${p.fecha}</div>
+      </div>
+      <div style="font-size:12px;color:var(--s2)">${p.categoria?.split(' ').slice(-2).join(' ') || '—'}</div>
+      <div><span class="badge ${badgeMap[p.estado]||'pendiente'}">${badgeLbl[p.estado]||'Pendiente'}</span></div>
+      <div style="font-size:12px;color:var(--s2)">${ndocs} doc${ndocs!==1?'s':''}</div>
+      <div>${proxVenc}</div>
+      <div>
+        <button class="btn btn-sm btn-p" onclick="event.stopPropagation();abrirDetalle(${PROVEEDORES.indexOf(p)})" style="width:auto">
+          Ver
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getProxVencimiento(p) {
+  let min = null;
+  Object.values(p.ai_extraido || {}).forEach(d => {
+    if (d.vencimiento) {
+      const dias = diasParaVencer(d.vencimiento);
+      if (dias !== null && (min === null || dias < min)) min = dias;
+    }
+  });
+  if (min === null) return '<span style="color:var(--s3);font-size:12px">Sin datos</span>';
+  if (min < 0)  return `<span class="venc-exp">Vencido hace ${Math.abs(min)}d</span>`;
+  if (min < 15) return `<span class="venc-exp">⚠ ${min} días</span>`;
+  if (min < 30) return `<span class="venc-warn">⚡ ${min} días</span>`;
+  return `<span class="venc-ok">${min} días</span>`;
+}
+
+function diasParaVencer(fechaStr) {
+  if (!fechaStr) return null;
+  const d = new Date(fechaStr);
+  if (isNaN(d)) return null;
+  return Math.round((d - new Date()) / 86400000);
+}
+
+/* ══════════════════════════════════════════
+   PANEL DETALLE
+══════════════════════════════════════════ */
+function abrirDetalle(idx) {
+  PROVEEDOR_ACTUAL = PROVEEDORES[idx];
+  const p = PROVEEDOR_ACTUAL;
+
+  document.getElementById('det-nombre').textContent = p.razonSocial;
+  document.getElementById('det-ruc').textContent    = `RUC: ${p.ruc} · ${p.email}`;
+
+  // Mostrar / ocultar botón aprobar
+  document.getElementById('btn-aprobar').style.display = p.estado === 'aprobado' ? 'none' : '';
+
+  const body = document.getElementById('detalle-body');
+  body.innerHTML = `
+    <!-- Info básica -->
+    <div class="section-title">Información del proveedor</div>
+    <div class="info-grid">
+      <div class="info-item"><label>Contacto</label><span>${p.contacto||'—'}</span></div>
+      <div class="info-item"><label>Teléfono</label><span>${p.telefono||'—'}</span></div>
+      <div class="info-item"><label>Email</label><span>${p.email||'—'}</span></div>
+      <div class="info-item"><label>Categoría</label><span>${p.categoria||'—'}</span></div>
+      <div class="info-item"><label>Analista</label><span>${p.analista||'—'}</span></div>
+      <div class="info-item"><label>Estado SUNAT</label><span style="color:var(--g);font-weight:700">${p.estadoSunat||'—'}</span></div>
+      <div class="info-item" style="grid-column:1/-1"><label>Dirección</label><span>${p.direccion||'—'}</span></div>
+    </div>
+    ${p.obs ? `<div class="obs-box">${p.obs}</div>` : ''}
+
+    <!-- Documentos con IA -->
+    <div class="section-title">Documentos enviados — Revisión con IA</div>
+    <div id="docs-review-list">${renderDocsReview(p)}</div>
+
+    <!-- Notas del analista -->
+    <div class="section-title">Notas del analista</div>
+    <textarea id="notas-analista" style="width:100%;min-height:80px;font-family:var(--f);font-size:13px;border:1.5px solid var(--s4);border-radius:var(--r8);padding:.75rem;background:var(--pll);color:var(--s1);outline:none;resize:vertical" placeholder="Agrega observaciones sobre este proveedor...">${p.notas||''}</textarea>
+  `;
+
+  document.getElementById('detalle-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function renderDocsReview(p) {
+  const NOMBRES_DOC = {
+    reg_brochure: 'Brochure / Cotización',
+    reg_carta:    'Carta de presentación',
+    reg_ficha:    'Ficha RUC SUNAT',
+    reg_deuda:    'Deudas coactivas',
+    reg_ref:      'Referencias comerciales',
+    reg_vigencia: 'Vigencia poder rep. legal',
+  };
+
+  const CAMPOS_IA = {
+    reg_ficha:    [{ key:'estado', lbl:'Estado' }, { key:'condicion', lbl:'Condición' }, { key:'domicilio', lbl:'Domicilio fiscal' }, { key:'vencimiento', lbl:'Fecha vencimiento', tipo:'fecha' }],
+    reg_vigencia: [{ key:'titular', lbl:'Representante legal' }, { key:'vencimiento', lbl:'Vigencia hasta', tipo:'fecha' }],
+    reg_brochure: [{ key:'empresa', lbl:'Empresa' }, { key:'vencimiento', lbl:'Validez oferta', tipo:'fecha' }],
+    reg_carta:    [{ key:'referencia', lbl:'Referencia' }, { key:'vencimiento', lbl:'Fecha carta', tipo:'fecha' }],
+    reg_deuda:    [{ key:'estado', lbl:'Estado deuda' }, { key:'vencimiento', lbl:'Fecha consulta', tipo:'fecha' }],
+    reg_ref:      [{ key:'empresa_ref', lbl:'Empresa referente' }, { key:'vencimiento', lbl:'Fecha', tipo:'fecha' }],
+  };
+
+  const docs = p.docs || {};
+  if (!Object.keys(docs).length) return '<p style="color:var(--s3);font-size:13px;padding:1rem 0">No se subieron documentos en el registro.</p>';
+
+  return Object.entries(docs).map(([docId, docData]) => {
+    const aiData   = (p.ai_extraido || {})[docId] || {};
+    const campos   = CAMPOS_IA[docId] || [];
+    const checked  = aiData._revisado ? 'checked' : '';
+    const claseDoc = aiData._revisado ? 'ok' : '';
+
+    const camposHtml = campos.map(c => {
+      const val  = aiData[c.key] || '';
+      let clase  = '';
+      if (c.tipo === 'fecha' && val) {
+        const dias = diasParaVencer(val);
+        if (dias !== null) clase = dias < 0 ? 'venc-exp' : dias < 30 ? 'venc-warn' : 'venc-ok';
+      }
+      return `<div class="ai-field">
+        <label>${c.lbl}</label>
+        <input type="${c.tipo==='fecha'?'date':'text'}" class="${clase}" value="${val}"
+          id="ai-${docId}-${c.key}"
+          onchange="actualizarCampoAI('${p.ruc}','${docId}','${c.key}',this.value)">
+      </div>`;
+    }).join('');
+
+    return `<div class="doc-review ${claseDoc}" id="doc-review-${docId}">
+      <div class="doc-review-head">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="doc-review-name">${NOMBRES_DOC[docId] || docId}</span>
+        <span style="font-size:11px;color:var(--s3);font-family:var(--m)">${docData.nombre||''}</span>
+        <button class="ai-btn" id="ai-btn-${docId}" onclick="analizarDocumento('${p.ruc}','${docId}')">
+          ✦ Analizar con IA
+        </button>
+        <div class="doc-check ${checked}" id="check-${docId}" onclick="toggleCheck('${p.ruc}','${docId}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+      ${campos.length ? `<div class="ai-fields">${camposHtml}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function cerrarDetalle(e) {
+  if (e && e.target !== document.getElementById('detalle-overlay')) return;
+  document.getElementById('detalle-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ══════════════════════════════════════════
+   CLAUDE AI — ANALIZAR DOCUMENTO
+══════════════════════════════════════════ */
+async function analizarDocumento(ruc, docId) {
+  const p = PROVEEDOR_ACTUAL;
+  const docData = (p.docs || {})[docId];
+  if (!docData) return;
+
+  const btn = document.getElementById(`ai-btn-${docId}`);
+  btn.classList.add('loading');
+  btn.innerHTML = '<div class="ai-spin"></div> Analizando...';
+
+  try {
+    // Construir prompt para Claude
+    const PROMPT_IA = `Eres un asistente de revisión de documentos para una empresa de logística en Perú.
+Analiza el siguiente documento PDF y extrae la información en formato JSON puro, sin texto adicional.
+Devuelve SOLO un objeto JSON con estos campos (los que apliquen según el tipo de documento):
+{
+  "tipo_documento": "nombre del documento detectado",
+  "estado": "estado o condición encontrada",
+  "condicion": "habido/no habido u otra condición",
+  "vencimiento": "fecha en formato YYYY-MM-DD o vacío si no aplica",
+  "titular": "nombre del titular o representante legal",
+  "domicilio": "dirección fiscal si aparece",
+  "empresa": "nombre de empresa si aparece",
+  "referencia": "número de referencia si aplica",
+  "empresa_ref": "empresa que da la referencia",
+  "observaciones": "cualquier alerta o dato importante"
+}
+Solo incluye los campos que realmente encuentres en el documento.`;
+
+    let messages;
+
+    if (docData.b64) {
+      // Si tiene contenido real (base64 del PDF)
+      messages = [{ role:'user', content:[
+        { type:'document', source:{ type:'base64', media_type:'application/pdf', data: docData.b64 } },
+        { type:'text', text: PROMPT_IA }
+      ]}];
+    } else {
+      // Modo demo: simular extracción
+      await new Promise(r => setTimeout(r, 1800));
+      const demoRes = simularExtraccionIA(docId, p);
+      aplicarResultadoIA(ruc, docId, demoRes);
+      btn.classList.remove('loading');
+      btn.innerHTML = '✦ Re-analizar';
+      return;
+    }
+
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages
+      })
+    });
+
+    const data = await res.json();
+    const texto = data.content?.find(b => b.type === 'text')?.text || '{}';
+    const clean = texto.replace(/```json|```/g, '').trim();
+    const resultado = JSON.parse(clean);
+
+    aplicarResultadoIA(ruc, docId, resultado);
+
+  } catch(e) {
+    console.error('Error IA:', e);
+    // Fallback demo si falla
+    const demoRes = simularExtraccionIA(docId, p);
+    aplicarResultadoIA(ruc, docId, demoRes);
+  }
+
+  btn.classList.remove('loading');
+  btn.innerHTML = '✦ Re-analizar';
+}
+
+function simularExtraccionIA(docId, p) {
+  const hoy = new Date();
+  const demos = {
+    reg_ficha:    { tipo_documento:'Ficha RUC SUNAT', estado: p.estadoSunat||'ACTIVO', condicion:'HABIDO', domicilio: p.direccion||'—', vencimiento:'' },
+    reg_vigencia: { tipo_documento:'Vigencia de Poder', titular: p.contacto||'—', vencimiento: new Date(hoy.getFullYear()+2, hoy.getMonth(), hoy.getDate()).toISOString().split('T')[0] },
+    reg_brochure: { tipo_documento:'Brochure/Cotización', empresa: p.razonSocial, vencimiento: new Date(hoy.getFullYear(), hoy.getMonth()+3, hoy.getDate()).toISOString().split('T')[0] },
+    reg_deuda:    { tipo_documento:'Reporte Deudas Coactivas', estado:'SIN DEUDA', vencimiento: hoy.toISOString().split('T')[0] },
+    reg_carta:    { tipo_documento:'Carta de Presentación', referencia:'CARTA-'+p.ruc?.slice(-4), vencimiento:'' },
+    reg_ref:      { tipo_documento:'Referencias Comerciales', empresa_ref:'Cliente Referente S.A.C.', vencimiento:'' },
+  };
+  return demos[docId] || { tipo_documento:'Documento', observaciones:'Revisar manualmente' };
+}
+
+function aplicarResultadoIA(ruc, docId, resultado) {
+  // Guardar en el proveedor actual
+  if (!PROVEEDOR_ACTUAL.ai_extraido) PROVEEDOR_ACTUAL.ai_extraido = {};
+  PROVEEDOR_ACTUAL.ai_extraido[docId] = { ...resultado };
+
+  // Actualizar campos en el DOM
+  Object.entries(resultado).forEach(([key, val]) => {
+    const el = document.getElementById(`ai-${docId}-${key}`);
+    if (el) {
+      el.value = val;
+      if (el.type === 'date' && val) {
+        const dias = diasParaVencer(val);
+        el.className = dias === null ? '' : dias < 0 ? 'venc-exp' : dias < 30 ? 'venc-warn' : 'venc-ok';
+      }
+    }
+  });
+
+  // Guardar en Sheet
+  guardarAIEnSheet(ruc, docId, resultado);
+}
+
+function actualizarCampoAI(ruc, docId, campo, valor) {
+  if (!PROVEEDOR_ACTUAL.ai_extraido) PROVEEDOR_ACTUAL.ai_extraido = {};
+  if (!PROVEEDOR_ACTUAL.ai_extraido[docId]) PROVEEDOR_ACTUAL.ai_extraido[docId] = {};
+  PROVEEDOR_ACTUAL.ai_extraido[docId][campo] = valor;
+
+  // Actualizar clase si es fecha
+  const el = document.getElementById(`ai-${docId}-${campo}`);
+  if (el && el.type === 'date' && valor) {
+    const dias = diasParaVencer(valor);
+    el.className = dias === null ? '' : dias < 0 ? 'venc-exp' : dias < 30 ? 'venc-warn' : 'venc-ok';
+  }
+}
+
+function toggleCheck(ruc, docId) {
+  if (!PROVEEDOR_ACTUAL.ai_extraido) PROVEEDOR_ACTUAL.ai_extraido = {};
+  if (!PROVEEDOR_ACTUAL.ai_extraido[docId]) PROVEEDOR_ACTUAL.ai_extraido[docId] = {};
+  const actual = PROVEEDOR_ACTUAL.ai_extraido[docId]._revisado;
+  PROVEEDOR_ACTUAL.ai_extraido[docId]._revisado = !actual;
+
+  const check = document.getElementById(`check-${docId}`);
+  const card  = document.getElementById(`doc-review-${docId}`);
+  check.classList.toggle('checked', !actual);
+  card.className = `doc-review ${!actual ? 'ok' : ''}`;
+}
+
+async function guardarAIEnSheet(ruc, docId, datos) {
+  if (CFG.DEMO || CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) return;
+  try {
+    await fetch(CFG.GSHEET_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'guardarAI', ruc, docId, datos })
+    });
+  } catch(e) { console.warn('No se pudo guardar AI en Sheet:', e); }
+}
+
+/* ══ GUARDAR NOTAS ══ */
+async function guardarObservaciones() {
+  const notas = document.getElementById('notas-analista')?.value || '';
+  PROVEEDOR_ACTUAL.notas = notas;
+  // Guardar en sheet
+  if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
+    await fetch(CFG.GSHEET_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'notas', ruc: PROVEEDOR_ACTUAL.ruc, notas })
+    });
+  }
+  // Feedback visual breve
+  const btn = document.querySelector('[onclick="guardarObservaciones()"]');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '✓ Guardado';
+  btn.style.color = 'var(--g)';
+  setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1500);
+}
+
+/* ══ APROBAR ══ */
+function abrirModalAprobar() {
+  const p = PROVEEDOR_ACTUAL;
+  document.getElementById('modal-aprobar-sub').textContent =
+    `Se enviará el link de acceso a ${p.email} para que ${p.razonSocial} pueda subir sus documentos complementarios.`;
+  document.getElementById('modal-msg').value = '';
+  document.getElementById('modal-aprobar').classList.add('open');
+}
+
+async function confirmarAprobar() {
+  const p    = PROVEEDOR_ACTUAL;
+  const msg  = document.getElementById('modal-msg').value;
+
+  cerrarModal('modal-aprobar');
+
+  // Actualizar estado local
+  p.estado = 'aprobado';
+  const idx = PROVEEDORES.indexOf(p);
+
+  // Guardar en Sheet
+  if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
+    await fetch(CFG.GSHEET_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR })
+    });
+  }
+
+  // Notificar por email vía Worker
+  if (!CFG.DEMO) {
+    try {
+      await fetch(CFG.FLOW_NOTIFICAR, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          email: p.email, contacto: p.contacto,
+          razonSocial: p.razonSocial, ruc: p.ruc,
+          mensaje: msg, linkIngresar: CFG.LINK_INGRESAR,
+          tipo: 'aprobacion'
+        })
+      });
+    } catch(e) { console.warn('No se pudo notificar:', e); }
+  }
+
+  cerrarDetalle();
+  renderDash();
+
+  // Mostrar confirmación
+  alert(`✅ ${p.razonSocial} aprobado.\n\nEn producción se enviará el link a ${p.email}`);
+}
+
+/* ══ RECHAZAR ══ */
+function abrirModalRechazar() {
+  document.getElementById('modal-motivo').value = '';
+  document.getElementById('modal-rechazar').classList.add('open');
+}
+
+async function confirmarRechazar() {
+  const motivo = document.getElementById('modal-motivo').value.trim();
+  if (!motivo) { alert('Indica el motivo del rechazo.'); return; }
+
+  const p = PROVEEDOR_ACTUAL;
+  p.estado = 'rechazado';
+  cerrarModal('modal-rechazar');
+
+  if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
+    await fetch(CFG.GSHEET_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'rechazar', ruc: p.ruc, motivo })
+    });
+  }
+
+  cerrarDetalle();
+  renderDash();
+}
+
+/* ══ UTILIDADES ══ */
+function irA(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const t = document.getElementById(id);
+  if (t) t.classList.add('active');
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function showAlert(id, type, msg) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  const icons = {
+    success:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    error:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    loading:'<div class="spin"></div>'
+  };
+  box.className = 'alert ' + type;
+  box.innerHTML = (icons[type]||'') + '<span>' + msg + '</span>';
+}
+
+function hideAlert(id) { const b = document.getElementById(id); if(b) b.className='alert'; }
+
+function cerrarModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Cerrar modales con Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    cerrarDetalle();
+    cerrarModal('modal-aprobar');
+    cerrarModal('modal-rechazar');
+  }
+});
+</script>
+</body>
+</html>

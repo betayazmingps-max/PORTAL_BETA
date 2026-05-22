@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Proveedor — Complejo Agroindustrial Beta</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#5212A0;--p2:#6B28C0;--p3:#8B4DD8;--pl:#EDE5FF;--pll:#F8F4FF;
+  --g:#5BAD1E;--g2:#79CC38;--gl:#EBF7DC;--gll:#F5FBF0;
+  --w:#FFFFFF;--bg:#F0EDF8;--s1:#1C0840;--s2:#5C4880;--s3:#9B89B8;--s4:#D4CBE8;--s5:#EDE8F8;
+  --r:#E02020;--rl:#FEE8E8;--amber:#F59E0B;--amberl:#FFFBEB;
+  --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace;
+  --r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --shadow:0 1px 3px rgba(82,18,160,.07),0 4px 20px rgba(82,18,160,.1);
+}
+body{font-family:var(--f);background:var(--bg);color:var(--s1);min-height:100vh}
+
+/* ── NAV ── */
+nav{background:var(--p);border-bottom:3px solid var(--g);height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 20px rgba(82,18,160,.4)}
+.nav-logo{display:flex;flex-direction:column;line-height:1;gap:2px}
+.nav-logo-name{font-size:24px;font-weight:800;letter-spacing:-.03em;color:#fff}
+.nav-logo-name span{color:var(--g2)}
+.nav-logo-sub{font-size:8.5px;font-weight:500;letter-spacing:.08em;color:rgba(255,255,255,.5);text-transform:lowercase}
+.nav-pill{font-size:11px;font-weight:600;letter-spacing:.05em;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2)}
+
+/* ── HERO COMPACTO ── */
+.hero{background:linear-gradient(135deg,var(--p) 0%,#3a0e7a 100%);padding:2rem 1.5rem 3rem;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:var(--bg);clip-path:ellipse(60% 100% at 50% 100%)}
+.hero-glow{position:absolute;top:-60px;right:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(121,204,56,.25),transparent 70%);pointer-events:none}
+.hero-content{position:relative;z-index:2;max-width:600px;margin:0 auto}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(121,204,56,.2);border:1px solid rgba(121,204,56,.4);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:700;color:#b4f06e;letter-spacing:.05em;margin-bottom:.875rem}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--g2)}
+.hero h1{font-size:1.75rem;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.2;margin-bottom:.4rem}
+.hero h1 em{font-style:normal;color:var(--g2)}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.65);line-height:1.6}
+
+/* ── LAYOUT ── */
+.page{max-width:640px;margin:0 auto;padding:2rem 1rem 5rem;display:flex;flex-direction:column;gap:0}
+
+/* ── STEPS SIDEBAR ── */
+.steps-track{display:flex;flex-direction:column;gap:0;margin-bottom:2rem}
+.step-row{display:flex;align-items:flex-start;gap:12px;position:relative}
+.step-row:not(:last-child)::before{content:'';position:absolute;left:15px;top:32px;width:2px;height:calc(100% - 8px);background:var(--s4)}
+.step-row.done::before{background:var(--g)}
+.step-row.active::before{background:linear-gradient(to bottom,var(--p),var(--s4))}
+.step-circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;margin-top:2px;border:2px solid var(--s4);background:var(--w);color:var(--s3);transition:.2s}
+.step-row.active .step-circle{border-color:var(--p);background:var(--p);color:#fff;box-shadow:0 0 0 4px rgba(82,18,160,.15)}
+.step-row.done .step-circle{border-color:var(--g);background:var(--g);color:#fff}
+.step-body{flex:1;padding-bottom:1.5rem}
+.step-title{font-size:13px;font-weight:700;color:var(--s1);margin-bottom:.1rem;padding-top:6px}
+.step-desc{font-size:11.5px;color:var(--s3);margin-bottom:.875rem}
+
+/* ── CARDS ── */
+.card{background:var(--w);border:1.5px solid var(--s4);border-radius:var(--r16);padding:1.25rem;box-shadow:var(--shadow);transition:border-color .15s}
+.card:focus-within{border-color:var(--p3);box-shadow:var(--shadow),0 0 0 3px rgba(82,18,160,.07)}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--s5)}
+.card-head-icon{width:32px;height:32px;border-radius:10px;background:var(--pl);display:flex;align-items:center;justify-content:center;color:var(--p);flex-shrink:0}
+.card-head-icon svg{width:16px;height:16px}
+.card-head-text{font-size:13px;font-weight:700;color:var(--s1)}
+.card-head-sub{font-size:11px;color:var(--s3)}
+
+/* ── SUNAT BANNER ── */
+.sunat-banner{background:linear-gradient(135deg,var(--gl),var(--gll));border:1.5px solid var(--g);border-radius:var(--r12);padding:.875rem 1rem;display:none;margin-top:.875rem}
+.sunat-banner.visible{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .75rem}
+@media(max-width:420px){.sunat-banner.visible{grid-template-columns:1fr}}
+.sb-item label{font-size:10px;font-weight:700;color:var(--g);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:2px}
+.sb-item span{font-size:12.5px;font-weight:600;color:var(--s1);font-family:var(--m)}
+.sb-item.full{grid-column:1/-1}
+
+/* ── GRID FIELDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+@media(max-width:480px){.g2{grid-template-columns:1fr}}
+.g1{display:grid;grid-template-columns:1fr;gap:.75rem}
+.field-group{display:flex;flex-direction:column;gap:.75rem;margin-top:.75rem}
+
+/* ── FIELDS ── */
+.field{display:flex;flex-direction:column;gap:.3rem}
+label{font-size:11.5px;font-weight:600;color:var(--s2)}
+label .req{color:var(--p);margin-left:2px}
+input,select,textarea{font-family:var(--f);font-size:13.5px;color:var(--s1);background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r8);padding:.55rem .875rem;outline:none;transition:border-color .15s,box-shadow .15s,background .15s;width:100%;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
+input::placeholder,textarea::placeholder{color:var(--s3);font-size:13px}
+input:read-only{background:var(--s5);color:var(--s2);cursor:default}
+input.filled{background:var(--gl);border-color:var(--g);color:var(--s1)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%235C4880' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:2rem;cursor:pointer}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+.hint{font-size:10.5px;color:var(--s3);margin-top:1px}
+.hint.ok{color:var(--g)}
+.hint.err{color:var(--r)}
+
+/* RUC row */
+.ruc-row{display:flex;gap:8px;align-items:flex-start}
+.ruc-input-wrap{position:relative;flex:1}
+.ruc-input-wrap input{padding-right:2.2rem}
+.ruc-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none}
+.spin{width:14px;height:14px;border:2px solid rgba(82,18,160,.2);border-top-color:var(--p);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.btn-buscar{flex-shrink:0;height:40px;padding:0 14px;background:var(--p);color:#fff;border:none;border-radius:var(--r8);cursor:pointer;font-size:12px;font-weight:700;font-family:var(--f);display:flex;align-items:center;gap:5px;transition:.15s;white-space:nowrap}
+.btn-buscar:hover{background:var(--p2);transform:translateY(-1px)}
+
+/* ── DOCS GRID ── */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;margin-top:.75rem}
+.doc-item{position:relative;border:1.5px dashed var(--s4);border-radius:var(--r12);overflow:hidden;cursor:pointer;background:var(--pll);transition:all .15s}
+.doc-item:hover{border-color:var(--p3);border-style:solid;background:var(--pl)}
+.doc-item.has-file{border-style:solid;border-color:var(--g);background:var(--gll)}
+.doc-item input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.doc-face{padding:10px 10px 8px;pointer-events:none}
+.doc-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;background:rgba(82,18,160,.1);color:var(--p);transition:.15s}
+.doc-item.has-file .doc-icon{background:var(--g);color:#fff}
+.doc-name{font-size:11px;font-weight:600;color:var(--s1);line-height:1.3;margin-bottom:2px}
+.doc-item.has-file .doc-name{color:var(--g)}
+.doc-status{font-size:9.5px;color:var(--s3);font-family:var(--m)}
+.doc-item.has-file .doc-status{color:var(--g)}
+
+/* ── BUTTONS ── */
+.btn{width:100%;padding:.85rem 1.5rem;border:none;border-radius:var(--r12);font-family:var(--f);font-size:14px;font-weight:800;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:-.01em}
+.btn-primary{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;box-shadow:0 4px 16px rgba(82,18,160,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(82,18,160,.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-green{background:linear-gradient(135deg,var(--g),var(--g2));color:#fff;box-shadow:0 4px 16px rgba(91,173,30,.3)}
+.btn-green:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(91,173,30,.4)}
+.btn svg{width:16px;height:16px;flex-shrink:0}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--s2);cursor:pointer;background:none;border:none;font-family:var(--f);padding:0;transition:.15s;margin-bottom:1.25rem}
+.back-btn:hover{color:var(--p)}
+.back-btn svg{width:14px;height:14px}
+
+/* ── ALERT ── */
+.alert{display:none;padding:.875rem 1rem;border-radius:var(--r12);border:1.5px solid;font-size:13px;line-height:1.55}
+.alert.success{display:flex;gap:10px;align-items:flex-start;background:var(--gl);border-color:var(--g);color:#2d6010}
+.alert.error{display:flex;gap:10px;align-items:flex-start;background:var(--rl);border-color:var(--r);color:var(--r)}
+.alert.loading{display:flex;gap:10px;align-items:center;background:var(--pl);border-color:var(--p);color:var(--p)}
+.alert.warning{display:flex;gap:10px;align-items:flex-start;background:var(--amberl);border-color:var(--amber);color:#92400e}
+.alert svg{flex-shrink:0}
+
+/* ── OTP ── */
+.screen{display:none}.screen.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.otp-wrap{display:flex;gap:9px;justify-content:center;margin:1.25rem 0}
+.otp-digit{width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;font-family:var(--m);border:2px solid var(--s4);border-radius:12px;background:var(--pll);color:var(--s1);transition:.15s;caret-color:var(--p);outline:none}
+.otp-digit:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.1)}
+.otp-digit.filled{border-color:var(--p3);background:var(--pl)}
+@media(max-width:380px){.otp-digit{width:40px;height:50px;font-size:19px}}
+.otp-timer{font-size:12px;color:var(--s3);text-align:center;font-family:var(--m)}
+.otp-timer strong{color:var(--p)}
+.btn-resend{background:none;border:none;font-family:var(--f);font-size:12.5px;font-weight:600;color:var(--p);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+/* ── SUCCESS ── */
+#screen-success{display:none;position:fixed;inset:0;z-index:9000;background:linear-gradient(135deg,#1C0840,#3a0d7a 50%,#1a3a0a);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;animation:fadeInSuccess .5s ease}
+#screen-success.show{display:flex}
+@keyframes fadeInSuccess{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.success-icon{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 0 0 16px rgba(91,173,30,.15),0 0 0 32px rgba(91,173,30,.07);animation:popIn .6s cubic-bezier(.34,1.56,.64,1) .2s both}
+@keyframes popIn{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.success-title{font-size:2.2rem;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:.6rem;animation:slideUp .5s ease .4s both}
+.success-title em{font-style:normal;color:var(--g2)}
+.success-sub{font-size:.95rem;color:rgba(255,255,255,.7);line-height:1.6;max-width:360px;margin:0 auto 1.75rem;animation:slideUp .5s ease .5s both}
+.success-meta{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.75rem;font-size:12.5px;color:rgba(255,255,255,.75);line-height:1.9;font-family:var(--m);animation:slideUp .5s ease .6s both;max-width:400px;width:100%}
+.success-meta strong{color:var(--g2)}
+.success-btn{padding:.9rem 2.25rem;background:linear-gradient(135deg,var(--g),var(--g2));border:none;border-radius:14px;font-family:var(--f);font-size:15px;font-weight:800;color:var(--s1);cursor:pointer;box-shadow:0 6px 24px rgba(91,173,30,.4);transition:.2s;display:inline-flex;align-items:center;gap:9px;animation:slideUp .5s ease .7s both}
+.success-btn:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(91,173,30,.5)}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.confetti-piece{position:fixed;top:-10px;border-radius:2px;animation:cfFall linear forwards;pointer-events:none;z-index:9001}
+@keyframes cfFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+
+/* ── FOOTER ── */
+footer{background:var(--s1);padding:1.25rem 1.5rem;display:flex;flex-direction:column;align-items:center;gap:.6rem;border-top:3px solid var(--g)}
+.footer-dev{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(121,204,56,.3);border-radius:12px;padding:.55rem 1rem}
+.footer-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--g2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.footer-name{font-size:12px;font-weight:700;color:#fff}
+.footer-role{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.03em}
+.footer-copy{font-size:9px;color:rgba(255,255,255,.2);text-align:center}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-name">bet<span>a</span></div>
+    <div class="nav-logo-sub">complejo agroindustrial</div>
+  </div>
+  <span class="nav-pill">✦ Registro de Proveedor</span>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Primera vez aquí</div>
+    <h1>Registro de<br><em>Nuevo Proveedor</em></h1>
+    <p class="hero-sub">Completa los 3 pasos para unirte al Portal — <strong style="color:#b4f06e">Complejo Agroindustrial Beta</strong></p>
+  </div>
+</div>
+
+<!-- ════ PANTALLA REGISTRO ════ -->
+<div id="screen-registro" class="screen active">
+<div class="page">
+
+  <div class="steps-track">
+
+    <!-- ── PASO 1 ── -->
+    <div class="step-row active" id="step-row-1">
+      <div class="step-circle" id="step-circ-1">1</div>
+      <div class="step-body">
+        <div class="step-title">Datos de empresa</div>
+        <div class="step-desc">Búsqueda automática por RUC en SUNAT</div>
+        <div class="card">
+          <div class="field">
+            <label>RUC <span class="req">*</span></label>
+            <div class="ruc-row">
+              <div class="ruc-input-wrap">
+                <input type="text" id="reg-ruc" placeholder="20xxxxxxxxx" maxlength="11" inputmode="numeric" oninput="onRucInput(this.value)">
+                <span class="ruc-icon" id="ruc-spinner" style="display:none"><div class="spin"></div></span>
+                <svg class="ruc-icon" id="ruc-ok" style="display:none;color:var(--g)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg class="ruc-icon" id="ruc-err" style="display:none;color:var(--r)" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+              <button class="btn-buscar" onclick="buscarRucManual()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Buscar
+              </button>
+            </div>
+            <span class="hint" id="ruc-hint">Ingresa 11 dígitos — se completa solo</span>
+          </div>
+
+          <!-- Banner SUNAT -->
+          <div class="sunat-banner" id="sunat-banner">
+            <div class="sb-item full">
+              <label>Razón Social</label>
+              <span id="sb-razon">—</span>
+            </div>
+            <div class="sb-item">
+              <label>Estado</label>
+              <span id="sb-estado">—</span>
+            </div>
+            <div class="sb-item">
+              <label>Condición</label>
+              <span id="sb-condicion">—</span>
+            </div>
+            <div class="sb-item full">
+              <label>Dirección fiscal</label>
+              <span id="sb-direccion">—</span>
+            </div>
+          </div>
+
+          <!-- Razón social editable (si falla SUNAT) -->
+          <div class="field" id="razon-manual-wrap" style="display:none;margin-top:.75rem">
+            <label>Razón social <span class="req">*</span></label>
+            <input type="text" id="reg-razon" placeholder="Ingresa la razón social manualmente">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PASO 2 ── -->
+    <div class="step-row" id="step-row-2">
+      <div class="step-circle" id="step-circ-2">2</div>
+      <div class="step-body">
+        <div class="step-title">Contacto y categoría</div>
+        <div class="step-desc">Persona responsable y asignación de analista</div>
+        <div class="card">
+          <div class="g2">
+            <div class="field">
+              <label>Nombre de contacto <span class="req">*</span></label>
+              <input type="text" id="reg-contacto" placeholder="Gerente / Representante">
+            </div>
+            <div class="field">
+              <label>Correo electrónico <span class="req">*</span></label>
+              <input type="email" id="reg-email" placeholder="empresa@correo.com">
+              <span class="hint">Recibirás el código de verificación aquí</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field">
+              <label>Teléfono / WhatsApp</label>
+              <input type="tel" id="reg-telefono" placeholder="+51 9xx xxx xxx">
+            </div>
+            <div class="g2">
+              <div class="field">
+                <label>Categoría <span class="req">*</span></label>
+                <select id="reg-categoria" onchange="actualizarAnalistas(this.value)">
+                  <option value="">Seleccionar...</option>
+                  <option value="Servicios Norte Y Sur">Servicios Norte y Sur</option>
+                  <option value="Transporte de Personal">Transporte de Personal</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Analista <span class="req">*</span></label>
+                <select id="reg-analista">
+                  <option value="">— Selecciona categoría —</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Observaciones</label>
+              <textarea id="reg-obs" placeholder="Servicios, rutas, capacidad de flota..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PASO 3 ── -->
+    <div class="step-row" id="step-row-3">
+      <div class="step-circle" id="step-circ-3">3</div>
+      <div class="step-body">
+        <div class="step-title">Documentos de presentación</div>
+        <div class="step-desc">Los marcados con ★ son obligatorios</div>
+        <div class="card">
+          <p style="font-size:12px;color:var(--s3);margin-bottom:.5rem;line-height:1.6">Adjunta los documentos requeridos. El analista los revisará antes de darte acceso.</p>
+          <div class="doc-grid" id="reg-docs-grid"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /steps-track -->
+
+  <div id="reg-alert" class="alert" style="margin-bottom:1rem"></div>
+
+  <button class="btn btn-green" id="btn-submit" onclick="submitRegistro()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    Enviar solicitud de registro
+  </button>
+
+</div>
+</div>
+
+<!-- ════ PANTALLA OTP ════ -->
+<div id="screen-otp" class="screen">
+<div class="page" style="max-width:440px">
+  <button class="back-btn" onclick="irA('screen-registro')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+    Cambiar correo
+  </button>
+  <div class="card" style="text-align:center">
+    <div style="width:52px;height:52px;border-radius:14px;background:var(--pl);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:var(--p)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    </div>
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:.35rem">Código de verificación</h3>
+    <p style="font-size:12.5px;color:var(--s2);line-height:1.6;margin-bottom:.2rem">Enviamos un código de 6 dígitos a</p>
+    <p id="otp-email-display" style="font-size:13px;font-weight:700;color:var(--p);font-family:var(--m);margin-bottom:1.25rem">—</p>
+    <div class="otp-wrap">
+      <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+      <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+      <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+      <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+      <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+      <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+    </div>
+    <div id="otp-timer-wrap" style="margin-bottom:1rem">
+      <p class="otp-timer">Válido por <strong id="otp-countdown">10:00</strong></p>
+    </div>
+    <div id="otp-resend-wrap" style="display:none;margin-bottom:1rem">
+      <button class="btn-resend" onclick="reenviarOtp()">Reenviar código</button>
+    </div>
+    <div id="otp-alert" class="alert" style="margin-bottom:.875rem;text-align:left"></div>
+    <button class="btn btn-primary" onclick="verificarOtp()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Verificar y completar registro
+    </button>
+  </div>
+</div>
+</div>
+
+<!-- ÉXITO -->
+<div id="screen-success">
+  <div class="success-icon">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1C0840" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <div class="success-title">¡Solicitud <em>enviada!</em> 🎉</div>
+  <div class="success-sub" id="success-sub">Tu solicitud fue registrada. El analista la revisará y recibirás una respuesta pronto.</div>
+  <div class="success-meta" id="success-meta">Cargando...</div>
+  <button class="success-btn" onclick="nuevoRegistro()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Registrar otro proveedor
+  </button>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-dev">
+    <div class="footer-avatar">YA</div>
+    <div>
+      <div class="footer-name">✦ Ing. Yazmin Atuncar</div>
+      <div class="footer-role">TI · Complejo Agroindustrial Beta</div>
+    </div>
+  </div>
+  <div class="footer-copy">Portal Proveedores v3.0 · Módulo Registro</div>
+</footer>
+
+<script>
+/* ════════════════════════════════════
+   CONFIGURACIÓN
+   ════════════════════════════════════ */
+const CFG = {
+  /* Worker Cloudflare (OTP) */
+  FLOW_ENVIAR_OTP:    'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
+  FLOW_VERIFICAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/verificar_otp',
+
+  /* Google Apps Script — guarda datos + docs para que el panel los lea */
+  GSHEET_URL: 'https://script.google.com/macros/s/AKfycbw_Fwj-pT-2NBB0w87h0dp2od9vWa4jMglXC773ThwqbrTsf3IRij-tx4amd4_RrF4eKg/exec',
+
+  APIS_NET_PE_TOKEN: '7ddcc309a88f8187d073fc1a59121919',
+  DEMO: false  // ← cambiar a false en producción
+};
+
+let SESSION = {};
+let SUNAT_DATA = {};
+
+/* ════════════════════════════════════
+   GOOGLE SHEETS — guardar registro
+   ════════════════════════════════════
+   El Apps Script que debes publicar en tu Google Sheet:
+
+   function doPost(e) {
+     var data = JSON.parse(e.postData.contents);
+     var sheet = SpreadsheetApp.getActiveSpreadsheet()
+                   .getSheetByName('Proveedores') ||
+                 SpreadsheetApp.getActiveSpreadsheet().insertSheet('Proveedores');
+
+     // Encabezados si la hoja está vacía
+     if (sheet.getLastRow() === 0) {
+       sheet.appendRow(['Fecha','RUC','Razón Social','Contacto','Email',
+                        'Teléfono','Categoría','Analista','Estado SUNAT',
+                        'Dirección','Observaciones','Registrado en']);
+     }
+     sheet.appendRow([
+       new Date().toLocaleString('es-PE'),
+       data.ruc, data.razonSocial, data.contacto, data.email,
+       data.telefono, data.categoria, data.analista,
+       data.estadoSunat, data.direccion, data.obs,
+       'Portal Beta'
+     ]);
+     return ContentService.createTextOutput(JSON.stringify({ok:true}))
+       .setMimeType(ContentService.MimeType.JSON);
+   }
+
+   function doGet(e) {
+     // ingreso.html lee esta función para verificar el correo
+     var ruc   = e.parameter.ruc;
+     var email = e.parameter.email;
+     var sheet = SpreadsheetApp.getActiveSpreadsheet()
+                   .getSheetByName('Proveedores');
+     if (!sheet) return resp({ok:false, error:'Sin datos'});
+     var data = sheet.getDataRange().getValues();
+     for (var i = 1; i < data.length; i++) {
+       if (String(data[i][1]) === String(ruc) &&
+           String(data[i][4]).toLowerCase() === String(email).toLowerCase()) {
+         return resp({ok:true, razonSocial:data[i][2],
+                      contacto:data[i][3], categoria:data[i][6]});
+       }
+     }
+     return resp({ok:false, error:'RUC o correo no encontrado'});
+   }
+
+   function resp(obj) {
+     return ContentService.createTextOutput(JSON.stringify(obj))
+       .setMimeType(ContentService.MimeType.JSON);
+   }
+   ════════════════════════════════════ */
+
+async function guardarEnSheet(datos) {
+  if (!CFG.GSHEET_URL || CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
+    console.warn('Google Sheet URL no configurada — saltando escritura en Sheet');
+    return { ok: true, skipped: true };
+  }
+  const res = await fetch(CFG.GSHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+    mode: 'no-cors'   // Apps Script requiere no-cors
+  });
+  // no-cors no devuelve JSON, pero si no lanza es que llegó
+  return { ok: true };
+}
+
+/* ════════════════════════════════════
+   DOCUMENTOS — con obligatorios
+   ════════════════════════════════════ */
+const DOCS_REGISTRO = [
+  { id:'reg_brochure', name:'Brochure',                    req:true },
+  { id:'reg_cotizacion',name:'Cotización',                 req:true },
+  { id:'reg_carta',    name:'Carta de presentación',       req:true },
+  { id:'reg_ficha',    name:'Ficha RUC SUNAT',             req:true },
+  { id:'reg_deuda',    name:'Deudas coactivas',            req:true },
+  { id:'reg_ref',      name:'Referencias comerciales',     req:true },
+  { id:'reg_vigencia', name:'Vigencia poder rep. legal',   req:true },
+];
+const fileStore = {};
+
+function renderDocGrid(containerId, docs) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '';
+  docs.forEach(doc => {
+    const div = document.createElement('div');
+    div.className = 'doc-item';
+    div.id = 'doc-item-' + doc.id;
+    div.innerHTML = `
+      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onFileChange('${doc.id}',this)">
+      <div class="doc-face">
+        <div class="doc-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="doc-name">${doc.req ? '★ ' : ''}${doc.name}</div>
+        <div class="doc-status" id="doc-status-${doc.id}">Sin archivo</div>
+      </div>
+      ${doc.req ? '<div style="position:absolute;top:6px;right:6px;font-size:9px;font-family:var(--m);font-weight:600;padding:2px 6px;border-radius:999px;background:rgba(82,18,160,.1);color:var(--p)">req</div>' : ''}`;
+    c.appendChild(div);
+  });
+}
+
+function onFileChange(docId, input) {
+  const file = input.files[0];
+  const item = document.getElementById('doc-item-' + docId);
+  const status = document.getElementById('doc-status-' + docId);
+  if (!item || !status) return;
+  if (file) {
+    fileStore[docId] = file;
+    item.classList.add('has-file');
+    status.textContent = file.name.length > 20 ? file.name.slice(0,18) + '…' : file.name;
+  } else {
+    delete fileStore[docId];
+    item.classList.remove('has-file');
+    status.textContent = 'Sin archivo';
+  }
+}
+
+/* ════════════════════════════════════
+   NAVEGACIÓN
+   ════════════════════════════════════ */
+function irA(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const t = document.getElementById(id);
+  if (t) t.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ════════════════════════════════════
+   SUNAT
+   ════════════════════════════════════ */
+let rucTimer = null;
+
+function onRucInput(val) {
+  const clean = val.replace(/\D/g, '').slice(0, 11);
+  document.getElementById('reg-ruc').value = clean;
+  clearTimeout(rucTimer);
+  setRucState('idle');
+  if (clean.length === 11) rucTimer = setTimeout(() => buscarRuc(clean), 700);
+  else clearSunatData();
+}
+
+function buscarRucManual() {
+  const v = document.getElementById('reg-ruc').value.replace(/\D/g, '').slice(0, 11);
+  if (v.length === 11) { clearTimeout(rucTimer); buscarRuc(v); }
+  else setRucState('error', 'Escribe los 11 dígitos del RUC');
+}
+
+function setRucState(state, msg) {
+  const spinner = document.getElementById('ruc-spinner');
+  const ok  = document.getElementById('ruc-ok');
+  const err = document.getElementById('ruc-err');
+  const hint = document.getElementById('ruc-hint');
+  if (spinner) spinner.style.display = 'none';
+  if (ok)  ok.style.display  = 'none';
+  if (err) err.style.display = 'none';
+  if (!hint) return;
+  if (state === 'loading') {
+    if (spinner) spinner.style.display = 'block';
+    hint.textContent = 'Consultando SUNAT...'; hint.className = 'hint';
+  } else if (state === 'ok') {
+    if (ok) ok.style.display = 'block';
+    hint.textContent = msg || '✓ Datos cargados'; hint.className = 'hint ok';
+  } else if (state === 'error') {
+    if (err) err.style.display = 'block';
+    hint.textContent = msg || 'RUC no encontrado'; hint.className = 'hint err';
+  } else {
+    hint.textContent = 'Ingresa 11 dígitos — se completa solo'; hint.className = 'hint';
+  }
+}
+
+function clearSunatData() {
+  SUNAT_DATA = {};
+  const banner = document.getElementById('sunat-banner');
+  if (banner) banner.className = 'sunat-banner';
+  const mw = document.getElementById('razon-manual-wrap');
+  if (mw) mw.style.display = 'none';
+}
+
+function fillSunatData(data) {
+  SUNAT_DATA = data;
+  const razon = data.razonSocial || data.nombre || '';
+  const el = (id) => document.getElementById(id);
+  if (el('sb-razon'))    el('sb-razon').textContent    = razon || '—';
+  if (el('sb-estado'))   el('sb-estado').textContent   = data.estado || '—';
+  if (el('sb-condicion'))el('sb-condicion').textContent= data.condicion || '—';
+  if (el('sb-direccion'))el('sb-direccion').textContent= data.direccion || data.domicilioFiscal || '—';
+  const banner = document.getElementById('sunat-banner');
+  if (banner) banner.className = 'sunat-banner visible';
+  const mw = document.getElementById('razon-manual-wrap');
+  if (mw) mw.style.display = 'none';
+  setRucState('ok', '✓ ' + razon);
+}
+
+async function buscarRuc(ruc) {
+  setRucState('loading');
+  try {
+    const res = await fetch('https://portalbeta.betayazmingps.workers.dev/sunat_ruc', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ruc, token: CFG.APIS_NET_PE_TOKEN })
+    });
+    if (res.ok) {
+      const d = await res.json();
+      if (d && (d.razonSocial || d.nombre)) { fillSunatData(d); return; }
+    }
+  } catch (e) {}
+  setRucState('error', 'No se pudo consultar SUNAT — ingresa la razón social abajo');
+  const mw = document.getElementById('razon-manual-wrap');
+  if (mw) { mw.style.display = 'block'; const r = document.getElementById('reg-razon'); if (r) r.focus(); }
+}
+
+/* ════════════════════════════════════
+   ANALISTAS
+   ════════════════════════════════════ */
+const ANALISTAS = {
+  'Servicios Norte Y Sur':   [{ v:'NORTE',      l:'NORTE'       }, { v:'SUR',       l:'SUR'         }],
+  'Transporte de Personal':  [{ v:'C. REGALADO', l:'C. REGALADO' }, { v:'E. ODAR',   l:'E. ODAR'     }, { v:'J. PADILLA', l:'J. PADILLA' }],
+};
+
+function actualizarAnalistas(cat) {
+  const sel = document.getElementById('reg-analista');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Seleccionar...</option>';
+  (ANALISTAS[cat] || []).forEach(a => {
+    const o = document.createElement('option');
+    o.value = a.v; o.textContent = a.l; sel.appendChild(o);
+  });
+}
+
+/* ════════════════════════════════════
+   OTP
+   ════════════════════════════════════ */
+let otpInterval = null, otpSeconds = 600;
+
+function otpInput(el) {
+  el.value = el.value.replace(/\D/g, '');
+  el.classList.toggle('filled', el.value.length === 1);
+  if (el.value.length === 1) {
+    const next = el.nextElementSibling;
+    if (next && next.classList.contains('otp-digit')) next.focus();
+    else checkOtpComplete();
+  }
+}
+function otpKeyDown(e, el) {
+  if (e.key === 'Backspace' && !el.value) {
+    const prev = el.previousElementSibling;
+    if (prev && prev.classList.contains('otp-digit')) { prev.value = ''; prev.classList.remove('filled'); prev.focus(); }
+  }
+}
+function getOtpValue() { return [...document.querySelectorAll('.otp-digit')].map(i => i.value).join(''); }
+function checkOtpComplete() { if (getOtpValue().length === 6) verificarOtp(); }
+function clearOtp() {
+  document.querySelectorAll('.otp-digit').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+  const first = document.querySelector('.otp-digit'); if (first) first.focus();
+}
+function startOtpCountdown() {
+  clearInterval(otpInterval); otpSeconds = 600;
+  const tw = document.getElementById('otp-timer-wrap');
+  const rw = document.getElementById('otp-resend-wrap');
+  if (tw) tw.style.display = 'block';
+  if (rw) rw.style.display = 'none';
+  updateOtpDisplay();
+  otpInterval = setInterval(() => {
+    otpSeconds--;
+    updateOtpDisplay();
+    if (otpSeconds <= 0) {
+      clearInterval(otpInterval);
+      if (tw) tw.style.display = 'none';
+      if (rw) rw.style.display = 'block';
+    }
+  }, 1000);
+}
+function updateOtpDisplay() {
+  const el = document.getElementById('otp-countdown');
+  if (!el) return;
+  el.textContent = String(Math.floor(otpSeconds / 60)).padStart(2, '0') + ':' + String(otpSeconds % 60).padStart(2, '0');
+}
+function mostrarOtp(email) {
+  const d = document.getElementById('otp-email-display');
+  if (d) d.textContent = email;
+  clearOtp(); hideAlert('otp-alert'); startOtpCountdown(); irA('screen-otp');
+}
+async function reenviarOtp() {
+  showAlert('otp-alert', 'loading', 'Reenviando código...');
+  try {
+    await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, contacto: SESSION.razonSocial });
+    startOtpCountdown(); showAlert('otp-alert', 'success', 'Código reenviado a ' + SESSION.email);
+  } catch (e) { showAlert('otp-alert', 'error', 'No se pudo reenviar: ' + e.message); }
+}
+
+/* ════════════════════════════════════
+   ALERTAS
+   ════════════════════════════════════ */
+function showAlert(id, type, msg) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  const icons = {
+    success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    error:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>',
+    loading: '<div class="spin"></div>'
+  };
+  box.className = 'alert ' + type;
+  box.innerHTML = (icons[type] || '') + '<span style="white-space:pre-line">' + msg + '</span>';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function hideAlert(id) { const b = document.getElementById(id); if (b) b.className = 'alert'; }
+
+/* ════════════════════════════════════
+   FETCH
+   ════════════════════════════════════ */
+async function callFlow(url, payload) {
+  if (CFG.DEMO) { await new Promise(r => setTimeout(r, 900)); return { ok: true }; }
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 60000);
+  let res;
+  try {
+    res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: ctrl.signal });
+    clearTimeout(tid);
+  } catch (e) {
+    clearTimeout(tid);
+    throw new Error(e.name === 'AbortError' ? 'Tiempo agotado. Verifica tu conexión.' : 'Sin conexión al servidor.');
+  }
+  if (!res.ok) throw new Error('Error del servidor (' + res.status + ')');
+  try { return await res.json(); } catch { return { ok: true }; }
+}
+async function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ════════════════════════════════════
+   SUBMIT REGISTRO
+   ════════════════════════════════════ */
+async function submitRegistro() {
+  const g = id => document.getElementById(id);
+  const ruc      = g('reg-ruc').value.trim();
+  const razon    = SUNAT_DATA.razonSocial || SUNAT_DATA.nombre || (g('reg-razon') ? g('reg-razon').value.trim() : '') || g('sb-razon').textContent.trim().replace('—', '');
+  const email    = g('reg-email').value.trim();
+  const contacto = g('reg-contacto').value.trim();
+  const analista = g('reg-analista').value;
+  const telefono = g('reg-telefono').value.trim();
+  const obs      = g('reg-obs').value.trim();
+  const cat      = g('reg-categoria').value;
+
+  // Validar campos
+  if (!ruc || ruc.length !== 11) return showAlert('reg-alert', 'error', 'Ingresa un RUC válido de 11 dígitos.');
+  if (!razon)    return showAlert('reg-alert', 'error', 'La razón social es requerida.');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert('reg-alert', 'error', 'Ingresa un correo válido.');
+  if (!contacto) return showAlert('reg-alert', 'error', 'El nombre de contacto es requerido.');
+  if (!cat)      return showAlert('reg-alert', 'error', 'Selecciona la categoría de transporte.');
+  if (!analista) return showAlert('reg-alert', 'error', 'Selecciona el analista responsable.');
+
+  // Validar documentos obligatorios
+  const faltantes = DOCS_REGISTRO.filter(d => d.req && !fileStore[d.id]).map(d => d.name);
+  if (faltantes.length) {
+    // Marcar visualmente los que faltan
+    DOCS_REGISTRO.filter(d => d.req && !fileStore[d.id]).forEach(d => {
+      const item = document.getElementById('doc-item-' + d.id);
+      if (item) item.style.borderColor = 'var(--r)';
+    });
+    return showAlert('reg-alert', 'error', `Faltan documentos obligatorios (★):\n${faltantes.join(', ')}`);
+  }
+
+  // Guardar datos en SESSION para usarlos después del OTP
+  SESSION = { ruc, razonSocial: razon, email, contacto, telefono, categoria: cat, analista, obs };
+
+  // Enviar OTP al correo del proveedor
+  showAlert('reg-alert', 'loading', '📧 Enviando código de verificación a ' + email + '...');
+  try {
+    if (!CFG.DEMO) {
+      await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc, email, contacto });
+    }
+    hideAlert('reg-alert');
+    mostrarOtp(email);
+  } catch(e) {
+    showAlert('reg-alert', 'error', 'No se pudo enviar el código: ' + e.message);
+  }
+}
+
+/* ════════════════════════════════════
+   VERIFICAR OTP → recién aquí guarda
+   ════════════════════════════════════ */
+async function verificarOtp() {
+  const otp = getOtpValue();
+  if (otp.length !== 6) return showAlert('otp-alert', 'error', 'Ingresa el código de 6 dígitos.');
+  showAlert('otp-alert', 'loading', 'Verificando código...');
+
+  try {
+    let valido = false;
+    if (CFG.DEMO) {
+      await new Promise(r => setTimeout(r, 800));
+      valido = (otp === '123456');
+    } else {
+      const r = await callFlow(CFG.FLOW_VERIFICAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, otp });
+      valido = r.valido || r.ok;
+    }
+
+    if (!valido) {
+      showAlert('otp-alert', 'error', 'Código incorrecto o expirado.');
+      clearOtp();
+      return;
+    }
+
+    // OTP válido → ahora sí guardamos y enviamos al panel
+    clearInterval(otpInterval);
+    showAlert('otp-alert', 'loading', '📊 Guardando registro...');
+
+    // 1 — Convertir archivos a base64
+    const archivos = [];
+    for (const [docId, file] of Object.entries(fileStore)) {
+      const b64 = await toBase64(file);
+      archivos.push({ id: docId, nombre: file.name, tipo: file.type || 'application/octet-stream', contenido: b64 });
+    }
+
+    // 2 — Guardar en Google Sheet (incluye docs en base64 para que el panel los lea)
+    await guardarEnSheet({
+      ruc:         SESSION.ruc,
+      razonSocial: SESSION.razonSocial,
+      email:       SESSION.email,
+      contacto:    SESSION.contacto,
+      telefono:    SESSION.telefono,
+      categoria:   SESSION.categoria,
+      analista:    SESSION.analista,
+      obs:         SESSION.obs,
+      estadoSunat: SUNAT_DATA.estado    || '',
+      condicion:   SUNAT_DATA.condicion || '',
+      direccion:   SUNAT_DATA.direccion || SUNAT_DATA.domicilioFiscal || '',
+      fecha:       new Date().toLocaleString('es-PE'),
+      estado:      'pendiente',
+      docs:        JSON.stringify(archivos)   // ← los docs viajan al Sheet para que el panel los analice
+    });
+
+    hideAlert('otp-alert');
+    mostrarExito();
+
+  } catch(e) {
+    showAlert('otp-alert', 'error', 'Error: ' + e.message);
+  }
+}
+
+/* ════════════════════════════════════
+   ÉXITO
+   ════════════════════════════════════ */
+function mostrarExito() {
+  const meta = document.getElementById('success-meta');
+  if (meta) meta.innerHTML =
+    `🏢 <strong>${SESSION.razonSocial}</strong><br>` +
+    `🪪 RUC: ${SESSION.ruc}<br>` +
+    `📧 Verificado: ${SESSION.email}<br>` +
+    `👤 Analista asignado: ${SESSION.analista}<br>` +
+    `📅 ${new Date().toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' })}`;
+  const ss = document.getElementById('screen-success');
+  if (ss) ss.classList.add('show');
+  window.scrollTo({ top: 0 });
+  lanzarConfeti();
+}
+
+function nuevoRegistro() {
+  // Limpiar todo y volver al formulario
+  SESSION = {};
+  SUNAT_DATA = {};
+  Object.keys(fileStore).forEach(k => delete fileStore[k]);
+  document.getElementById('reg-ruc').value = '';
+  document.getElementById('reg-email').value = '';
+  document.getElementById('reg-contacto').value = '';
+  document.getElementById('reg-telefono').value = '';
+  document.getElementById('reg-obs').value = '';
+  document.getElementById('reg-categoria').value = '';
+  document.getElementById('reg-analista').innerHTML = '<option value="">— Selecciona categoría —</option>';
+  clearSunatData();
+  renderDocGrid('reg-docs-grid', DOCS_REGISTRO);
+  hideAlert('reg-alert');
+  const ss = document.getElementById('screen-success');
+  if (ss) ss.classList.remove('show');
+  document.querySelectorAll('.confetti-piece').forEach(el => el.remove());
+  irA('screen-registro');
+}
+
+function lanzarConfeti() {
+  const cols = ['#79CC38','#5212A0','#F59E0B','#ffffff','#b4f06e','#8B4DD8'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      const sz = Math.random() * 10 + 6;
+      p.style.cssText = `left:${Math.random()*100}vw;width:${sz}px;height:${sz*(Math.random()>.5?1:2.5)}px;background:${cols[Math.floor(Math.random()*cols.length)]};opacity:${Math.random()*.6+.4};animation-duration:${Math.random()*2.5+2}s;transform:rotate(${Math.random()*360}deg);`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 5000);
+    }, i * 40);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderDocGrid('reg-docs-grid', DOCS_REGISTRO);
+});
+</script>
+</body>
+</html>

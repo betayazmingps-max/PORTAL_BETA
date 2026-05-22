@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acceso Interno — Complejo Agroindustrial Beta</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#5212A0;--p2:#6B28C0;--p3:#8B4DD8;--pl:#EDE5FF;--pll:#F8F4FF;
+  --g:#5BAD1E;--g2:#79CC38;--gl:#EBF7DC;--gll:#F5FBF0;
+  --w:#FFFFFF;--bg:#F4F1FA;
+  --s1:#1C0840;--s2:#5C4880;--s3:#9B89B8;--s4:#D4CBE8;--s5:#EDE8F8;
+  --r:#E02020;--rl:#FEE8E8;
+  --amber:#F59E0B;--amberl:#FFFBEB;
+  --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace;
+  --r8:8px;--r12:12px;--r16:16px;
+  --shadow:0 1px 3px rgba(82,18,160,.06), 0 4px 16px rgba(82,18,160,.08);
+}
+body{font-family:var(--f);background:var(--bg);color:var(--s1);min-height:100vh;display:flex;flex-direction:column}
+
+/* ══ NAVBAR ══ */
+nav{
+  background:var(--p);border-bottom:2px solid var(--g);
+  height:60px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 2rem;position:sticky;top:0;z-index:200;
+  box-shadow:0 2px 16px rgba(82,18,160,.3);
+}
+.nav-pill{font-size:11px;font-weight:600;letter-spacing:.06em;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2)}
+.nav-session{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 14px 5px 8px;cursor:pointer;transition:.15s}
+.nav-session:hover{background:rgba(255,255,255,.18)}
+.nav-session-avatar{width:26px;height:26px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--p);flex-shrink:0}
+.nav-session-name{font-size:11.5px;font-weight:600;color:#fff;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ══ MAIN ══ */
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+
+/* ══ LOCK SCREEN ══ */
+.lock-wrap{width:100%;max-width:420px}
+.lock-icon{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 32px rgba(82,18,160,.35)}
+.lock-icon svg{width:36px;height:36px;color:#fff}
+.lock-title{font-size:1.6rem;font-weight:800;color:var(--s1);text-align:center;margin-bottom:.4rem;letter-spacing:-.02em}
+.lock-sub{font-size:13px;color:var(--s2);text-align:center;line-height:1.6;margin-bottom:2rem}
+
+/* ══ CARD ══ */
+.card{background:var(--w);border:1px solid var(--s4);border-radius:var(--r16);padding:1.75rem;box-shadow:var(--shadow)}
+.field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1rem}
+label{font-size:11.5px;font-weight:600;color:var(--s2);letter-spacing:.01em}
+label .req{color:var(--p);margin-left:2px}
+input,select{font-family:var(--f);font-size:13.5px;color:var(--s1);background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r8);padding:.55rem .875rem;outline:none;transition:border-color .15s,box-shadow .15s,background .15s;width:100%;appearance:none}
+input:focus,select:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
+input::placeholder{color:var(--s3);font-size:13px}
+.hint{font-size:10.5px;color:var(--s3);margin-top:2px;display:block}
+
+/* ══ BTN ══ */
+.btn{width:100%;padding:.85rem 1.5rem;border:none;border-radius:var(--r12);font-family:var(--f);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:9px}
+.btn-primary{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;box-shadow:0 4px 16px rgba(82,18,160,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(82,18,160,.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn svg{width:16px;height:16px;flex-shrink:0}
+
+/* ══ ALERT ══ */
+.alert{display:none;padding:.9rem 1.1rem;border-radius:var(--r12);border:1.5px solid;font-size:13px;line-height:1.55;margin-bottom:1rem}
+.alert.error{display:flex;gap:10px;align-items:flex-start;background:var(--rl);border-color:var(--r);color:var(--r)}
+.alert.loading{display:flex;gap:10px;align-items:center;background:var(--pl);border-color:var(--p);color:var(--p)}
+.alert.success{display:flex;gap:10px;align-items:flex-start;background:var(--gl);border-color:var(--g);color:#2d6010}
+.spin{width:15px;height:15px;flex-shrink:0;border:2px solid rgba(82,18,160,.2);border-top-color:var(--p);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ══ DENEGADO ══ */
+.denied-wrap{text-align:center;padding:1.5rem 0}
+.denied-icon{width:72px;height:72px;border-radius:50%;background:var(--rl);border:2px solid rgba(224,32,32,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.denied-icon svg{width:32px;height:32px;color:var(--r)}
+.denied-title{font-size:1.1rem;font-weight:800;color:var(--r);margin-bottom:.5rem}
+.denied-sub{font-size:12.5px;color:var(--s2);line-height:1.6;margin-bottom:1.5rem}
+.btn-retry{background:none;border:1.5px solid var(--s4);border-radius:var(--r12);padding:.65rem 1.5rem;font-family:var(--f);font-size:13px;font-weight:600;color:var(--s2);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
+.btn-retry:hover{border-color:var(--p3);color:var(--p);background:var(--pll)}
+
+/* ══ OTP ══ */
+.otp-wrap{display:flex;gap:10px;justify-content:center;margin:1rem 0}
+.otp-digit{width:52px;height:60px;text-align:center;font-size:24px;font-weight:700;font-family:var(--m);border:2px solid var(--s4);border-radius:12px;background:var(--pll);color:var(--s1);transition:all .15s;caret-color:var(--p)}
+.otp-digit:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.1);outline:none}
+.otp-digit.filled{border-color:var(--p3);background:var(--pl)}
+.otp-timer{font-size:12px;color:var(--s3);text-align:center;font-family:var(--m);margin:.5rem 0}
+.otp-timer strong{color:var(--p)}
+.btn-resend{background:none;border:none;font-family:var(--f);font-size:12.5px;font-weight:600;color:var(--p);cursor:pointer;text-decoration:underline;text-underline-offset:2px;display:block;margin:.5rem auto}
+
+/* ══ BIENVENIDA ══ */
+.welcome-banner{background:linear-gradient(135deg,var(--gl),var(--gll));border:1.5px solid rgba(91,173,30,.4);border-left:5px solid var(--g);border-radius:var(--r16);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px;margin-bottom:1.5rem}
+.welcome-icon{width:48px;height:48px;border-radius:12px;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.welcome-banner h3{font-size:14px;font-weight:700;color:#2d6010;margin-bottom:3px}
+.welcome-banner p{font-size:12px;color:#3d7a18}
+
+/* ══ PANTALLAS ══ */
+.screen{display:none;animation:fadeUp .3s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ DOCS WRAP ══ */
+.docs-wrap{width:100%;max-width:720px;padding:0 1rem 4rem}
+.card-title{font-size:13px;font-weight:700;color:var(--s1);margin-bottom:1.1rem;display:flex;align-items:center;gap:7px}
+.card-title .dot{width:6px;height:6px;border-radius:50%;background:var(--g);flex-shrink:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+@media(max-width:540px){.g2{grid-template-columns:1fr}}
+.opt-btn{width:100%;padding:1rem 1.25rem;background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r12);display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s;text-align:left;font-family:var(--f)}
+.opt-btn:hover{border-color:var(--p3);background:var(--pl);box-shadow:0 4px 16px rgba(82,18,160,.1)}
+.opt-btn-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.opt-btn-icon.purple{background:var(--pl);color:var(--p)}
+.opt-btn-icon.green{background:var(--gl);color:var(--g)}
+.opt-btn-text strong{display:block;font-size:13.5px;font-weight:700;color:var(--s1);margin-bottom:2px}
+.opt-btn-text span{font-size:11.5px;color:var(--s3)}
+.opt-btn-arrow{margin-left:auto;color:var(--s3);flex-shrink:0}
+.step-label{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--s3);text-transform:uppercase}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--p);color:var(--w);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-line{flex:1;height:1px;background:var(--s4)}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.doc-item{position:relative;border:1.5px solid var(--s4);border-radius:var(--r12);overflow:hidden;cursor:pointer;background:var(--pll);transition:all .15s}
+.doc-item:hover{border-color:var(--p3);box-shadow:0 3px 12px rgba(82,18,160,.12)}
+.doc-item.has-file{border-color:var(--g);background:var(--gll)}
+.doc-item.required-missing{border-color:var(--r);background:var(--rl)}
+.doc-item input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.doc-face{padding:12px 12px 10px;pointer-events:none}
+.doc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;background:var(--w);border:1px solid var(--s4);color:var(--p);transition:all .15s}
+.doc-item.has-file .doc-icon{background:var(--g);border-color:transparent;color:var(--w)}
+.doc-item.required-missing .doc-icon{background:var(--r);border-color:transparent;color:var(--w)}
+.doc-name{font-size:11.5px;font-weight:600;color:var(--s1);line-height:1.35;margin-bottom:3px}
+.doc-item.has-file .doc-name{color:var(--g)}
+.doc-status{font-size:10px;font-family:var(--m);color:var(--s3)}
+.doc-item.has-file .doc-status{color:var(--g)}
+.doc-item.required-missing .doc-status{color:var(--r)}
+.doc-req-tag{position:absolute;top:7px;right:7px;font-size:9px;font-family:var(--m);font-weight:500;padding:2px 6px;border-radius:999px;background:rgba(82,18,160,.1);color:var(--p)}
+.info-card{background:linear-gradient(135deg,var(--pl),var(--gll));border:1px solid var(--s4);border-left:4px solid var(--p);border-radius:var(--r12);padding:1rem 1.25rem;display:flex;gap:14px;align-items:center}
+.info-icon{width:40px;height:40px;flex-shrink:0;border-radius:10px;background:var(--p);color:var(--w);display:flex;align-items:center;justify-content:center}
+.info-icon svg{width:18px;height:18px}
+.info-text p{font-size:13px;font-weight:700;color:var(--p);margin-bottom:2px}
+.info-text span{font-size:11.5px;color:var(--s2)}
+.folder-path{background:var(--s5);border:1px solid var(--s4);border-radius:var(--r8);padding:.6rem .875rem;font-family:var(--m);font-size:11.5px;color:var(--s2);word-break:break-all;line-height:1.6}
+.folder-path span{color:var(--p);font-weight:600}
+.prog-bar{background:var(--w);border-bottom:1px solid var(--s4);position:sticky;top:60px;z-index:100}
+.prog-inner{max-width:720px;margin:0 auto;padding:.875rem 2rem;display:flex;align-items:center;gap:12px}
+.prog-label{font-size:11.5px;font-weight:600;color:var(--s2);white-space:nowrap}
+.prog-track{flex:1;height:5px;border-radius:99px;background:var(--s4);overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--p),var(--g));width:0%;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.prog-num{font-size:11px;font-weight:600;font-family:var(--m);color:var(--p);white-space:nowrap}
+textarea{font-family:var(--f);font-size:13.5px;color:var(--s1);background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r8);padding:.55rem .875rem;outline:none;transition:border-color .15s;width:100%;resize:vertical;min-height:80px;line-height:1.5}
+textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--s2);cursor:pointer;transition:.15s;border:none;background:none;font-family:var(--f);padding:0;margin-bottom:1.5rem}
+.back-link:hover{color:var(--p)}
+.back-link svg{width:14px;height:14px}
+
+/* ══ ÉXITO ══ */
+#screen-success{display:none;position:fixed;inset:0;z-index:9000;background:linear-gradient(135deg,#1C0840,#3a0d7a 50%,#1a3a0a);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;animation:fadeInSuccess .5s ease}
+#screen-success.show{display:flex}
+@keyframes fadeInSuccess{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.success-icon-wrap{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.75rem;box-shadow:0 0 0 16px rgba(91,173,30,.15),0 0 0 32px rgba(91,173,30,.07);animation:popIn .6s cubic-bezier(.34,1.56,.64,1) .2s both}
+@keyframes popIn{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.success-title{font-size:2.2rem;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:.75rem;animation:slideUp .5s ease .4s both}
+.success-title span{color:var(--g2)}
+.success-sub{font-size:1rem;color:rgba(255,255,255,.75);line-height:1.6;max-width:380px;margin:0 auto 2rem;animation:slideUp .5s ease .55s both}
+.success-meta{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:1.1rem 1.5rem;margin-bottom:2rem;font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.8;font-family:var(--m);animation:slideUp .5s ease .65s both;max-width:420px;width:100%}
+.success-meta strong{color:var(--g2)}
+.success-btn{padding:.9rem 2.5rem;background:linear-gradient(135deg,var(--g),var(--g2));border:none;border-radius:14px;font-family:var(--f);font-size:15px;font-weight:800;color:var(--s1);cursor:pointer;box-shadow:0 6px 24px rgba(91,173,30,.4);transition:all .2s;animation:slideUp .5s ease .85s both;display:inline-flex;align-items:center;gap:9px}
+.success-btn:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(91,173,30,.5)}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.confetti-piece{position:fixed;top:-10px;border-radius:2px;animation:confettiFall linear forwards;pointer-events:none;z-index:9001}
+@keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div style="display:flex;flex-direction:column;line-height:1;gap:2px">
+    <span style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.03em;color:#fff">bet<span style="color:#79CC38">a</span></span>
+    <span style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:500;letter-spacing:.08em;color:rgba(255,255,255,.6);text-transform:lowercase">complejo agroindustrial</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="nav-pill">🔒 Acceso Interno</span>
+    <div id="nav-session" class="nav-session" style="display:none" onclick="cerrarSesion()">
+      <div class="nav-session-avatar" id="nav-avatar">?</div>
+      <span class="nav-session-name" id="nav-name"></span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </div>
+  </div>
+</nav>
+
+<!-- PROGRESS BAR (solo en docs) -->
+<div class="prog-bar" id="prog-bar-wrap" style="display:none">
+  <div class="prog-inner">
+    <span class="prog-label">Documentos</span>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    <span class="prog-num" id="prog-count">0 / 0</span>
+  </div>
+</div>
+
+<!-- ══ PANTALLA 1: LOGIN ══ -->
+<div id="screen-login" class="screen active">
+  <main>
+    <div class="lock-wrap">
+      <div class="lock-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      </div>
+      <h1 class="lock-title">Acceso Interno</h1>
+      <p class="lock-sub">Solo personal autorizado por Complejo Agroindustrial Beta puede ingresar a esta plataforma.</p>
+
+      <div class="card">
+        <div class="field">
+          <label>RUC de empresa <span class="req">*</span></label>
+          <input type="text" id="login-ruc" placeholder="20xxxxxxxxx" maxlength="11"
+            oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)"
+            onkeydown="if(event.key==='Enter') verificarAcceso()">
+          <span class="hint">Ingresa el RUC registrado en el sistema</span>
+        </div>
+        <div class="field">
+          <label>Correo electrónico <span class="req">*</span></label>
+          <input type="email" id="login-email" placeholder="tu@empresa.com"
+            onkeydown="if(event.key==='Enter') verificarAcceso()">
+          <span class="hint">Recibirás un código de verificación</span>
+        </div>
+
+        <div id="login-alert" class="alert" style="margin-bottom:1rem"></div>
+
+        <button class="btn btn-primary" onclick="verificarAcceso()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Verificar acceso
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══ PANTALLA 2: DENEGADO ══ -->
+<div id="screen-denied" class="screen">
+  <main>
+    <div class="lock-wrap">
+      <div class="card">
+        <div class="denied-wrap">
+          <div class="denied-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+          </div>
+          <div class="denied-title">Acceso denegado</div>
+          <div class="denied-sub">
+            El RUC ingresado no está registrado como personal autorizado.<br>
+            Contacta al administrador del sistema para solicitar acceso.
+          </div>
+          <button class="btn-retry" onclick="irA('screen-login')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Intentar con otro RUC
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══ PANTALLA 3: OTP ══ -->
+<div id="screen-otp" class="screen">
+  <main>
+    <div class="lock-wrap">
+      <div class="card" style="text-align:center">
+        <div style="width:56px;height:56px;border-radius:16px;background:var(--pl);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:var(--p)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
+        </div>
+        <h3 style="font-size:1rem;font-weight:700;margin-bottom:.4rem">Código de verificación</h3>
+        <p style="font-size:12.5px;color:var(--s2);margin-bottom:.25rem">Enviamos un código de 6 dígitos a</p>
+        <p id="otp-email-display" style="font-size:13px;font-weight:700;color:var(--p);font-family:var(--m);margin-bottom:1.5rem"></p>
+
+        <div class="otp-wrap" id="otp-inputs">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+        </div>
+
+        <div id="otp-timer-wrap">
+          <p class="otp-timer">Código válido por <strong id="otp-countdown">10:00</strong></p>
+        </div>
+        <div id="otp-resend-wrap" style="display:none">
+          <button class="btn-resend" onclick="reenviarOtp()">Reenviar código</button>
+        </div>
+
+        <div id="otp-alert" class="alert" style="margin-bottom:.875rem;text-align:left"></div>
+
+        <button class="btn btn-primary" onclick="verificarOtp()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Verificar y acceder
+        </button>
+
+        <button class="back-link" onclick="irA('screen-login')" style="margin-top:1rem;justify-content:center;width:100%">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Cambiar correo
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══ PANTALLA 4: DOCUMENTOS ══ -->
+<div id="screen-docs" class="screen">
+  <div style="max-width:720px;margin:0 auto;padding:2rem 1.5rem 5rem;display:flex;flex-direction:column;gap:1.5rem">
+
+    <div class="welcome-banner">
+      <div class="welcome-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+      </div>
+      <div>
+        <h3 id="docs-banner-name">Bienvenido</h3>
+        <p id="docs-banner-sub">Tu carpeta en SharePoint está lista</p>
+        <div style="margin-top:6px">
+          <div class="folder-path" id="docs-folder-path">2.Compras / TRANSPORTE 2026 / <span>categoría</span> / <span>empresa</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+      </div>
+      <div class="info-text">
+        <p>Sube los documentos requeridos</p>
+        <span>Los marcados con ★ son obligatorios para completar la habilitación</span>
+      </div>
+    </div>
+
+    <div class="step-label"><div class="step-num">1</div><span>Documentos de empresa</span><div class="step-line"></div></div>
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        Empresa / Proveedor <div class="dot"></div>
+      </div>
+      <div class="doc-grid" id="docs-empresa"></div>
+    </div>
+
+    <div class="step-label"><div class="step-num">2</div><span>Conductores</span><div class="step-line"></div></div>
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Conductores <div class="dot"></div>
+      </div>
+      <div id="conductores-lista"></div>
+      <button onclick="addConductorEntry()" style="margin-top:8px;width:100%;padding:9px;background:var(--pll);border:1.5px dashed var(--p3);border-radius:var(--r12);cursor:pointer;font-family:var(--f);font-size:13px;font-weight:600;color:var(--p);display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s" onmouseover="this.style.background='var(--pl)'" onmouseout="this.style.background='var(--pll)'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar conductor
+      </button>
+    </div>
+
+    <div class="step-label"><div class="step-num">3</div><span>Unidades / Vehículos</span><div class="step-line"></div></div>
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h5l3 4v4h-8V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Unidades <div class="dot"></div>
+      </div>
+      <div id="unidades-lista"></div>
+      <button onclick="addUnidadEntry()" style="margin-top:8px;width:100%;padding:9px;background:var(--pll);border:1.5px dashed var(--p3);border-radius:var(--r12);cursor:pointer;font-family:var(--f);font-size:13px;font-weight:600;color:var(--p);display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s" onmouseover="this.style.background='var(--pl)'" onmouseout="this.style.background='var(--pll)'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar unidad
+      </button>
+    </div>
+
+    <div class="field">
+      <label>Observaciones adicionales</label>
+      <textarea id="doc-obs" placeholder="Comentarios o aclaraciones adicionales..."></textarea>
+    </div>
+
+    <div id="docs-alert" class="alert"></div>
+
+    <button class="btn btn-primary" id="btn-submit-docs" onclick="submitDocumentos()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Enviar documentos a SharePoint
+    </button>
+  </div>
+</div>
+
+<!-- ÉXITO -->
+<div id="screen-success">
+  <div class="success-icon-wrap">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1C0840" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+  </div>
+  <h2 class="success-title">¡Documentos <span>enviados!</span></h2>
+  <p class="success-sub" id="success-sub">Tus archivos llegaron correctamente a SharePoint.</p>
+  <div class="success-meta" id="success-meta"></div>
+  <button class="success-btn" onclick="cerrarExito()">← Volver al inicio</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   ⚙ CONFIGURACIÓN — edita aquí
+══════════════════════════════════════════ */
+const CFG = {
+  SITIO_SP:    'https://betacompe.sharepoint.com/sites/Intranet',
+  BASE_PATH:   'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026',
+  FLOW_VERIFICAR_RUC: 'https://portalbeta.betayazmingps.workers.dev/verificar_ruc',
+  FLOW_ENVIAR_OTP:    'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
+  FLOW_VERIFICAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/verificar_otp',
+  FLOW_SUBIR_DOCS:    'https://portalbeta.betayazmingps.workers.dev/subir_docs',
+  APIS_NET_PE_TOKEN:  '7ddcc309a88f8187d073fc1a59121919',
+  DEMO: false
+};
+
+/* ══════════════════════════════════════════
+   🔐 LISTA DE RUCs AUTORIZADOS
+   Agrega o quita RUCs según el personal
+══════════════════════════════════════════ */
+const RUCS_AUTORIZADOS = [
+  "20612307599",   // CORPORACION BETA S.A.C.
+  "20100070970",   // Personal TI - demo
+  // ← Agrega aquí los RUCs del personal interno
+];
+
+/* ══ ESTADO ══ */
+let SESSION = { ruc:'', email:'', razonSocial:'', carpeta:'', analista:'', modo:'existente' };
+let otpTimer = null;
+
+/* ══ NAVEGACIÓN ══ */
+function irA(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('prog-bar-wrap').style.display = id === 'screen-docs' ? 'block' : 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ══ ALERTAS ══ */
+function showAlert(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = `alert ${type}`;
+  el.style.display = 'flex';
+  el.innerHTML = type === 'loading'
+    ? `<div class="spin"></div><span>${msg}</span>`
+    : `<span>${msg}</span>`;
+}
+function hideAlert(id) {
+  const el = document.getElementById(id);
+  el.style.display = 'none';
+}
+
+/* ══ CALL FLOW ══ */
+async function callFlow(url, body) {
+  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+/* ══════════════════════════════════════════
+   PASO 1 — VERIFICAR ACCESO
+══════════════════════════════════════════ */
+async function verificarAcceso() {
+  const ruc   = document.getElementById('login-ruc').value.replace(/\D/g,'').slice(0,11);
+  const email = document.getElementById('login-email').value.trim();
+
+  if (ruc.length !== 11) return showAlert('login-alert','error','Ingresa el RUC de 11 dígitos.');
+  if (!email)            return showAlert('login-alert','error','Ingresa tu correo electrónico.');
+
+  // ── Verificar si el RUC está en la lista autorizada ──
+  if (!RUCS_AUTORIZADOS.includes(ruc)) {
+    irA('screen-denied');
+    return;
+  }
+
+  showAlert('login-alert','loading','Verificando en el sistema...');
+
+  try {
+    if (CFG.DEMO) {
+      SESSION = { ruc, email, razonSocial:'EMPRESA INTERNA DEMO', carpeta:`${CFG.BASE_PATH}/DEMO`, analista:'SISTEMA', modo:'existente' };
+    } else {
+      const result = await callFlow(CFG.FLOW_VERIFICAR_RUC, { ruc, email });
+      if (!result.existe) {
+        return showAlert('login-alert','error','RUC no encontrado en SharePoint. Verifica con el administrador.');
+      }
+      SESSION = {
+        ruc, email,
+        razonSocial: result.razonSocial || ruc,
+        carpeta:     result.ruta_carpeta || result.carpeta || '',
+        analista:    result.analista || '',
+        categoria:   result.categoria || '',
+        modo: 'existente'
+      };
+      showAlert('login-alert','loading','Acceso confirmado — enviando código...');
+      await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc, email, contacto: result.razonSocial || ruc });
+    }
+    hideAlert('login-alert');
+    mostrarOtp(email);
+  } catch(e) {
+    showAlert('login-alert','error','Error al verificar: ' + e.message);
+  }
+}
+
+/* ══ OTP ══ */
+function mostrarOtp(email) {
+  document.getElementById('otp-email-display').textContent = email;
+  clearOtp();
+  hideAlert('otp-alert');
+  startOtpCountdown();
+  irA('screen-otp');
+  if (CFG.DEMO) setTimeout(() => showAlert('otp-alert','warning','MODO DEMO: Usa el código 123456'), 400);
+}
+
+function otpInput(el) {
+  el.value = el.value.replace(/\D/,'');
+  el.classList.toggle('filled', el.value !== '');
+  if (el.value && el.nextElementSibling) el.nextElementSibling.focus();
+  if (getOtpValue().length === 6) verificarOtp();
+}
+
+function otpKeyDown(e, el) {
+  if (e.key === 'Backspace' && !el.value && el.previousElementSibling) {
+    el.previousElementSibling.value = '';
+    el.previousElementSibling.classList.remove('filled');
+    el.previousElementSibling.focus();
+  }
+}
+
+function getOtpValue() {
+  return [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
+}
+
+function clearOtp() {
+  document.querySelectorAll('.otp-digit').forEach(i => { i.value=''; i.classList.remove('filled'); });
+}
+
+function startOtpCountdown() {
+  if (otpTimer) clearInterval(otpTimer);
+  let secs = 600;
+  document.getElementById('otp-timer-wrap').style.display = 'block';
+  document.getElementById('otp-resend-wrap').style.display = 'none';
+  otpTimer = setInterval(() => {
+    secs--;
+    const m = Math.floor(secs/60), s = secs%60;
+    document.getElementById('otp-countdown').textContent = `${m}:${String(s).padStart(2,'0')}`;
+    if (secs <= 0) {
+      clearInterval(otpTimer);
+      document.getElementById('otp-timer-wrap').style.display = 'none';
+      document.getElementById('otp-resend-wrap').style.display = 'block';
+    }
+  }, 1000);
+}
+
+async function reenviarOtp() {
+  try {
+    await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, contacto: SESSION.razonSocial });
+    startOtpCountdown();
+    clearOtp();
+  } catch(e) { showAlert('otp-alert','error','Error al reenviar: ' + e.message); }
+}
+
+async function verificarOtp() {
+  const codigo = getOtpValue();
+  if (codigo.length !== 6) return showAlert('otp-alert','error','Ingresa el código de 6 dígitos.');
+  showAlert('otp-alert','loading','Verificando código...');
+
+  try {
+    let ok = false;
+    if (CFG.DEMO) {
+      ok = codigo === '123456';
+    } else {
+      const r = await callFlow(CFG.FLOW_VERIFICAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, codigo });
+      ok = r.valido === true || r.ok === true;
+      if (r.razonSocial) SESSION.razonSocial = r.razonSocial;
+      if (r.carpeta)     SESSION.carpeta     = r.carpeta;
+    }
+    if (!ok) {
+      showAlert('otp-alert','error','Código incorrecto o expirado. Intenta de nuevo.');
+      clearOtp();
+      return;
+    }
+    clearInterval(otpTimer);
+    hideAlert('otp-alert');
+    accederDocumentos();
+  } catch(e) {
+    showAlert('otp-alert','error','Error: ' + e.message);
+  }
+}
+
+/* ══ DOCUMENTOS ══ */
+const DOCS_EMPRESA = [
+  { id:'p01', name:'Contrato firmado',      req:true  },
+  { id:'p02', name:'Ficha RUC',             req:true  },
+  { id:'p03', name:'Reporte Sentinel',      req:true  },
+  { id:'p04', name:'Vigencia de Poder',     req:false },
+  { id:'p05', name:'SCTR Pensión',          req:true  },
+  { id:'p06', name:'SCTR Salud',            req:true  },
+  { id:'p07', name:'Póliza CAR',            req:false },
+  { id:'p08', name:'Cert. habilitación MTC',req:true  },
+];
+const DOCS_CONDUCTOR = [
+  { id:'c01', name:'DNI',                   req:true  },
+  { id:'c02', name:'Licencia de conducir',  req:true  },
+  { id:'c03', name:'Antecedentes penales',  req:true  },
+  { id:'c04', name:'Antecedentes policiales',req:true },
+  { id:'c05', name:'Cert. médico',          req:false },
+];
+const DOCS_UNIDAD = [
+  { id:'u01', name:'Tarjeta de propiedad',  req:true  },
+  { id:'u02', name:'SOAT',                  req:true  },
+  { id:'u03', name:'Revisión técnica',      req:true  },
+  { id:'u04', name:'Hab. complementaria',   req:false },
+];
+
+let conductoresCount = 0;
+let unidadesCount    = 0;
+
+function renderDocGrid(containerId, docs, prefix) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = '';
+  docs.forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'doc-item';
+    div.id = `item-${prefix}-${d.id}`;
+    div.innerHTML = `
+      <input type="file" accept=".pdf,.jpg,.jpeg,.png" onchange="fileSelected(this,'${prefix}-${d.id}')">
+      <div class="doc-face">
+        <div class="doc-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="doc-name">${d.req ? '★ ' : ''}${d.name}</div>
+        <div class="doc-status" id="status-${prefix}-${d.id}">Sin archivo</div>
+      </div>
+      ${d.req ? '<div class="doc-req-tag">req</div>' : ''}`;
+    c.appendChild(div);
+  });
+}
+
+function fileSelected(input, key) {
+  const item = document.getElementById(`item-${key}`);
+  const status = document.getElementById(`status-${key}`);
+  if (input.files[0]) {
+    item.classList.add('has-file');
+    item.classList.remove('required-missing');
+    const name = input.files[0].name;
+    status.textContent = name.length > 20 ? name.slice(0,17)+'...' : name;
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  const items = document.querySelectorAll('#screen-docs .doc-item');
+  const total = items.length;
+  const done  = [...items].filter(i => i.classList.contains('has-file')).length;
+  document.getElementById('prog-fill').style.width = total ? (done/total*100)+'%' : '0%';
+  document.getElementById('prog-count').textContent = `${done} / ${total}`;
+}
+
+function addConductorEntry() {
+  conductoresCount++;
+  const n = conductoresCount;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'margin-bottom:1rem;padding:1rem;background:var(--pll);border-radius:var(--r12);border:1px solid var(--s4)';
+  wrap.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--p);margin-bottom:.75rem">Conductor ${n}</div>
+    <div class="field" style="margin-bottom:.5rem">
+      <label>Nombre completo</label>
+      <input type="text" placeholder="Nombres y apellidos" id="cond-nombre-${n}">
+    </div>
+    <div class="doc-grid" id="docs-conductor-${n}"></div>`;
+  document.getElementById('conductores-lista').appendChild(wrap);
+  renderDocGrid(`docs-conductor-${n}`, DOCS_CONDUCTOR, `cond${n}`);
+  updateProgress();
+}
+
+function addUnidadEntry() {
+  unidadesCount++;
+  const n = unidadesCount;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'margin-bottom:1rem;padding:1rem;background:var(--pll);border-radius:var(--r12);border:1px solid var(--s4)';
+  wrap.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--p);margin-bottom:.75rem">Unidad ${n}</div>
+    <div class="field" style="margin-bottom:.5rem">
+      <label>Placa del vehículo</label>
+      <input type="text" placeholder="Ej: ABC-123" id="unidad-placa-${n}" style="text-transform:uppercase">
+    </div>
+    <div class="doc-grid" id="docs-unidad-${n}"></div>`;
+  document.getElementById('unidades-lista').appendChild(wrap);
+  renderDocGrid(`docs-unidad-${n}`, DOCS_UNIDAD, `unid${n}`);
+  updateProgress();
+}
+
+function accederDocumentos() {
+  document.getElementById('nav-session').style.display = 'flex';
+  document.getElementById('nav-avatar').textContent = (SESSION.razonSocial || SESSION.ruc).charAt(0).toUpperCase();
+  document.getElementById('nav-name').textContent = SESSION.razonSocial || SESSION.ruc;
+  document.getElementById('docs-banner-name').textContent = `¡Bienvenido, ${SESSION.razonSocial || SESSION.ruc}!`;
+  document.getElementById('docs-banner-sub').textContent = 'Tu carpeta en SharePoint está lista';
+  document.getElementById('docs-folder-path').innerHTML =
+    `Docs / CADENA_DE_SUMINISTROS / 2.Compras / TRANSPORTE 2026 / <span>${SESSION.categoria||''}</span> / <span>${SESSION.razonSocial || SESSION.ruc}</span>`;
+  renderDocGrid('docs-empresa', DOCS_EMPRESA, 'emp');
+  document.getElementById('conductores-lista').innerHTML = '';
+  document.getElementById('unidades-lista').innerHTML = '';
+  conductoresCount = 0; unidadesCount = 0;
+  irA('screen-docs');
+  setTimeout(updateProgress, 100);
+}
+
+/* ══ SUBMIT DOCS ══ */
+async function submitDocumentos() {
+  const requiredMissing = [];
+  document.querySelectorAll('#screen-docs .doc-item').forEach(item => {
+    const isReq = item.querySelector('.doc-req-tag');
+    const hasFile = item.classList.contains('has-file');
+    if (isReq && !hasFile) {
+      item.classList.add('required-missing');
+      requiredMissing.push(item.querySelector('.doc-name').textContent);
+    }
+  });
+  if (requiredMissing.length) {
+    showAlert('docs-alert','error',`Faltan documentos obligatorios: ${requiredMissing.join(', ')}`);
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit-docs');
+  btn.disabled = true;
+  showAlert('docs-alert','loading','Subiendo documentos a SharePoint...');
+
+  try {
+    const archivos = [];
+    for (const inp of document.querySelectorAll('#screen-docs input[type="file"]')) {
+      if (inp.files[0]) {
+        const b64 = await toBase64(inp.files[0]);
+        archivos.push({ nombre: inp.files[0].name, contenido: b64, tipo: inp.files[0].type });
+      }
+    }
+
+    const obs = document.getElementById('doc-obs').value;
+    const basePayload = {
+      ruc: SESSION.ruc, razonSocial: SESSION.razonSocial,
+      email: SESSION.email, carpeta: SESSION.carpeta, obs
+    };
+
+    let enviados = 0;
+    for (const archivo of archivos) {
+      await callFlow(CFG.FLOW_SUBIR_DOCS, {
+        ...basePayload, archivos: [archivo],
+        indice: enviados + 1, es_ultimo: enviados + 1 === archivos.length
+      });
+      enviados++;
+      document.getElementById('prog-fill').style.width = (enviados/archivos.length*100)+'%';
+      document.getElementById('prog-count').textContent = `${enviados} / ${archivos.length}`;
+    }
+
+    setTimeout(() => {
+      const meta = document.getElementById('success-meta');
+      meta.innerHTML =
+        `📁 <strong>${SESSION.carpeta || 'SharePoint'}</strong><br>` +
+        `📄 <strong>${archivos.length} archivo(s)</strong> enviados correctamente<br>` +
+        `✅ Proceso completado — ${new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'})}`;
+      document.getElementById('screen-success').classList.add('show');
+      window.scrollTo({ top:0 });
+      lanzarConfeti();
+    }, 400);
+
+  } catch(e) {
+    showAlert('docs-alert','error','Error al enviar: ' + e.message);
+    btn.disabled = false;
+  }
+}
+
+function toBase64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(new Error('Error al leer archivo'));
+    r.readAsDataURL(file);
+  });
+}
+
+function cerrarExito() {
+  document.getElementById('screen-success').classList.remove('show');
+  document.querySelectorAll('.confetti-piece').forEach(el => el.remove());
+  cerrarSesion();
+}
+
+function cerrarSesion() {
+  SESSION = { ruc:'', email:'', razonSocial:'', carpeta:'', analista:'', modo:'existente' };
+  document.getElementById('nav-session').style.display = 'none';
+  document.getElementById('login-ruc').value = '';
+  document.getElementById('login-email').value = '';
+  hideAlert('login-alert');
+  irA('screen-login');
+}
+
+function lanzarConfeti() {
+  const colores = ['#79CC38','#5212A0','#F59E0B','#ffffff','#b4f06e','#8B4DD8'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      const size = Math.random()*10+6;
+      p.style.cssText = `left:${Math.random()*100}vw;width:${size}px;height:${size*(Math.random()>.5?1:2.5)}px;background:${colores[Math.floor(Math.random()*colores.length)]};opacity:${Math.random()*.6+.4};animation-duration:${Math.random()*2.5+2}s;transform:rotate(${Math.random()*360}deg)`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 5000);
+    }, i*40);
+  }
+}
+</script>
+</body>
+</html>
