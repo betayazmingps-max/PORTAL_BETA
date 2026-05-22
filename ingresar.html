@@ -593,7 +593,7 @@ async function verificarOtp() {
       ok = codigo === '123456';
     } else {
       const r = await callFlow(CFG.FLOW_VERIFICAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, otp: codigo });
-      ok = r.valido === true || r.ok === true;
+      ok = r.valido || r.ok;
       if (r.razonSocial) SESSION.razonSocial = r.razonSocial;
       if (r.carpeta)     SESSION.carpeta     = r.carpeta;
     }
