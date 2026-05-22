@@ -34,14 +34,22 @@ nav{
 .nav-session-name{font-size:11.5px;font-weight:600;color:#fff;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ══ MAIN ══ */
-main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
-
+/* ══ HERO ══ */
+.hero{background:linear-gradient(135deg,var(--p) 0%,#3a0e7a 100%);padding:2.5rem 1.5rem 4.5rem;position:relative;overflow:hidden;text-align:center}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:48px;background:var(--bg);clip-path:ellipse(60% 100% at 50% 100%)}
+.hero-glow{position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(121,204,56,.22),transparent 70%);pointer-events:none}
+.hero-glow2{position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(82,18,160,.35),transparent 70%);pointer-events:none}
+.hero-content{position:relative;z-index:2;max-width:480px;margin:0 auto}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(121,204,56,.2);border:1px solid rgba(121,204,56,.4);border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;color:#b4f06e;letter-spacing:.06em;margin-bottom:1rem}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--g2)}
+.hero-icon{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;backdrop-filter:blur(8px)}
+.hero-icon svg{width:32px;height:32px;color:#fff}
+.hero h1{font-size:2rem;font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1.15;margin-bottom:.5rem}
+.hero h1 em{font-style:normal;color:var(--g2)}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.65);line-height:1.6}
 /* ══ LOCK SCREEN ══ */
+main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:2.5rem 1rem 5rem}
 .lock-wrap{width:100%;max-width:420px}
-.lock-icon{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 32px rgba(82,18,160,.35)}
-.lock-icon svg{width:36px;height:36px;color:#fff}
-.lock-title{font-size:1.6rem;font-weight:800;color:var(--s1);text-align:center;margin-bottom:.4rem;letter-spacing:-.02em}
-.lock-sub{font-size:13px;color:var(--s2);text-align:center;line-height:1.6;margin-bottom:2rem}
 
 /* ══ CARD ══ */
 .card{background:var(--w);border:1px solid var(--s4);border-radius:var(--r16);padding:1.75rem;box-shadow:var(--shadow)}
@@ -196,18 +204,33 @@ textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rg
 
 <!-- ══ PANTALLA 1: LOGIN ══ -->
 <div id="screen-login" class="screen active">
-  <main>
-    <div class="lock-wrap">
-      <div class="lock-icon">
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-glow2"></div>
+    <div class="hero-content">
+      <div class="hero-tag">Portal de proveedores</div>
+      <div class="hero-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <rect x="3" y="11" width="18" height="11" rx="2"/>
           <path d="M7 11V7a5 5 0 0110 0v4"/>
         </svg>
       </div>
-      <h1 class="lock-title">Acceso Interno</h1>
-      <p class="lock-sub">Solo personal autorizado por Complejo Agroindustrial Beta puede ingresar a esta plataforma.</p>
-
+      <h1>Acceso<br><em>Autorizado</em></h1>
+      <p class="hero-sub">Plataforma de documentación — <strong style="color:#b4f06e">Complejo Agroindustrial Beta</strong></p>
+    </div>
+  </div>
+  <main>
+    <div class="lock-wrap">
       <div class="card">
+        <div class="card-head" style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--s5)">
+          <div style="width:32px;height:32px;border-radius:10px;background:var(--pl);display:flex;align-items:center;justify-content:center;color:var(--p);flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--s1)">Verificación de acceso</div>
+            <div style="font-size:11px;color:var(--s3)">Solo proveedores aprobados pueden ingresar</div>
+          </div>
+        </div>
         <div class="field">
           <label>RUC de empresa <span class="req">*</span></label>
           <input type="text" id="login-ruc" placeholder="20xxxxxxxxx" maxlength="11"
@@ -221,11 +244,9 @@ textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rg
             onkeydown="if(event.key==='Enter') verificarAcceso()">
           <span class="hint">Recibirás un código de verificación</span>
         </div>
-
         <div id="login-alert" class="alert" style="margin-bottom:1rem"></div>
-
         <button class="btn btn-primary" onclick="verificarAcceso()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="9" y2="12"/></svg>
           Verificar acceso
         </button>
       </div>
@@ -396,25 +417,14 @@ textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rg
    ⚙ CONFIGURACIÓN — edita aquí
 ══════════════════════════════════════════ */
 const CFG = {
-  SITIO_SP:    'https://betacompe.sharepoint.com/sites/Intranet',
-  BASE_PATH:   'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026',
-  FLOW_VERIFICAR_RUC: 'https://portalbeta.betayazmingps.workers.dev/verificar_ruc',
+  GSHEET_URL:         'https://script.google.com/macros/s/AKfycbw_Fwj-pT-2NBB0w87h0dp2od9vWa4jMglXC773ThwqbrTsf3IRij-tx4amd4_RrF4eKg/exec',
+  SITIO_SP:           'https://betacompe.sharepoint.com/sites/Intranet',
+  BASE_PATH:          'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026',
   FLOW_ENVIAR_OTP:    'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
   FLOW_VERIFICAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/verificar_otp',
   FLOW_SUBIR_DOCS:    'https://portalbeta.betayazmingps.workers.dev/subir_docs',
-  APIS_NET_PE_TOKEN:  '7ddcc309a88f8187d073fc1a59121919',
   DEMO: false
 };
-
-/* ══════════════════════════════════════════
-   🔐 LISTA DE RUCs AUTORIZADOS
-   Agrega o quita RUCs según el personal
-══════════════════════════════════════════ */
-const RUCS_AUTORIZADOS = [
-  "20612307599",   // CORPORACION BETA S.A.C.
-  "20100070970",   // Personal TI - demo
-  // ← Agrega aquí los RUCs del personal interno
-];
 
 /* ══ ESTADO ══ */
 let SESSION = { ruc:'', email:'', razonSocial:'', carpeta:'', analista:'', modo:'existente' };
@@ -459,35 +469,56 @@ async function verificarAcceso() {
   if (ruc.length !== 11) return showAlert('login-alert','error','Ingresa el RUC de 11 dígitos.');
   if (!email)            return showAlert('login-alert','error','Ingresa tu correo electrónico.');
 
-  // ── Verificar si el RUC está en la lista autorizada ──
-  if (!RUCS_AUTORIZADOS.includes(ruc)) {
-    irA('screen-denied');
-    return;
-  }
-
   showAlert('login-alert','loading','Verificando en el sistema...');
 
   try {
-    if (CFG.DEMO) {
-      SESSION = { ruc, email, razonSocial:'EMPRESA INTERNA DEMO', carpeta:`${CFG.BASE_PATH}/DEMO`, analista:'SISTEMA', modo:'existente' };
-    } else {
-      const result = await callFlow(CFG.FLOW_VERIFICAR_RUC, { ruc, email });
-      if (!result.existe) {
-        return showAlert('login-alert','error','RUC no encontrado en SharePoint. Verifica con el administrador.');
-      }
-      SESSION = {
-        ruc, email,
-        razonSocial: result.razonSocial || ruc,
-        carpeta:     result.ruta_carpeta || result.carpeta || '',
-        analista:    result.analista || '',
-        categoria:   result.categoria || '',
-        modo: 'existente'
-      };
-      showAlert('login-alert','loading','Acceso confirmado — enviando código...');
-      await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc, email, contacto: result.razonSocial || ruc });
+    // Consultar Google Sheet para verificar estado del proveedor
+    const url = CFG.GSHEET_URL + `?action=listar&analista=TODOS`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.ok || !data.proveedores) {
+      return showAlert('login-alert','error','No se pudo conectar con el sistema. Intenta de nuevo.');
     }
+
+    // Buscar el proveedor por RUC y email
+    const proveedor = data.proveedores.find(p =>
+      String(p.ruc) === String(ruc) &&
+      p.email.toLowerCase() === email.toLowerCase()
+    );
+
+    // No existe en el Sheet
+    if (!proveedor) {
+      return showAlert('login-alert','error','RUC o correo no encontrado. Verifica tus datos o contáctate con tu analista.');
+    }
+
+    // Existe pero no está aprobado
+    if (proveedor.estado !== 'aprobado') {
+      const mensajes = {
+        pendiente:  'Tu solicitud está siendo revisada por el analista. Te notificaremos cuando sea aprobada.',
+        rechazado:  'Tu solicitud fue rechazada. Contáctate con tu analista para más información.',
+        revision:   'Tu solicitud está en revisión. Por favor espera la confirmación del analista.',
+      };
+      return showAlert('login-alert','warning', mensajes[proveedor.estado] || 'Tu acceso aún no está habilitado.');
+    }
+
+    // ✅ Aprobado — guardar sesión y enviar OTP
+    SESSION = {
+      ruc,
+      email,
+      razonSocial: proveedor.razonSocial,
+      carpeta:     proveedor.carpeta || '',
+      analista:    proveedor.analista || '',
+      categoria:   proveedor.categoria || '',
+      modo:        'existente'
+    };
+
+    showAlert('login-alert','loading','Acceso confirmado — enviando código de verificación...');
+    await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc, email, contacto: proveedor.razonSocial });
+
     hideAlert('login-alert');
     mostrarOtp(email);
+
   } catch(e) {
     showAlert('login-alert','error','Error al verificar: ' + e.message);
   }
@@ -697,10 +728,67 @@ function accederDocumentos() {
 }
 
 /* ══ SUBMIT DOCS ══ */
+
+// Recolecta todos los archivos con su subcarpeta destino
+async function recolectarArchivos() {
+  const archivos = [];
+
+  // 1 — Empresa / Proveedor
+  for (const inp of document.querySelectorAll('#docs-empresa input[type="file"]')) {
+    if (inp.files[0]) {
+      archivos.push({
+        nombre:     inp.files[0].name,
+        contenido:  await toBase64(inp.files[0]),
+        tipo:       inp.files[0].type || 'application/octet-stream',
+        subcarpeta: 'Proveedor'
+      });
+    }
+  }
+
+  // 2 — Conductores  (cada bloque tiene id="docs-conductor-N" y un input id="cond-nombre-N")
+  for (let n = 1; n <= conductoresCount; n++) {
+    const grid = document.getElementById(`docs-conductor-${n}`);
+    if (!grid) continue;
+    const nombreRaw = (document.getElementById(`cond-nombre-${n}`)?.value || '').trim();
+    const nombreCarpeta = nombreRaw || `Conductor_${n}`;
+    for (const inp of grid.querySelectorAll('input[type="file"]')) {
+      if (inp.files[0]) {
+        archivos.push({
+          nombre:     inp.files[0].name,
+          contenido:  await toBase64(inp.files[0]),
+          tipo:       inp.files[0].type || 'application/octet-stream',
+          subcarpeta: `Conductores/${nombreCarpeta}`
+        });
+      }
+    }
+  }
+
+  // 3 — Unidades  (cada bloque tiene id="docs-unidad-N" y un input id="unidad-placa-N")
+  for (let n = 1; n <= unidadesCount; n++) {
+    const grid = document.getElementById(`docs-unidad-${n}`);
+    if (!grid) continue;
+    const placaRaw = (document.getElementById(`unidad-placa-${n}`)?.value || '').trim().toUpperCase();
+    const placaCarpeta = placaRaw || `Unidad_${n}`;
+    for (const inp of grid.querySelectorAll('input[type="file"]')) {
+      if (inp.files[0]) {
+        archivos.push({
+          nombre:     inp.files[0].name,
+          contenido:  await toBase64(inp.files[0]),
+          tipo:       inp.files[0].type || 'application/octet-stream',
+          subcarpeta: `Unidades/${placaCarpeta}`
+        });
+      }
+    }
+  }
+
+  return archivos;
+}
+
 async function submitDocumentos() {
+  // Validar obligatorios
   const requiredMissing = [];
   document.querySelectorAll('#screen-docs .doc-item').forEach(item => {
-    const isReq = item.querySelector('.doc-req-tag');
+    const isReq  = item.querySelector('.doc-req-tag');
     const hasFile = item.classList.contains('has-file');
     if (isReq && !hasFile) {
       item.classList.add('required-missing');
@@ -714,32 +802,44 @@ async function submitDocumentos() {
 
   const btn = document.getElementById('btn-submit-docs');
   btn.disabled = true;
-  showAlert('docs-alert','loading','Subiendo documentos a SharePoint...');
+  showAlert('docs-alert','loading','Preparando documentos...');
 
   try {
-    const archivos = [];
-    for (const inp of document.querySelectorAll('#screen-docs input[type="file"]')) {
-      if (inp.files[0]) {
-        const b64 = await toBase64(inp.files[0]);
-        archivos.push({ nombre: inp.files[0].name, contenido: b64, tipo: inp.files[0].type });
-      }
+    const archivos = await recolectarArchivos();
+
+    if (!archivos.length) {
+      showAlert('docs-alert','error','No hay archivos para enviar.');
+      btn.disabled = false;
+      return;
     }
 
     const obs = document.getElementById('doc-obs').value;
     const basePayload = {
-      ruc: SESSION.ruc, razonSocial: SESSION.razonSocial,
-      email: SESSION.email, carpeta: SESSION.carpeta, obs
+      ruc:         SESSION.ruc,
+      razonSocial: SESSION.razonSocial,
+      email:       SESSION.email,
+      carpeta:     SESSION.carpeta,   // carpeta principal en SharePoint
+      obs
     };
+
+    showAlert('docs-alert','loading',`Subiendo documentos a SharePoint... (0 / ${archivos.length})`);
 
     let enviados = 0;
     for (const archivo of archivos) {
       await callFlow(CFG.FLOW_SUBIR_DOCS, {
-        ...basePayload, archivos: [archivo],
-        indice: enviados + 1, es_ultimo: enviados + 1 === archivos.length
+        ...basePayload,
+        // subcarpeta destino dentro de la carpeta principal
+        // Ej: "Proveedor" | "Conductores/Juan Pérez" | "Unidades/ABC-123"
+        subcarpeta: archivo.subcarpeta,
+        archivos:   [{ nombre: archivo.nombre, contenido: archivo.contenido, tipo: archivo.tipo }],
+        indice:     enviados + 1,
+        es_ultimo:  enviados + 1 === archivos.length
       });
       enviados++;
-      document.getElementById('prog-fill').style.width = (enviados/archivos.length*100)+'%';
+      const pct = Math.round(enviados / archivos.length * 100);
+      document.getElementById('prog-fill').style.width = pct + '%';
       document.getElementById('prog-count').textContent = `${enviados} / ${archivos.length}`;
+      showAlert('docs-alert','loading',`Subiendo documentos... (${enviados} / ${archivos.length})`);
     }
 
     setTimeout(() => {
