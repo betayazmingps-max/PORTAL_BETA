@@ -33,8 +33,18 @@ nav{background:var(--p);border-bottom:3px solid var(--g);height:58px;display:fle
 .screen{display:none}.screen.active{display:block;animation:fadeUp .3s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
+/* ── HERO COMPACTO ── */
+.hero{background:linear-gradient(135deg,var(--p) 0%,#3a0e7a 100%);padding:1.75rem 1.5rem 3.5rem;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:36px;background:var(--bg);clip-path:ellipse(60% 100% at 50% 100%)}
+.hero-glow{position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(121,204,56,.2),transparent 70%);pointer-events:none}
+.hero-content{position:relative;z-index:2;max-width:640px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.hero-icon{width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hero-icon svg{width:24px;height:24px;color:#fff}
+.hero h1{font-size:1.6rem;font-weight:900;color:#fff;letter-spacing:-.02em;line-height:1.2;margin-bottom:.25rem}
+.hero h1 em{font-style:normal;color:var(--g2)}
+.hero-sub{font-size:12px;color:rgba(255,255,255,.65)}
 /* ── LOGIN ── */
-.login-wrap{min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
+.login-wrap{display:flex;align-items:flex-start;justify-content:center;padding:1.5rem 1rem 3rem}
 .login-box{width:100%;max-width:380px}
 .login-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 8px 32px rgba(82,18,160,.3)}
 .login-icon svg{width:32px;height:32px;color:#fff}
@@ -205,6 +215,18 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
 
 <!-- ══ LOGIN ══ -->
 <div id="screen-login" class="screen active">
+  <div class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      </div>
+      <div>
+        <h1>Panel de <em>Analista</em></h1>
+        <p class="hero-sub">Gestión de proveedores — <strong style="color:#b4f06e">Complejo Agroindustrial Beta</strong></p>
+      </div>
+    </div>
+  </div>
   <div class="login-wrap">
     <div class="login-box">
       <div class="login-icon">
@@ -220,9 +242,11 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
           <label>Analista <span class="req">*</span></label>
           <select id="login-analista">
             <option value="">Seleccionar analista...</option>
-            <option value="CREGALADO">C. Regalado</option>
-            <option value="MHUANCA">M. Huanca</option>
-            <option value="LFLORES">L. Flores</option>
+            <option value="NORTE">NORTE</option>
+            <option value="SUR">SUR</option>
+            <option value="C. REGALADO">C. Regalado</option>
+            <option value="E. ODAR">E. Odar</option>
+            <option value="J. PADILLA">J. Padilla</option>
             <option value="ADMIN">Administrador (todos)</option>
           </select>
         </div>
@@ -318,8 +342,8 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
     <div class="detalle-body" id="detalle-body"><!-- se llena dinámicamente --></div>
     <div class="detalle-footer">
       <button class="btn btn-g btn-sm" onclick="abrirModalAprobar()" id="btn-aprobar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Aprobar y dar acceso
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        Crear carpeta y aprobar
       </button>
       <button class="btn btn-sm" style="background:var(--rl);color:var(--r);border:1.5px solid rgba(224,32,32,.3)" onclick="abrirModalRechazar()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -388,6 +412,9 @@ const CFG = {
   FLOW_ENVIAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
   FLOW_NOTIFICAR:  'https://portalbeta.betayazmingps.workers.dev/notificar',
 
+  // Power Automate — crear carpetas en SharePoint ← reemplaza con tu URL real
+  FLOW_CREAR_CARPETAS: 'https://prod-00.westus.logic.azure.com/workflows/PENDIENTE/triggers/manual/paths/invoke',
+
   // Link que se manda al proveedor aprobado
   LINK_INGRESAR: 'https://betayazmingps-max.github.io/PORTAL_BETA/ingresar.html',
 
@@ -399,10 +426,12 @@ const CFG = {
    Cambia las contraseñas antes de publicar
 ══════════════════════════════════════════ */
 const ANALISTAS_AUTH = {
-  'CREGALADO': { pass: 'beta2026', nombre: 'C. Regalado' },
-  'MHUANCA':   { pass: 'beta2026', nombre: 'M. Huanca'   },
-  'LFLORES':   { pass: 'beta2026', nombre: 'L. Flores'   },
-  'ADMIN':     { pass: 'admin2026', nombre: 'Administrador' },
+  'NORTE':       { pass: 'beta2026',  nombre: 'Norte'          },
+  'SUR':         { pass: 'beta2026',  nombre: 'Sur'            },
+  'C. REGALADO': { pass: 'beta2026',  nombre: 'C. Regalado'    },
+  'E. ODAR':     { pass: 'beta2026',  nombre: 'E. Odar'        },
+  'J. PADILLA':  { pass: 'beta2026',  nombre: 'J. Padilla'     },
+  'ADMIN':       { pass: 'admin2026', nombre: 'Administrador'  },
 };
 
 /* ══ ESTADO ══ */
@@ -424,6 +453,31 @@ const DEMO_DATA = [
 /* ══════════════════════════════════════════
    LOGIN
 ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   ACORTAR NOMBRE — evita rutas largas en SharePoint
+══════════════════════════════════════════ */
+function acortarNombre(nombre, max = 40) {
+  let n = nombre.replace(/\.$/, '').replace(/[.]/g, '').trim();
+  if (n.length <= max) return n;
+  const abrev = {
+    'SOCIEDAD ANONIMA CERRADA':'SAC','SOCIEDAD ANONIMA':'SA',
+    'SOCIEDAD COMERCIAL DE RESPONSABILIDAD LIMITADA':'SRL',
+    'EMPRESA INDIVIDUAL DE RESPONSABILIDAD LIMITADA':'EIRL',
+    'CORPORACION':'CORP','SERVICIOS':'SERV','INDUSTRIALES':'IND',
+    'AGROINDUSTRIAL':'AGROIN','AGRO INDUSTRIAL':'AGROIN',
+    'INTERNACIONAL':'INTL','COMERCIAL':'COM','CONSTRUCCIONES':'CONST',
+    'TRANSPORTE':'TRANSP','TRANSPORTES':'TRANSP','INVERSIONES':'INV',
+    'CONTRATISTAS':'CONT','CONTRATISTA':'CONT','GENERAL':'GRAL',
+    'REPRESENTACIONES':'REPRES','REPRESENTACION':'REPRES',
+    'DEL SUR':'SUR','DEL NORTE':'NORTE','DEL PERU':'PERU',
+    'DE SERVICIOS':'SERV','Y SERVICIOS':'Y SERV',
+  };
+  let r = n.toUpperCase();
+  for (const [k, v] of Object.entries(abrev)) r = r.replace(k, v);
+  if (r.length > max) r = r.slice(0, max).trim();
+  return r;
+}
+
 function login() {
   const analista = document.getElementById('login-analista').value;
   const pass     = document.getElementById('login-pass').value;
@@ -859,29 +913,56 @@ function abrirModalAprobar() {
 }
 
 async function confirmarAprobar() {
-  const p    = PROVEEDOR_ACTUAL;
-  const msg  = document.getElementById('modal-msg').value;
+  const p   = PROVEEDOR_ACTUAL;
+  const msg = document.getElementById('modal-msg').value;
 
   cerrarModal('modal-aprobar');
 
-  // Actualizar estado local
-  p.estado = 'aprobado';
-  const idx = PROVEEDORES.indexOf(p);
+  // Mostrar loading en el panel
+  const btnAprobar = document.getElementById('btn-aprobar');
+  if (btnAprobar) { btnAprobar.disabled = true; btnAprobar.innerHTML = '<div class="spin" style="border-top-color:#fff"></div> Creando carpetas...'; }
 
-  // Guardar en Sheet
-  if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
-    await fetch(CFG.GSHEET_URL, {
-      method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR })
-    });
-  }
+  try {
+    // 1 — Llamar al Flow de Power Automate para crear carpetas en SharePoint
+    const payload = {
+      ruc:              p.ruc,
+      razonSocial:      p.razonSocial,
+      razonSocialCorta: acortarNombre(p.razonSocial),
+      categoria:   p.categoria,
+      analista:    p.analista,
+      email:       p.email,
+      contacto:    p.contacto,
+      // Subcarpetas que debe crear el flow
+      subcarpetas: ['Proveedor', 'Conductor', 'Unidad']
+    };
 
-  // Notificar por email vía Worker
-  if (!CFG.DEMO) {
+    if (!CFG.FLOW_CREAR_CARPETAS.includes('PENDIENTE')) {
+      const resFlow = await fetch(CFG.FLOW_CREAR_CARPETAS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!resFlow.ok) throw new Error(`Flow respondió ${resFlow.status}`);
+    } else {
+      // MODO DEMO — simular delay del flow
+      await new Promise(r => setTimeout(r, 1200));
+      console.log('DEMO — payload que se enviará al flow:', payload);
+    }
+
+    // 2 — Actualizar estado en Sheet
+    p.estado = 'aprobado';
+    if (!CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
+      await fetch(CFG.GSHEET_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${acortarNombre(p.razonSocial)}` })
+      });
+    }
+
+    // 3 — Notificar al proveedor con el link de ingreso
     try {
       await fetch(CFG.FLOW_NOTIFICAR, {
-        method:'POST', headers:{'Content-Type':'application/json'},
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: p.email, contacto: p.contacto,
           razonSocial: p.razonSocial, ruc: p.ruc,
@@ -890,13 +971,15 @@ async function confirmarAprobar() {
         })
       });
     } catch(e) { console.warn('No se pudo notificar:', e); }
+
+    cerrarDetalle();
+    renderDash();
+    alert(`✅ Carpetas creadas y proveedor aprobado.\n\n📁 ${p.razonSocial}\n📧 Link enviado a: ${p.email}`);
+
+  } catch(e) {
+    if (btnAprobar) { btnAprobar.disabled = false; btnAprobar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Crear carpeta y aprobar'; }
+    alert('❌ Error al crear carpetas: ' + e.message);
   }
-
-  cerrarDetalle();
-  renderDash();
-
-  // Mostrar confirmación
-  alert(`✅ ${p.razonSocial} aprobado.\n\nEn producción se enviará el link a ${p.email}`);
 }
 
 /* ══ RECHAZAR ══ */
