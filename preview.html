@@ -244,9 +244,9 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
             <option value="">Seleccionar analista...</option>
             <option value="NORTE">NORTE</option>
             <option value="SUR">SUR</option>
-            <option value="C. REGALADO">C. Regalado</option>
-            <option value="E. ODAR">E. Odar</option>
-            <option value="J. PADILLA">J. Padilla</option>
+            <option value="C. REGALADO">C. REGALADO</option>
+            <option value="E. ODAR">E. ODAR</option>
+            <option value="J. PADILLA">J. PADILLA</option>
             <option value="ADMIN">Administrador (todos)</option>
           </select>
         </div>
@@ -426,11 +426,11 @@ const CFG = {
    Cambia las contraseñas antes de publicar
 ══════════════════════════════════════════ */
 const ANALISTAS_AUTH = {
-  'NORTE':       { pass: 'beta2026',  nombre: 'Norte'          },
-  'SUR':         { pass: 'beta2026',  nombre: 'Sur'            },
-  'C. REGALADO': { pass: 'beta2026',  nombre: 'C. Regalado'    },
-  'E. ODAR':     { pass: 'beta2026',  nombre: 'E. Odar'        },
-  'J. PADILLA':  { pass: 'beta2026',  nombre: 'J. Padilla'     },
+  'NORTE':       { pass: 'beta2026',  nombre: 'NORTE'          },
+  'SUR':         { pass: 'beta2026',  nombre: 'SUR'            },
+  'C. REGALADO': { pass: 'beta2026',  nombre: 'C. REGALADO'    },
+  'E. ODAR':     { pass: 'beta2026',  nombre: 'E. ODAR'        },
+  'J. PADILLA':  { pass: 'beta2026',  nombre: 'J. PADILLA'     },
   'ADMIN':       { pass: 'admin2026', nombre: 'Administrador'  },
 };
 
@@ -522,15 +522,17 @@ async function cargarProveedores() {
   }
 
   try {
-    // Lee del Google Sheet vía GET
-    const url = CFG.GSHEET_URL + `?action=listar&analista=${SESSION_ADMIN.esAdmin ? 'TODOS' : SESSION_ADMIN.analista}`;
-    const res = await fetch(url);
+    // Pasa por el Worker para evitar CORS con Google Sheet
+    const res = await fetch('https://portalbeta.betayazmingps.workers.dev/listar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ analista: SESSION_ADMIN.esAdmin ? 'TODOS' : SESSION_ADMIN.analista })
+    });
     const data = await res.json();
     PROVEEDORES = data.proveedores || [];
     renderDash();
   } catch(e) {
     console.error('Error cargando Sheet:', e);
-    // Fallback a demo si falla
     PROVEEDORES = DEMO_DATA.filter(p => SESSION_ADMIN.esAdmin || p.analista === SESSION_ADMIN.analista);
     renderDash();
   }
@@ -785,22 +787,15 @@ Solo incluye los campos que realmente encuentres en el documento.`;
       return;
     }
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://portalbeta.betayazmingps.workers.dev/analizar_doc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages
-      })
+      body: JSON.stringify({ b64: docData.b64, docId })
     });
 
     const data = await res.json();
-    const texto = data.content?.find(b => b.type === 'text')?.text || '{}';
-    const clean = texto.replace(/```json|```/g, '').trim();
-    const resultado = JSON.parse(clean);
-
-    aplicarResultadoIA(ruc, docId, resultado);
+    if (!data.ok) throw new Error(data.error || 'Error en análisis');
+    aplicarResultadoIA(ruc, docId, data.resultado);
 
   } catch(e) {
     console.error('Error IA:', e);
@@ -875,8 +870,8 @@ function toggleCheck(ruc, docId) {
 async function guardarAIEnSheet(ruc, docId, datos) {
   if (CFG.DEMO || CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) return;
   try {
-    await fetch(CFG.GSHEET_URL, {
-      method:'POST', mode:'no-cors',
+    await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
+      method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action:'guardarAI', ruc, docId, datos })
     });
@@ -889,8 +884,8 @@ async function guardarObservaciones() {
   PROVEEDOR_ACTUAL.notas = notas;
   // Guardar en sheet
   if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
-    await fetch(CFG.GSHEET_URL, {
-      method:'POST', mode:'no-cors',
+    await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
+      method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action:'notas', ruc: PROVEEDOR_ACTUAL.ruc, notas })
     });
@@ -952,7 +947,7 @@ async function confirmarAprobar() {
     // 2 — Actualizar estado en Sheet
     p.estado = 'aprobado';
     if (!CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
-      await fetch(CFG.GSHEET_URL, {
+      await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${acortarNombre(p.razonSocial)}` })
@@ -997,8 +992,8 @@ async function confirmarRechazar() {
   cerrarModal('modal-rechazar');
 
   if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
-    await fetch(CFG.GSHEET_URL, {
-      method:'POST', mode:'no-cors',
+    await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
+      method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ action:'rechazar', ruc: p.ruc, motivo })
     });
