@@ -475,24 +475,29 @@ footer{background:var(--s1);padding:1.5rem 2rem;display:flex;flex-direction:colu
         Regularización de documentos
       </div>
       <div class="tabs">
-        <button class="tab active" id="tab-faltantes" onclick="showRegTab('faltantes',this)">📋 Documentos faltantes</button>
-        <button class="tab" id="tab-vencidos" onclick="showRegTab('vencidos',this)">🔄 Documentos vencidos</button>
+        <button class="tab active" id="tab-faltantes" onclick="showRegTab('faltantes',this)">📋 Faltantes</button>
+        <button class="tab" id="tab-vencidos" onclick="showRegTab('vencidos',this)">⏰ Vencidos / Renovación</button>
       </div>
+
+      <!-- ══ TAB FALTANTES ══ -->
       <div id="faltantes" class="tab-panel active">
         <div style="background:var(--pl);border:1px solid var(--p3);border-radius:var(--r12);padding:.875rem 1rem;margin-bottom:1rem;font-size:12.5px;color:var(--p);display:flex;gap:10px;align-items:flex-start">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
-          <span>Documentos <strong>complementarios</strong> pendientes. Súbelos para completar tu expediente.</span>
+          <span>La IA <strong>verifica</strong> que el documento sea el correcto y extrae sus datos automáticamente.</span>
         </div>
+        <!-- Empresa -->
         <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
           Empresa / Proveedor <span id="falt-emp-count" style="font-size:10px;font-weight:600;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:99px;font-family:var(--m)"></span>
         </div>
         <div class="doc-grid" id="faltantes-empresa-grid" style="margin-bottom:1.25rem"></div>
+        <!-- Conductores -->
         <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           Conductores <span id="falt-cond-count" style="font-size:10px;font-weight:600;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:99px;font-family:var(--m)"></span>
         </div>
         <div id="faltantes-conductores-wrap"></div>
+        <!-- Unidades -->
         <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h5l3 4v4h-8V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
           Unidades / Vehículos <span id="falt-unid-count" style="font-size:10px;font-weight:600;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:99px;font-family:var(--m)"></span>
@@ -505,17 +510,39 @@ footer{background:var(--s1);padding:1.5rem 2rem;display:flex;flex-direction:colu
           Enviar documentos faltantes
         </button>
       </div>
+
+      <!-- ══ TAB VENCIDOS ══ -->
       <div id="vencidos" class="tab-panel">
-        <div style="background:var(--amberl);border:1px solid var(--amber);border-radius:var(--r12);padding:.875rem 1rem;margin-bottom:1rem;font-size:12.5px;color:#92400e;display:flex;gap:10px;align-items:flex-start">
+        <div style="background:var(--amberl);border:1px solid var(--amber);border-radius:var(--r12);padding:.875rem 1rem;margin-bottom:1.25rem;font-size:12.5px;color:#92400e;display:flex;gap:10px;align-items:flex-start">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          <span>Sube aquí los documentos que han <strong>vencido</strong> o necesitan renovación.</span>
+          <span>Sube la versión <strong>renovada</strong> de cada documento. La IA verificará que sea el correcto y leerá la nueva fecha de vencimiento para actualizar el sistema.</span>
         </div>
-        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" id="vencidos-input" style="width:100%;padding:20px;border:2px dashed var(--p3);border-radius:12px;cursor:pointer;background:var(--pll);color:var(--s2);font-family:var(--f);font-size:13px" onchange="onVencidosChange(this)">
-        <div id="lista-vencidos" style="margin-top:.875rem;display:flex;flex-direction:column;gap:6px"></div>
+
+        <!-- Empresa vencidos -->
+        <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          Empresa / Proveedor
+        </div>
+        <div class="doc-grid" id="venc-empresa-grid" style="margin-bottom:1.25rem"></div>
+
+        <!-- Conductores vencidos -->
+        <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Conductores
+        </div>
+        <div id="venc-conductores-wrap"></div>
+
+        <!-- Unidades vencidos -->
+        <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h5l3 4v4h-8V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Unidades / Vehículos
+        </div>
+        <div id="venc-unidades-wrap"></div>
+
         <div id="venc-alert" class="alert" style="margin-top:.875rem"></div>
-        <button class="btn btn-primary" style="margin-top:1rem" id="btn-venc-submit" onclick="submitVencidos()">
+        <button class="btn btn-primary" style="margin-top:1rem;background:linear-gradient(135deg,var(--amber),#d97706)" id="btn-venc-submit" onclick="submitVencidos()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Enviar documentos vencidos
+          Enviar renovaciones al sistema
         </button>
       </div>
     </div>
@@ -560,7 +587,7 @@ footer{background:var(--s1);padding:1.5rem 2rem;display:flex;flex-direction:colu
 <script>
 /* ══ CONFIG ══ */
 const CFG = {
-  GSHEET_URL:         'https://script.google.com/macros/s/AKfycbw_Fwj-pT-2NBB0w87h0dp2od9vWa4jMglXC773ThwqbrTsf3IRij-tx4amd4_RrF4eKg/exec',
+  GSHEET_URL:         'https://script.google.com/macros/s/AKfycbxu-TP4IduJCTk-qoVrJLjCjR2i7GWK6zrC28Uxs79iUAYJmc5-99Y7JSz1Flc3hQ8WWA/exec',
   FLOW_ENVIAR_OTP:    'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
   FLOW_VERIFICAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/verificar_otp',
   FLOW_SUBIR_DOCS:    'https://portalbeta.betayazmingps.workers.dev/subir_docs',
@@ -575,6 +602,7 @@ let SESSION = { ruc:'', email:'', razonSocial:'', carpeta:'', analista:'', categ
 let otpInterval = null, otpSeconds = 600;
 const fileStore  = {};
 const aiRejected = new Set();
+const aiStore    = {};   // guarda datos extraídos por IA por cada docId
 
 /* ══ DOCUMENTOS ══ */
 const DOCS_EMPRESA = [
@@ -680,13 +708,26 @@ async function validarConIA(docId, docName, file){
       isImg?{type:'image',source:{type:'base64',media_type:file.type,data:b64}}
            :{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
       {type:'text',text:`Eres un validador de documentos de una empresa agroindustrial peruana.
-El campo es: "${docName}"
-Analiza el documento y responde ÚNICAMENTE con JSON (sin texto extra, sin markdown):
-{"valido":true/false,"motivo":"texto corto en español","nitido":true/false}
+El campo solicitado es: "${docName}"
+Analiza el documento y responde ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
+{
+  "valido": true/false,
+  "nitido": true/false,
+  "motivo": "texto corto en español",
+  "datos": {
+    "titular": "nombre de la persona o empresa en el doc, o null",
+    "numero": "número de documento/placa/licencia/RUC que aparezca, o null",
+    "vencimiento": "fecha de vencimiento en formato YYYY-MM-DD si existe, o null",
+    "emision": "fecha de emisión en formato YYYY-MM-DD si existe, o null",
+    "observacion": "dato relevante adicional (ej: categoría licencia, tipo seguro), o null"
+  }
+}
+Reglas:
 - valido: true si el documento corresponde al campo. false si es claramente otro documento.
-- motivo: si válido di "Documento verificado". Si no, explica qué se necesita.
-- nitido: true si se puede leer. false si está borroso o ilegible.
-Sé flexible: acepta si tiene relación con el campo. Solo rechaza si es completamente diferente.`}
+- nitido: true si se puede leer bien. false si está borroso o ilegible.
+- motivo: si válido di "Documento verificado". Si no, explica brevemente qué se necesita.
+- datos: extrae la info aunque el doc no sea válido. Si un campo no existe en el doc pon null.
+- Sé flexible al validar: acepta si tiene relación con el campo. Solo rechaza si es completamente diferente.`}
     ];
 
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
@@ -698,8 +739,26 @@ Sé flexible: acepta si tiene relación con el campo. Solo rechaza si es complet
     let res;
     try{res=JSON.parse(texto.replace(/```json|```/g,'').trim());}catch{setAprobado(docId,file,icon,badge,stat,item);return true;}
 
+    // Guardar siempre los datos extraídos, aunque el doc sea rechazado
+    if(res.datos){
+      aiStore[docId]={ docNombre: docName, ...res.datos, valido: res.valido, nitido: res.nitido };
+    }
+
     if(!res.nitido){setRechazado(docId,'📷 Documento poco nítido — sube una versión más clara y legible',icon,badge,stat,item);return false;}
     if(!res.valido){setRechazado(docId,'❌ '+res.motivo,icon,badge,stat,item);return false;}
+
+    // Mostrar chip de vencimiento si la IA lo detectó
+    if(res.datos?.vencimiento){
+      const venc=new Date(res.datos.vencimiento);
+      const hoy=new Date();
+      const dias=Math.ceil((venc-hoy)/(1000*60*60*24));
+      let vencMsg='';
+      if(dias<0)vencMsg=`⚠️ Vencido el ${res.datos.vencimiento}`;
+      else if(dias<=60)vencMsg=`⏰ Vence en ${dias} días (${res.datos.vencimiento})`;
+      else vencMsg=`✓ Vigente hasta ${res.datos.vencimiento}`;
+      if(badge)badge.textContent=vencMsg;
+    }
+
     setAprobado(docId,file,icon,badge,stat,item);return true;
   }catch(e){
     console.warn('IA no disponible:',e.message);
@@ -911,6 +970,7 @@ function accederDocumentos(){
   document.getElementById('docs-banner-sub').textContent='Tu carpeta en SharePoint está activa';
   document.getElementById('docs-folder-path').innerHTML='Docs / CADENA_DE_SUMINISTROS / 2.Compras / TRANSPORTE 2026 / <span>'+(SESSION.categoria||'')+'</span> / <span>'+SESSION.analista+'</span> / <span>'+(SESSION.razonSocial||SESSION.ruc)+'</span>';
   Object.keys(fileStore).forEach(k=>delete fileStore[k]);aiRejected.clear();
+  Object.keys(aiStore).forEach(k=>delete aiStore[k]);
   renderDocGrid('docs-empresa',DOCS_EMPRESA);
   condEntryCount=0;unidEntryCount=0;
   document.getElementById('conductores-lista').innerHTML='';
@@ -963,6 +1023,29 @@ async function submitDocumentos(){
       enviados++;
       document.getElementById('prog-fill').style.width=Math.round(enviados/archivos.length*100)+'%';
       document.getElementById('prog-count').textContent=enviados+' / '+archivos.length+' archivos';
+    }
+
+    // Guardar datos IA en el Google Sheet (acción 'guardarAI')
+    if(Object.keys(aiStore).length>0){
+      showAlert('docs-alert','loading','Guardando datos de documentos en el sistema...');
+      try{
+        await fetch(CFG.GSHEET_URL,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            action:'guardarAI',
+            ruc:SESSION.ruc,
+            docId:'__ingresar__',   // clave especial para datos de ingresar
+            datos:{
+              fecha:new Date().toLocaleString('es-PE'),
+              conductores: conductores.map(c=>c.nombre),
+              unidades:    unidades.map(u=>u.placa),
+              documentos:  Object.entries(aiStore).map(([id,d])=>({id,...d}))
+            }
+          }),
+          mode:'no-cors'
+        });
+      }catch(e){console.warn('No se pudieron guardar datos IA en Sheet:',e.message);}
     }
 
     setTimeout(()=>{
