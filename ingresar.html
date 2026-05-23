@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Acceso Interno — Complejo Agroindustrial Beta</title>
+<title>Portal Proveedores — Complejo Agroindustrial Beta</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -16,159 +16,162 @@
   --amber:#F59E0B;--amberl:#FFFBEB;
   --f:'Outfit',sans-serif;--m:'JetBrains Mono',monospace;
   --r8:8px;--r12:12px;--r16:16px;
-  --shadow:0 1px 3px rgba(82,18,160,.06), 0 4px 16px rgba(82,18,160,.08);
+  --shadow:0 1px 3px rgba(82,18,160,.06),0 4px 16px rgba(82,18,160,.08);
 }
-body{font-family:var(--f);background:var(--bg);color:var(--s1);min-height:100vh;display:flex;flex-direction:column}
-
-/* ══ NAVBAR ══ */
-nav{
-  background:var(--p);border-bottom:2px solid var(--g);
-  height:60px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 2rem;position:sticky;top:0;z-index:200;
-  box-shadow:0 2px 16px rgba(82,18,160,.3);
-}
+body{font-family:var(--f);background:var(--bg);color:var(--s1);min-height:100vh}
+nav{background:var(--p);border-bottom:2px solid var(--g);height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;position:sticky;top:0;z-index:200;box-shadow:0 2px 16px rgba(82,18,160,.3)}
+.nav-right{display:flex;align-items:center;gap:10px}
 .nav-pill{font-size:11px;font-weight:600;letter-spacing:.06em;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.2)}
+.nav-pill-g{background:rgba(91,173,30,.2);color:#b4f06e;border-color:rgba(91,173,30,.35)}
 .nav-session{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:5px 14px 5px 8px;cursor:pointer;transition:.15s}
 .nav-session:hover{background:rgba(255,255,255,.18)}
 .nav-session-avatar{width:26px;height:26px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--p);flex-shrink:0}
-.nav-session-name{font-size:11.5px;font-weight:600;color:#fff;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* ══ MAIN ══ */
-/* ══ HERO ══ */
-.hero{background:linear-gradient(135deg,var(--p) 0%,#3a0e7a 100%);padding:2.5rem 1.5rem 4.5rem;position:relative;overflow:hidden;text-align:center}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:48px;background:var(--bg);clip-path:ellipse(60% 100% at 50% 100%)}
-.hero-glow{position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(121,204,56,.22),transparent 70%);pointer-events:none}
-.hero-glow2{position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(82,18,160,.35),transparent 70%);pointer-events:none}
-.hero-content{position:relative;z-index:2;max-width:480px;margin:0 auto}
-.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(121,204,56,.2);border:1px solid rgba(121,204,56,.4);border-radius:999px;padding:4px 14px;font-size:11px;font-weight:700;color:#b4f06e;letter-spacing:.06em;margin-bottom:1rem}
-.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--g2)}
-.hero-icon{width:72px;height:72px;border-radius:22px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;backdrop-filter:blur(8px)}
-.hero-icon svg{width:32px;height:32px;color:#fff}
-.hero h1{font-size:2rem;font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1.15;margin-bottom:.5rem}
-.hero h1 em{font-style:normal;color:var(--g2)}
-.hero-sub{font-size:13px;color:rgba(255,255,255,.65);line-height:1.6}
-/* ══ LOCK SCREEN ══ */
-main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:2.5rem 1rem 5rem}
-.lock-wrap{width:100%;max-width:420px}
-
-/* ══ CARD ══ */
-.card{background:var(--w);border:1px solid var(--s4);border-radius:var(--r16);padding:1.75rem;box-shadow:var(--shadow)}
-.field{display:flex;flex-direction:column;gap:.3rem;margin-bottom:1rem}
-label{font-size:11.5px;font-weight:600;color:var(--s2);letter-spacing:.01em}
-label .req{color:var(--p);margin-left:2px}
-input,select{font-family:var(--f);font-size:13.5px;color:var(--s1);background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r8);padding:.55rem .875rem;outline:none;transition:border-color .15s,box-shadow .15s,background .15s;width:100%;appearance:none}
-input:focus,select:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
-input::placeholder{color:var(--s3);font-size:13px}
-.hint{font-size:10.5px;color:var(--s3);margin-top:2px;display:block}
-
-/* ══ BTN ══ */
-.btn{width:100%;padding:.85rem 1.5rem;border:none;border-radius:var(--r12);font-family:var(--f);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:9px}
-.btn-primary{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;box-shadow:0 4px 16px rgba(82,18,160,.35)}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(82,18,160,.4)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.btn svg{width:16px;height:16px;flex-shrink:0}
-
-/* ══ ALERT ══ */
-.alert{display:none;padding:.9rem 1.1rem;border-radius:var(--r12);border:1.5px solid;font-size:13px;line-height:1.55;margin-bottom:1rem}
-.alert.error{display:flex;gap:10px;align-items:flex-start;background:var(--rl);border-color:var(--r);color:var(--r)}
-.alert.loading{display:flex;gap:10px;align-items:center;background:var(--pl);border-color:var(--p);color:var(--p)}
-.alert.success{display:flex;gap:10px;align-items:flex-start;background:var(--gl);border-color:var(--g);color:#2d6010}
-.spin{width:15px;height:15px;flex-shrink:0;border:2px solid rgba(82,18,160,.2);border-top-color:var(--p);border-radius:50%;animation:sp .7s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-
-/* ══ DENEGADO ══ */
-.denied-wrap{text-align:center;padding:1.5rem 0}
-.denied-icon{width:72px;height:72px;border-radius:50%;background:var(--rl);border:2px solid rgba(224,32,32,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
-.denied-icon svg{width:32px;height:32px;color:var(--r)}
-.denied-title{font-size:1.1rem;font-weight:800;color:var(--r);margin-bottom:.5rem}
-.denied-sub{font-size:12.5px;color:var(--s2);line-height:1.6;margin-bottom:1.5rem}
-.btn-retry{background:none;border:1.5px solid var(--s4);border-radius:var(--r12);padding:.65rem 1.5rem;font-family:var(--f);font-size:13px;font-weight:600;color:var(--s2);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
-.btn-retry:hover{border-color:var(--p3);color:var(--p);background:var(--pll)}
-
-/* ══ OTP ══ */
-.otp-wrap{display:flex;gap:10px;justify-content:center;margin:1rem 0}
-.otp-digit{width:52px;height:60px;text-align:center;font-size:24px;font-weight:700;font-family:var(--m);border:2px solid var(--s4);border-radius:12px;background:var(--pll);color:var(--s1);transition:all .15s;caret-color:var(--p)}
-.otp-digit:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.1);outline:none}
-.otp-digit.filled{border-color:var(--p3);background:var(--pl)}
-.otp-timer{font-size:12px;color:var(--s3);text-align:center;font-family:var(--m);margin:.5rem 0}
-.otp-timer strong{color:var(--p)}
-.btn-resend{background:none;border:none;font-family:var(--f);font-size:12.5px;font-weight:600;color:var(--p);cursor:pointer;text-decoration:underline;text-underline-offset:2px;display:block;margin:.5rem auto}
-
-/* ══ BIENVENIDA ══ */
-.welcome-banner{background:linear-gradient(135deg,var(--gl),var(--gll));border:1.5px solid rgba(91,173,30,.4);border-left:5px solid var(--g);border-radius:var(--r16);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:14px;margin-bottom:1.5rem}
-.welcome-icon{width:48px;height:48px;border-radius:12px;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
-.welcome-banner h3{font-size:14px;font-weight:700;color:#2d6010;margin-bottom:3px}
-.welcome-banner p{font-size:12px;color:#3d7a18}
-
-/* ══ PANTALLAS ══ */
+.nav-session-name{font-size:11.5px;font-weight:600;color:#fff;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero{background:var(--p);position:relative;overflow:hidden;padding:3.5rem 2rem 0}
+.hero-wave{height:60px;background:var(--bg);clip-path:polygon(0 100%,100% 0,100% 100%);position:relative;z-index:2}
+.hero-wave::before{content:'';position:absolute;inset:0;background:var(--g);clip-path:polygon(0 100%,100% 30%,100% 100%);opacity:.35}
+.hero-dec1{position:absolute;top:-80px;right:-80px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(107,40,192,.6) 0%,transparent 70%);pointer-events:none}
+.hero-dec2{position:absolute;bottom:20px;left:-60px;width:200px;height:200px;border-radius:50%;background:rgba(91,173,30,.12);pointer-events:none}
+.hero-accent{position:absolute;top:0;right:0;width:5px;height:100%;background:linear-gradient(to bottom,var(--g2),var(--g))}
+.hero-content{position:relative;z-index:2;max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr auto;align-items:center;gap:2rem;padding-bottom:1.5rem}
+.hero-text h1{font-size:2rem;font-weight:800;color:#fff;line-height:1.15;margin-bottom:.5rem;letter-spacing:-.02em}
+.hero-text h1 span{color:var(--g2)}
+.hero-text p{font-size:.875rem;color:rgba(255,255,255,.7);line-height:1.6;max-width:380px}
+.hero-chips{display:flex;gap:6px;margin-top:1rem;flex-wrap:wrap}
+.hchip{font-size:10.5px;font-weight:600;letter-spacing:.05em;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.8);background:rgba(255,255,255,.1)}
+.hchip.g{background:rgba(91,173,30,.25);border-color:rgba(91,173,30,.5);color:#b4f06e}
+.hero-logo-box{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:var(--r16);padding:1rem 1.25rem;display:flex;flex-direction:column;align-items:center;gap:8px;backdrop-filter:blur(4px);flex-shrink:0}
+.hero-logo-box .gbar{height:3px;width:80%;border-radius:99px;background:linear-gradient(90deg,var(--g2),transparent)}
 .screen{display:none;animation:fadeUp .3s ease}
 .screen.active{display:block}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-/* ══ DOCS WRAP ══ */
-.docs-wrap{width:100%;max-width:720px;padding:0 1rem 4rem}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.wrap{max-width:720px;margin:0 auto;padding:2rem 1.5rem 5rem;display:flex;flex-direction:column;gap:1.5rem}
+.wrap-sm{max-width:480px;margin:0 auto;padding:2.5rem 1.5rem 5rem}
+.card{background:var(--w);border:1px solid var(--s4);border-radius:var(--r16);padding:1.5rem;box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
+.card:focus-within{border-color:var(--p3);box-shadow:var(--shadow),0 0 0 3px rgba(82,18,160,.07)}
 .card-title{font-size:13px;font-weight:700;color:var(--s1);margin-bottom:1.1rem;display:flex;align-items:center;gap:7px}
+.card-title svg{width:15px;height:15px;color:var(--p);flex-shrink:0}
 .card-title .dot{width:6px;height:6px;border-radius:50%;background:var(--g);flex-shrink:0}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
-@media(max-width:540px){.g2{grid-template-columns:1fr}}
+.entry-card{background:var(--w);border:1px solid var(--s4);border-radius:20px;padding:2.5rem 2rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:1.5rem}
 .opt-btn{width:100%;padding:1rem 1.25rem;background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r12);display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s;text-align:left;font-family:var(--f)}
 .opt-btn:hover{border-color:var(--p3);background:var(--pl);box-shadow:0 4px 16px rgba(82,18,160,.1)}
 .opt-btn-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.opt-btn-icon.purple{background:var(--pl);color:var(--p)}
 .opt-btn-icon.green{background:var(--gl);color:var(--g)}
+.opt-btn-icon.purple{background:var(--pl);color:var(--p)}
 .opt-btn-text strong{display:block;font-size:13.5px;font-weight:700;color:var(--s1);margin-bottom:2px}
 .opt-btn-text span{font-size:11.5px;color:var(--s3)}
 .opt-btn-arrow{margin-left:auto;color:var(--s3);flex-shrink:0}
 .step-label{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--s3);text-transform:uppercase}
 .step-num{width:22px;height:22px;border-radius:50%;background:var(--p);color:var(--w);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .step-line{flex:1;height:1px;background:var(--s4)}
-.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
-.doc-item{position:relative;border:1.5px solid var(--s4);border-radius:var(--r12);overflow:hidden;cursor:pointer;background:var(--pll);transition:all .15s}
-.doc-item:hover{border-color:var(--p3);box-shadow:0 3px 12px rgba(82,18,160,.12)}
-.doc-item.has-file{border-color:var(--g);background:var(--gll)}
-.doc-item.required-missing{border-color:var(--r);background:var(--rl)}
-.doc-item input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.doc-face{padding:12px 12px 10px;pointer-events:none}
-.doc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;background:var(--w);border:1px solid var(--s4);color:var(--p);transition:all .15s}
-.doc-item.has-file .doc-icon{background:var(--g);border-color:transparent;color:var(--w)}
-.doc-item.required-missing .doc-icon{background:var(--r);border-color:transparent;color:var(--w)}
-.doc-name{font-size:11.5px;font-weight:600;color:var(--s1);line-height:1.35;margin-bottom:3px}
-.doc-item.has-file .doc-name{color:var(--g)}
-.doc-status{font-size:10px;font-family:var(--m);color:var(--s3)}
-.doc-item.has-file .doc-status{color:var(--g)}
-.doc-item.required-missing .doc-status{color:var(--r)}
-.doc-req-tag{position:absolute;top:7px;right:7px;font-size:9px;font-family:var(--m);font-weight:500;padding:2px 6px;border-radius:999px;background:rgba(82,18,160,.1);color:var(--p)}
-.info-card{background:linear-gradient(135deg,var(--pl),var(--gll));border:1px solid var(--s4);border-left:4px solid var(--p);border-radius:var(--r12);padding:1rem 1.25rem;display:flex;gap:14px;align-items:center}
-.info-icon{width:40px;height:40px;flex-shrink:0;border-radius:10px;background:var(--p);color:var(--w);display:flex;align-items:center;justify-content:center}
-.info-icon svg{width:18px;height:18px}
-.info-text p{font-size:13px;font-weight:700;color:var(--p);margin-bottom:2px}
-.info-text span{font-size:11.5px;color:var(--s2)}
-.folder-path{background:var(--s5);border:1px solid var(--s4);border-radius:var(--r8);padding:.6rem .875rem;font-family:var(--m);font-size:11.5px;color:var(--s2);word-break:break-all;line-height:1.6}
-.folder-path span{color:var(--p);font-weight:600}
-.prog-bar{background:var(--w);border-bottom:1px solid var(--s4);position:sticky;top:60px;z-index:100}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+@media(max-width:540px){.g2{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:.3rem}
+label{font-size:11.5px;font-weight:600;color:var(--s2);letter-spacing:.01em}
+label .req{color:var(--p);margin-left:2px}
+input,select,textarea{font-family:var(--f);font-size:13.5px;color:var(--s1);background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r8);padding:.55rem .875rem;outline:none;transition:border-color .15s,box-shadow .15s,background .15s;width:100%;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
+input::placeholder,textarea::placeholder{color:var(--s3);font-size:13px}
+textarea{resize:vertical;min-height:80px;line-height:1.5}
+.hint{font-size:10.5px;color:var(--s3);margin-top:2px;display:block}
+.otp-wrap{display:flex;gap:10px;justify-content:center;margin:1rem 0}
+.otp-digit{width:52px;height:60px;text-align:center;font-size:24px;font-weight:700;font-family:var(--m);letter-spacing:0;border:2px solid var(--s4);border-radius:12px;background:var(--pll);color:var(--s1);transition:all .15s;caret-color:var(--p)}
+.otp-digit:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.1);outline:none}
+.otp-digit.filled{border-color:var(--p3);background:var(--pl)}
+@media(max-width:400px){.otp-digit{width:42px;height:52px;font-size:20px}}
+.btn{width:100%;padding:.85rem 1.5rem;border:none;border-radius:var(--r12);font-family:var(--f);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:-.01em}
+.btn-primary{background:linear-gradient(135deg,var(--p) 0%,var(--p2) 100%);color:var(--w);box-shadow:0 4px 16px rgba(82,18,160,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(82,18,160,.4)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn svg{width:16px;height:16px;flex-shrink:0}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--s2);cursor:pointer;transition:.15s;border:none;background:none;font-family:var(--f);padding:0}
+.back-link:hover{color:var(--p)}
+.back-link svg{width:14px;height:14px}
+.alert{display:none;padding:.9rem 1.1rem;border-radius:var(--r12);border:1.5px solid;font-size:13px;line-height:1.55}
+.alert.success{display:flex;gap:10px;align-items:flex-start;background:var(--gl);border-color:var(--g);color:#2d6010}
+.alert.error{display:flex;gap:10px;align-items:flex-start;background:var(--rl);border-color:var(--r);color:var(--r)}
+.alert.loading{display:flex;gap:10px;align-items:center;background:var(--pl);border-color:var(--p);color:var(--p)}
+.alert.warning{display:flex;gap:10px;align-items:flex-start;background:var(--amberl);border-color:var(--amber);color:#92400e}
+.spin{width:15px;height:15px;flex-shrink:0;border:2px solid rgba(82,18,160,.2);border-top-color:var(--p);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.prog-bar{background:var(--w);border-bottom:1px solid var(--s4)}
 .prog-inner{max-width:720px;margin:0 auto;padding:.875rem 2rem;display:flex;align-items:center;gap:12px}
 .prog-label{font-size:11.5px;font-weight:600;color:var(--s2);white-space:nowrap}
 .prog-track{flex:1;height:5px;border-radius:99px;background:var(--s4);overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--p),var(--g));width:0%;transition:width .4s cubic-bezier(.4,0,.2,1)}
 .prog-num{font-size:11px;font-weight:600;font-family:var(--m);color:var(--p);white-space:nowrap}
-textarea{font-family:var(--f);font-size:13.5px;color:var(--s1);background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r8);padding:.55rem .875rem;outline:none;transition:border-color .15s;width:100%;resize:vertical;min-height:80px;line-height:1.5}
-textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
-.back-link{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--s2);cursor:pointer;transition:.15s;border:none;background:none;font-family:var(--f);padding:0;margin-bottom:1.5rem}
-.back-link:hover{color:var(--p)}
-.back-link svg{width:14px;height:14px}
-
-/* ══ ÉXITO ══ */
-#screen-success{display:none;position:fixed;inset:0;z-index:9000;background:linear-gradient(135deg,#1C0840,#3a0d7a 50%,#1a3a0a);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;animation:fadeInSuccess .5s ease}
+.otp-timer{font-size:12px;color:var(--s3);text-align:center;font-family:var(--m)}
+.otp-timer strong{color:var(--p)}
+.btn-resend{background:none;border:none;font-family:var(--f);font-size:12.5px;font-weight:600;color:var(--p);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.folder-path{background:var(--s5);border:1px solid var(--s4);border-radius:var(--r8);padding:.6rem .875rem;font-family:var(--m);font-size:11.5px;color:var(--s2);word-break:break-all;line-height:1.6}
+.folder-path span{color:var(--p);font-weight:600}
+.landing-hero{text-align:center;padding:3rem 2rem 1rem;max-width:480px;margin:0 auto}
+.landing-hero .big-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--p) 0%,var(--p2) 100%);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;box-shadow:0 8px 32px rgba(82,18,160,.3)}
+.landing-hero h2{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.5rem}
+.landing-hero p{font-size:.875rem;color:var(--s2);line-height:1.6}
+footer{background:var(--s1);padding:1.5rem 2rem;display:flex;flex-direction:column;align-items:center;gap:.75rem;border-top:3px solid var(--g)}
+.footer-dev{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(121,204,56,.3);border-radius:12px;padding:.6rem 1.1rem}
+.footer-dev-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--p),var(--g2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.footer-dev-info{line-height:1.3}
+.footer-dev-name{font-size:12px;font-weight:700;color:#fff}
+.footer-dev-role{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.03em}
+.footer-copy{font-size:9.5px;color:rgba(255,255,255,.25);text-align:center}
+.info-card{background:linear-gradient(135deg,var(--pl) 0%,var(--gll) 100%);border:1px solid var(--s4);border-left:4px solid var(--p);border-radius:var(--r12);padding:1rem 1.25rem;display:flex;gap:14px;align-items:center}
+.info-icon{width:40px;height:40px;flex-shrink:0;border-radius:10px;background:var(--p);color:var(--w);display:flex;align-items:center;justify-content:center}
+.info-icon svg{width:18px;height:18px}
+.info-text p{font-size:13px;font-weight:700;color:var(--p);margin-bottom:2px}
+.info-text span{font-size:11.5px;color:var(--s2)}
+.existing-banner{background:linear-gradient(135deg,var(--gl) 0%,var(--gll) 100%);border:1.5px solid rgba(91,173,30,.4);border-left:5px solid var(--g);border-radius:var(--r16);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:16px}
+.existing-banner-icon{width:48px;height:48px;border-radius:12px;background:var(--g);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.existing-banner h3{font-size:14px;font-weight:700;color:#2d6010;margin-bottom:3px}
+.existing-banner p{font-size:12px;color:#3d7a18}
+/* DOC GRID */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.doc-item{position:relative;border:1.5px solid var(--s4);border-radius:var(--r12);overflow:hidden;cursor:pointer;background:var(--pll);transition:all .15s}
+.doc-item:hover{border-color:var(--p3);box-shadow:0 3px 12px rgba(82,18,160,.12)}
+.doc-item.has-file{border-color:var(--g);background:var(--gll)}
+.doc-item.required-missing{border-color:var(--r);background:var(--rl)}
+.doc-item.ai-checking{border-color:var(--amber);background:var(--amberl);pointer-events:none}
+.doc-item.ai-rejected{border-color:var(--r);background:var(--rl)}
+.doc-item input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.doc-face{padding:12px 12px 10px;pointer-events:none}
+.doc-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;background:var(--w);border:1px solid var(--s4);color:var(--p);transition:all .15s}
+.doc-item.has-file .doc-icon{background:var(--g);border-color:transparent;color:var(--w)}
+.doc-item.ai-checking .doc-icon{background:var(--amber);border-color:transparent;color:var(--w)}
+.doc-item.ai-rejected .doc-icon,.doc-item.required-missing .doc-icon{background:var(--r);border-color:transparent;color:var(--w)}
+.doc-name{font-size:11.5px;font-weight:600;color:var(--s1);line-height:1.35;margin-bottom:3px}
+.doc-item.has-file .doc-name{color:#2d6010}
+.doc-item.ai-rejected .doc-name,.doc-item.required-missing .doc-name{color:var(--r)}
+.doc-status{font-size:10px;font-family:var(--m);color:var(--s3)}
+.doc-item.has-file .doc-status{color:var(--g)}
+.doc-item.ai-rejected .doc-status{color:var(--r)}
+.doc-req-tag{position:absolute;top:7px;right:7px;font-size:9px;font-family:var(--m);font-weight:500;padding:2px 6px;border-radius:999px;background:rgba(82,18,160,.1);color:var(--p)}
+/* AI BADGE */
+.ai-badge{position:absolute;bottom:6px;left:7px;font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:999px;display:none;font-family:var(--m);letter-spacing:.02em}
+.doc-item.has-file .ai-badge{display:block;background:rgba(91,173,30,.15);color:#2d6010;border:1px solid rgba(91,173,30,.3)}
+.doc-item.ai-checking .ai-badge{display:block;background:rgba(245,158,11,.2);color:#7a4f00;border:1px solid rgba(245,158,11,.4)}
+.doc-item.ai-rejected .ai-badge{display:block;background:rgba(224,32,32,.1);color:var(--r);border:1px solid rgba(224,32,32,.3)}
+.ai-spin{width:11px;height:11px;border:1.5px solid rgba(245,158,11,.3);border-top-color:var(--amber);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:3px}
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--s5);border:1px solid var(--s4);border-radius:var(--r12);padding:3px;margin-bottom:1.25rem}
+.tab{flex:1;padding:7px 6px;text-align:center;font-size:12px;font-weight:600;font-family:var(--f);border-radius:10px;border:none;background:transparent;color:var(--s2);cursor:pointer;transition:all .15s}
+.tab.active{background:var(--p);color:var(--w);box-shadow:0 2px 8px rgba(82,18,160,.3)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+/* ÉXITO */
+#screen-success{display:none;position:fixed;inset:0;z-index:9000;background:linear-gradient(135deg,#1C0840 0%,#3a0d7a 50%,#1a3a0a 100%);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;animation:fadeInSuccess .5s ease}
 #screen-success.show{display:flex}
 @keyframes fadeInSuccess{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-.success-icon-wrap{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));display:flex;align-items:center;justify-content:center;margin:0 auto 1.75rem;box-shadow:0 0 0 16px rgba(91,173,30,.15),0 0 0 32px rgba(91,173,30,.07);animation:popIn .6s cubic-bezier(.34,1.56,.64,1) .2s both}
+.success-icon-wrap{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--g) 0%,var(--g2) 100%);display:flex;align-items:center;justify-content:center;margin:0 auto 1.75rem;box-shadow:0 0 0 16px rgba(91,173,30,.15),0 0 0 32px rgba(91,173,30,.07);animation:popIn .6s cubic-bezier(.34,1.56,.64,1) .2s both}
 @keyframes popIn{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
-.success-title{font-size:2.2rem;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:.75rem;animation:slideUp .5s ease .4s both}
+.success-title{font-size:2.4rem;font-weight:900;color:#fff;letter-spacing:-.03em;line-height:1.1;margin-bottom:.75rem;animation:slideUp .5s ease .4s both}
 .success-title span{color:var(--g2)}
 .success-sub{font-size:1rem;color:rgba(255,255,255,.75);line-height:1.6;max-width:380px;margin:0 auto 2rem;animation:slideUp .5s ease .55s both}
 .success-meta{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:1.1rem 1.5rem;margin-bottom:2rem;font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.8;font-family:var(--m);animation:slideUp .5s ease .65s both;max-width:420px;width:100%}
 .success-meta strong{color:var(--g2)}
-.success-btn{padding:.9rem 2.5rem;background:linear-gradient(135deg,var(--g),var(--g2));border:none;border-radius:14px;font-family:var(--f);font-size:15px;font-weight:800;color:var(--s1);cursor:pointer;box-shadow:0 6px 24px rgba(91,173,30,.4);transition:all .2s;animation:slideUp .5s ease .85s both;display:inline-flex;align-items:center;gap:9px}
+.success-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:2rem;animation:slideUp .5s ease .75s both}
+.success-chip{padding:5px 14px;border-radius:999px;font-size:11.5px;font-weight:700;background:rgba(121,204,56,.2);border:1px solid rgba(121,204,56,.4);color:#b4f06e}
+.success-btn{padding:.9rem 2.5rem;background:linear-gradient(135deg,var(--g) 0%,var(--g2) 100%);border:none;border-radius:14px;font-family:var(--f);font-size:15px;font-weight:800;color:var(--s1);cursor:pointer;box-shadow:0 6px 24px rgba(91,173,30,.4);transition:all .2s;animation:slideUp .5s ease .85s both;display:inline-flex;align-items:center;gap:9px}
 .success-btn:hover{transform:translateY(-3px);box-shadow:0 10px 32px rgba(91,173,30,.5)}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .confetti-piece{position:fixed;top:-10px;border-radius:2px;animation:confettiFall linear forwards;pointer-events:none;z-index:9001}
@@ -183,172 +186,232 @@ textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rg
     <span style="font-family:'Outfit',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.03em;color:#fff">bet<span style="color:#79CC38">a</span></span>
     <span style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:500;letter-spacing:.08em;color:rgba(255,255,255,.6);text-transform:lowercase">complejo agroindustrial</span>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <span class="nav-pill">🔒 Acceso Interno</span>
+  <div class="nav-right">
+    <span class="nav-pill">Portal Proveedores</span>
+    <span class="nav-pill nav-pill-g">✦ IA Activa</span>
     <div id="nav-session" class="nav-session" style="display:none" onclick="cerrarSesion()">
       <div class="nav-session-avatar" id="nav-avatar">?</div>
-      <span class="nav-session-name" id="nav-name"></span>
+      <span class="nav-session-name" id="nav-name">Proveedor</span>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </div>
   </div>
 </nav>
 
-<!-- PROGRESS BAR (solo en docs) -->
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-dec1"></div><div class="hero-dec2"></div><div class="hero-accent"></div>
+  <div class="hero-content">
+    <div class="hero-text">
+      <h1>Portal de<br><span>Proveedores</span></h1>
+      <p>Ingresa con tu RUC para acceder a tu carpeta de documentos — <strong style="color:#b4f06e">Complejo Agroindustrial Beta</strong></p>
+      <div class="hero-chips">
+        <span class="hchip">Seguro</span>
+        <span class="hchip">Verificación OTP</span>
+        <span class="hchip g">Validación IA</span>
+      </div>
+    </div>
+    <div class="hero-logo-box">
+      <div style="display:flex;flex-direction:column;align-items:center;line-height:1;gap:3px">
+        <span style="font-family:'Outfit',sans-serif;font-size:32px;font-weight:800;letter-spacing:-.03em;color:#fff">bet<span style="color:#79CC38">a</span></span>
+        <span style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:500;letter-spacing:.08em;color:rgba(255,255,255,.65);text-transform:lowercase">complejo agroindustrial</span>
+      </div>
+      <div class="gbar"></div>
+    </div>
+  </div>
+  <div class="hero-wave"></div>
+</div>
+
+<!-- PROGRESS BAR -->
 <div class="prog-bar" id="prog-bar-wrap" style="display:none">
   <div class="prog-inner">
-    <span class="prog-label">Documentos</span>
+    <span class="prog-label">Progreso de carga</span>
     <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
     <span class="prog-num" id="prog-count">0 / 0</span>
   </div>
 </div>
 
-<!-- ══ PANTALLA 1: LOGIN ══ -->
-<div id="screen-login" class="screen active">
-  <div class="hero">
-    <div class="hero-glow"></div>
-    <div class="hero-glow2"></div>
-    <div class="hero-content">
-      <div class="hero-tag">Portal de proveedores</div>
-      <div class="hero-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="3" y="11" width="18" height="11" rx="2"/>
-          <path d="M7 11V7a5 5 0 0110 0v4"/>
-        </svg>
+<!-- PANTALLA 1: ENTRADA -->
+<div id="screen-entry" class="screen active">
+  <div class="wrap-sm">
+    <div class="landing-hero">
+      <div class="big-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
-      <h1>Acceso<br><em>Autorizado</em></h1>
-      <p class="hero-sub">Plataforma de documentación — <strong style="color:#b4f06e">Complejo Agroindustrial Beta</strong></p>
+      <h2>Bienvenido al Portal</h2>
+      <p>Ingresa con tu RUC y correo para acceder a tu carpeta de documentos.</p>
+    </div>
+    <div class="entry-card">
+      <button class="opt-btn" onclick="irA('screen-login')">
+        <div class="opt-btn-icon purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        </div>
+        <div class="opt-btn-text">
+          <strong>Ingresar con mi RUC</strong>
+          <span>Ya estoy registrado — acceder a mi carpeta</span>
+        </div>
+        <svg class="opt-btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
     </div>
   </div>
-  <main>
-    <div class="lock-wrap">
-      <div class="card">
-        <div class="card-head" style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--s5)">
-          <div style="width:32px;height:32px;border-radius:10px;background:var(--pl);display:flex;align-items:center;justify-content:center;color:var(--p);flex-shrink:0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          </div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--s1)">Verificación de acceso</div>
-            <div style="font-size:11px;color:var(--s3)">Solo proveedores aprobados pueden ingresar</div>
-          </div>
-        </div>
-        <div class="field">
-          <label>RUC de empresa <span class="req">*</span></label>
-          <input type="text" id="login-ruc" placeholder="20xxxxxxxxx" maxlength="11"
-            oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)"
-            onkeydown="if(event.key==='Enter') verificarAcceso()">
-          <span class="hint">Ingresa el RUC registrado en el sistema</span>
-        </div>
-        <div class="field">
-          <label>Correo electrónico <span class="req">*</span></label>
-          <input type="email" id="login-email" placeholder="tu@empresa.com"
-            onkeydown="if(event.key==='Enter') verificarAcceso()">
-          <span class="hint">Recibirás un código de verificación</span>
-        </div>
-        <div id="login-alert" class="alert" style="margin-bottom:1rem"></div>
-        <button class="btn btn-primary" onclick="verificarAcceso()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="9" y2="12"/></svg>
-          Verificar acceso
-        </button>
-      </div>
-    </div>
-  </main>
 </div>
 
-<!-- ══ PANTALLA 2: DENEGADO ══ -->
-<div id="screen-denied" class="screen">
-  <main>
-    <div class="lock-wrap">
-      <div class="card">
-        <div class="denied-wrap">
-          <div class="denied-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-            </svg>
-          </div>
-          <div class="denied-title">Acceso denegado</div>
-          <div class="denied-sub">
-            El RUC ingresado no está registrado como personal autorizado.<br>
-            Contacta al administrador del sistema para solicitar acceso.
-          </div>
-          <button class="btn-retry" onclick="irA('screen-login')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-            Intentar con otro RUC
-          </button>
-        </div>
+<!-- PANTALLA 2: LOGIN -->
+<div id="screen-login" class="screen">
+  <div class="wrap-sm">
+    <button class="back-link" onclick="irA('screen-entry')" style="margin-bottom:1.5rem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Volver al inicio
+    </button>
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Identificación <div class="dot"></div>
       </div>
+      <div class="field" style="margin-bottom:.875rem">
+        <label>RUC de empresa <span class="req">*</span></label>
+        <input type="text" id="login-ruc" placeholder="20xxxxxxxxx" maxlength="11" oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)" onkeydown="if(event.key==='Enter')solicitarOtpLogin()">
+      </div>
+      <div class="field" style="margin-bottom:1.25rem">
+        <label>Correo electrónico registrado <span class="req">*</span></label>
+        <input type="email" id="login-email" placeholder="proveedor@empresa.com" onkeydown="if(event.key==='Enter')solicitarOtpLogin()">
+        <span class="hint">Recibirás un código de 6 dígitos en este correo</span>
+      </div>
+      <div id="login-alert" class="alert" style="margin-bottom:.875rem"></div>
+      <button class="btn btn-primary" onclick="solicitarOtpLogin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Enviar código al correo
+      </button>
     </div>
-  </main>
+  </div>
 </div>
 
-<!-- ══ PANTALLA 3: OTP ══ -->
+<!-- PANTALLA 3: OTP -->
 <div id="screen-otp" class="screen">
-  <main>
-    <div class="lock-wrap">
-      <div class="card" style="text-align:center">
-        <div style="width:56px;height:56px;border-radius:16px;background:var(--pl);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:var(--p)">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
-        </div>
-        <h3 style="font-size:1rem;font-weight:700;margin-bottom:.4rem">Código de verificación</h3>
-        <p style="font-size:12.5px;color:var(--s2);margin-bottom:.25rem">Enviamos un código de 6 dígitos a</p>
-        <p id="otp-email-display" style="font-size:13px;font-weight:700;color:var(--p);font-family:var(--m);margin-bottom:1.5rem"></p>
-
-        <div class="otp-wrap" id="otp-inputs">
-          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
-          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
-          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
-          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
-          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
-          <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
-        </div>
-
-        <div id="otp-timer-wrap">
-          <p class="otp-timer">Código válido por <strong id="otp-countdown">10:00</strong></p>
-        </div>
-        <div id="otp-resend-wrap" style="display:none">
-          <button class="btn-resend" onclick="reenviarOtp()">Reenviar código</button>
-        </div>
-
-        <div id="otp-alert" class="alert" style="margin-bottom:.875rem;text-align:left"></div>
-
-        <button class="btn btn-primary" onclick="verificarOtp()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-          Verificar y acceder
-        </button>
-
-        <button class="back-link" onclick="irA('screen-login')" style="margin-top:1rem;justify-content:center;width:100%">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-          Cambiar correo
-        </button>
+  <div class="wrap-sm">
+    <button class="back-link" onclick="irA('screen-login')" style="margin-bottom:1.5rem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Cambiar correo
+    </button>
+    <div class="card" style="text-align:center">
+      <div style="width:56px;height:56px;border-radius:16px;background:var(--pl);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:var(--p)">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>
       </div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.4rem">Código de verificación</h3>
+      <p style="font-size:12.5px;color:var(--s2);line-height:1.6;margin-bottom:.25rem">Enviamos un código de 6 dígitos a</p>
+      <p id="otp-email-display" style="font-size:13px;font-weight:700;color:var(--p);font-family:var(--m);margin-bottom:1.5rem"></p>
+      <div class="otp-wrap">
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+        <input class="otp-digit" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" oninput="otpInput(this)" onkeydown="otpKeyDown(event,this)">
+      </div>
+      <div id="otp-timer-wrap" style="margin-bottom:1rem"><p class="otp-timer">Código válido por <strong id="otp-countdown">10:00</strong></p></div>
+      <div id="otp-resend-wrap" style="display:none;margin-bottom:1rem"><button class="btn-resend" onclick="reenviarOtp()">Reenviar código</button></div>
+      <div id="otp-alert" class="alert" style="margin-bottom:.875rem;text-align:left"></div>
+      <button class="btn btn-primary" onclick="verificarOtp()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Verificar y acceder
+      </button>
     </div>
-  </main>
+  </div>
 </div>
 
-<!-- ══ PANTALLA 4: DOCUMENTOS ══ -->
+<!-- PANTALLA 4: DOCUMENTOS -->
 <div id="screen-docs" class="screen">
-  <div style="max-width:720px;margin:0 auto;padding:2rem 1.5rem 5rem;display:flex;flex-direction:column;gap:1.5rem">
-
-    <div class="welcome-banner">
-      <div class="welcome-icon">
+  <div class="wrap">
+    <div id="docs-banner" class="existing-banner">
+      <div class="existing-banner-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
       </div>
       <div>
         <h3 id="docs-banner-name">Bienvenido</h3>
         <p id="docs-banner-sub">Tu carpeta en SharePoint está lista</p>
-        <div style="margin-top:6px">
-          <div class="folder-path" id="docs-folder-path">2.Compras / TRANSPORTE 2026 / <span>categoría</span> / <span>empresa</span></div>
+        <div style="margin-top:6px"><div class="folder-path" id="docs-folder-path">2.Compras / TRANSPORTE 2026 / <span>categoría</span> / <span>analista</span> / <span>empresa</span></div></div>
+      </div>
+    </div>
+
+    <div class="card" id="card-regularizacion">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Regularización de documentos
+        <div class="dot"></div>
+        <button id="btn-analizar-reg" onclick="analizarRegularizacion()" style="margin-left:auto;background:linear-gradient(135deg,var(--p),var(--p2));border:none;border-radius:8px;padding:5px 14px;font-family:var(--f);font-size:11.5px;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a10 10 0 110 20A10 10 0 0112 2z"/><path d="M12 8v4l3 3"/></svg>
+          Analizar con IA
+        </button>
+      </div>
+
+      <!-- Estado inicial -->
+      <div id="reg-initial" style="text-align:center;padding:1.5rem 1rem">
+        <div style="width:48px;height:48px;border-radius:14px;background:var(--pl);display:flex;align-items:center;justify-content:center;margin:0 auto .875rem;color:var(--p)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
+        <p style="font-size:13px;font-weight:600;color:var(--s1);margin-bottom:.3rem">Analiza tus documentos</p>
+        <p style="font-size:12px;color:var(--s3);line-height:1.5">La IA revisará qué documentos te faltan subir<br>y cuáles están próximos a vencer</p>
+      </div>
+
+      <!-- Loading -->
+      <div id="reg-loading" style="display:none;text-align:center;padding:1.5rem 1rem">
+        <div class="spin" style="margin:0 auto .875rem;width:28px;height:28px;border-width:3px"></div>
+        <p style="font-size:13px;font-weight:600;color:var(--p)">Analizando documentos con IA...</p>
+        <p style="font-size:11.5px;color:var(--s3);margin-top:.3rem">Esto puede tomar unos segundos</p>
+      </div>
+
+      <!-- Resultado -->
+      <div id="reg-resultado" style="display:none">
+
+        <!-- Resumen -->
+        <div id="reg-resumen" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem"></div>
+
+        <!-- Bloque faltantes -->
+        <div id="bloque-faltantes" style="display:none;margin-bottom:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:28px;height:28px;border-radius:8px;background:var(--pl);display:flex;align-items:center;justify-content:center;color:var(--p)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+              <span style="font-size:12.5px;font-weight:700;color:var(--s1)">Documentos faltantes</span>
+              <span id="badge-faltantes" style="font-size:10px;font-weight:700;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:99px;font-family:var(--m)"></span>
+            </div>
+            <button onclick="irA('screen-regularizacion');showRegTab('faltantes',null)" style="font-size:11.5px;font-weight:700;color:var(--p);background:none;border:1px solid var(--p3);border-radius:8px;padding:4px 12px;cursor:pointer;font-family:var(--f);transition:.15s" onmouseover="this.style.background='var(--pl)'" onmouseout="this.style.background='none'">Subir →</button>
+          </div>
+          <div id="lista-faltantes-ia" style="display:flex;flex-direction:column;gap:5px"></div>
+        </div>
+
+        <!-- Bloque vencidos -->
+        <div id="bloque-vencidos" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:28px;height:28px;border-radius:8px;background:var(--rl);display:flex;align-items:center;justify-content:center;color:var(--r)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <span style="font-size:12.5px;font-weight:700;color:var(--s1)">Documentos vencidos / por vencer</span>
+              <span id="badge-vencidos" style="font-size:10px;font-weight:700;background:var(--rl);color:var(--r);padding:2px 8px;border-radius:99px;font-family:var(--m)"></span>
+            </div>
+            <button onclick="irA('screen-regularizacion');showRegTab('vencidos',null)" style="font-size:11.5px;font-weight:700;color:var(--r);background:none;border:1px solid rgba(224,32,32,.3);border-radius:8px;padding:4px 12px;cursor:pointer;font-family:var(--f);transition:.15s" onmouseover="this.style.background='var(--rl)'" onmouseout="this.style.background='none'">Renovar →</button>
+          </div>
+          <div id="lista-vencidos-ia" style="display:flex;flex-direction:column;gap:5px"></div>
+        </div>
+
+        <!-- Todo OK -->
+        <div id="reg-todo-ok" style="display:none;text-align:center;padding:1rem">
+          <div style="font-size:32px;margin-bottom:.5rem">✅</div>
+          <p style="font-size:13.5px;font-weight:700;color:#2d6010;margin-bottom:.25rem">¡Todo en orden!</p>
+          <p style="font-size:12px;color:var(--s3)">No se detectaron documentos faltantes ni vencidos</p>
+        </div>
+
       </div>
     </div>
 
     <div class="info-card">
       <div class="info-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a10 10 0 110 20A10 10 0 0112 2z"/><path d="M12 8v4l3 3"/></svg>
       </div>
       <div class="info-text">
-        <p>Sube los documentos requeridos</p>
-        <span>Los marcados con ★ son obligatorios para completar la habilitación</span>
+        <p>✦ Validación automática con IA</p>
+        <span>Cada documento es verificado al cargarlo — sube el correcto y asegúrate que sea legible</span>
       </div>
     </div>
 
@@ -365,12 +428,12 @@ textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rg
     <div class="card">
       <div class="card-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Conductores <div class="dot"></div>
+        Documentos de conductores <div class="dot"></div>
       </div>
       <div id="conductores-lista"></div>
       <button onclick="addConductorEntry()" style="margin-top:8px;width:100%;padding:9px;background:var(--pll);border:1.5px dashed var(--p3);border-radius:var(--r12);cursor:pointer;font-family:var(--f);font-size:13px;font-weight:600;color:var(--p);display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s" onmouseover="this.style.background='var(--pl)'" onmouseout="this.style.background='var(--pll)'">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Agregar conductor
+        Agregar otro conductor
       </button>
     </div>
 
@@ -378,12 +441,12 @@ textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rg
     <div class="card">
       <div class="card-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h5l3 4v4h-8V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-        Unidades <div class="dot"></div>
+        Documentos de unidades <div class="dot"></div>
       </div>
       <div id="unidades-lista"></div>
       <button onclick="addUnidadEntry()" style="margin-top:8px;width:100%;padding:9px;background:var(--pll);border:1.5px dashed var(--p3);border-radius:var(--r12);cursor:pointer;font-family:var(--f);font-size:13px;font-weight:600;color:var(--p);display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s" onmouseover="this.style.background='var(--pl)'" onmouseout="this.style.background='var(--pll)'">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Agregar unidad
+        Agregar otra unidad
       </button>
     </div>
 
@@ -391,13 +454,71 @@ textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rg
       <label>Observaciones adicionales</label>
       <textarea id="doc-obs" placeholder="Comentarios o aclaraciones adicionales..."></textarea>
     </div>
-
     <div id="docs-alert" class="alert"></div>
-
     <button class="btn btn-primary" id="btn-submit-docs" onclick="submitDocumentos()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Enviar documentos a SharePoint
     </button>
+  </div>
+</div>
+
+<!-- PANTALLA 5: REGULARIZACIÓN -->
+<div id="screen-regularizacion" class="screen">
+  <div class="wrap">
+    <button class="back-link" onclick="irA('screen-docs')" style="margin-bottom:1.5rem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Volver a mis documentos
+    </button>
+    <div class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Regularización de documentos
+      </div>
+      <div class="tabs">
+        <button class="tab active" id="tab-faltantes" onclick="showRegTab('faltantes',this)">📋 Documentos faltantes</button>
+        <button class="tab" id="tab-vencidos" onclick="showRegTab('vencidos',this)">🔄 Documentos vencidos</button>
+      </div>
+      <div id="faltantes" class="tab-panel active">
+        <div style="background:var(--pl);border:1px solid var(--p3);border-radius:var(--r12);padding:.875rem 1rem;margin-bottom:1rem;font-size:12.5px;color:var(--p);display:flex;gap:10px;align-items:flex-start">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+          <span>Documentos <strong>complementarios</strong> pendientes. Súbelos para completar tu expediente.</span>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          Empresa / Proveedor <span id="falt-emp-count" style="font-size:10px;font-weight:600;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:99px;font-family:var(--m)"></span>
+        </div>
+        <div class="doc-grid" id="faltantes-empresa-grid" style="margin-bottom:1.25rem"></div>
+        <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Conductores <span id="falt-cond-count" style="font-size:10px;font-weight:600;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:99px;font-family:var(--m)"></span>
+        </div>
+        <div id="faltantes-conductores-wrap"></div>
+        <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem;display:flex;align-items:center;gap:8px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h5l3 4v4h-8V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Unidades / Vehículos <span id="falt-unid-count" style="font-size:10px;font-weight:600;background:var(--pl);color:var(--p);padding:2px 8px;border-radius:99px;font-family:var(--m)"></span>
+        </div>
+        <div id="faltantes-unidades-wrap"></div>
+        <div style="margin-top:1rem"><label style="display:block;margin-bottom:.3rem">Observaciones</label><textarea id="falt-obs" placeholder="Comentarios sobre estos documentos..." style="min-height:60px"></textarea></div>
+        <div id="falt-alert" class="alert" style="margin-top:.875rem"></div>
+        <button class="btn btn-primary" style="margin-top:1rem" id="btn-falt-submit" onclick="submitFaltantes()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Enviar documentos faltantes
+        </button>
+      </div>
+      <div id="vencidos" class="tab-panel">
+        <div style="background:var(--amberl);border:1px solid var(--amber);border-radius:var(--r12);padding:.875rem 1rem;margin-bottom:1rem;font-size:12.5px;color:#92400e;display:flex;gap:10px;align-items:flex-start">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <span>Sube aquí los documentos que han <strong>vencido</strong> o necesitan renovación.</span>
+        </div>
+        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" id="vencidos-input" style="width:100%;padding:20px;border:2px dashed var(--p3);border-radius:12px;cursor:pointer;background:var(--pll);color:var(--s2);font-family:var(--f);font-size:13px" onchange="onVencidosChange(this)">
+        <div id="lista-vencidos" style="margin-top:.875rem;display:flex;flex-direction:column;gap:6px"></div>
+        <div id="venc-alert" class="alert" style="margin-top:.875rem"></div>
+        <button class="btn btn-primary" style="margin-top:1rem" id="btn-venc-submit" onclick="submitVencidos()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Enviar documentos vencidos
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -406,433 +527,698 @@ textarea:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rg
   <div class="success-icon-wrap">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1C0840" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
   </div>
-  <h2 class="success-title">¡Documentos <span>enviados!</span></h2>
-  <p class="success-sub" id="success-sub">Tus archivos llegaron correctamente a SharePoint.</p>
-  <div class="success-meta" id="success-meta"></div>
-  <button class="success-btn" onclick="cerrarExito()">← Volver al inicio</button>
+  <div class="success-title">¡Todo enviado<br><span>con éxito!</span> 🎉</div>
+  <div class="success-sub">Tus documentos llegaron a SharePoint y el analista ya fue notificado.<br><strong style="color:#b4f06e">¡Gracias por confiar en Complejo Agroindustrial Beta!</strong></div>
+  <div class="success-meta" id="success-meta">📁 Carpeta actualizada correctamente<br>✦ Verificados con IA<br>✅ Proceso completado</div>
+  <div class="success-chips">
+    <span class="success-chip">✓ Documentos recibidos</span>
+    <span class="success-chip">✓ SharePoint actualizado</span>
+    <span class="success-chip">✓ Notificación enviada</span>
+  </div>
+  <button class="success-btn" onclick="cerrarExito()">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Volver al inicio
+  </button>
+  <div style="margin-top:1.5rem;font-size:10.5px;color:rgba(255,255,255,.3);font-family:var(--m)">Desarrollado por Ing. Yazmin Atuncar · TI Beta</div>
 </div>
 
+<footer>
+  <div style="display:flex;flex-direction:column;align-items:center;line-height:1;gap:3px">
+    <span style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.03em;color:#fff">bet<span style="color:#79CC38">a</span></span>
+    <span style="font-family:'Outfit',sans-serif;font-size:8px;font-weight:500;letter-spacing:.08em;color:rgba(255,255,255,.35);text-transform:lowercase">complejo agroindustrial</span>
+  </div>
+  <div class="footer-dev">
+    <div class="footer-dev-avatar">YA</div>
+    <div class="footer-dev-info">
+      <div class="footer-dev-name">✦ Desarrollado por Ing. Yazmin Atuncar</div>
+      <div class="footer-dev-role">Área de Logística y Transporte · Complejo Agroindustrial Beta</div>
+    </div>
+  </div>
+  <div class="footer-copy">Portal Proveedores v4.0 &nbsp;·&nbsp; Sistema de documentación digital con IA</div>
+</footer>
+
 <script>
-/* ══════════════════════════════════════════
-   ⚙ CONFIGURACIÓN — edita aquí
-══════════════════════════════════════════ */
+/* ══ CONFIG ══ */
 const CFG = {
   GSHEET_URL:         'https://script.google.com/macros/s/AKfycbw_Fwj-pT-2NBB0w87h0dp2od9vWa4jMglXC773ThwqbrTsf3IRij-tx4amd4_RrF4eKg/exec',
-  SITIO_SP:           'https://betacompe.sharepoint.com/sites/Intranet',
-  BASE_PATH:          'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026',
   FLOW_ENVIAR_OTP:    'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
   FLOW_VERIFICAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/verificar_otp',
   FLOW_SUBIR_DOCS:    'https://portalbeta.betayazmingps.workers.dev/subir_docs',
+  SITIO_SP:           'https://betacompe.sharepoint.com/sites/Intranet',
+  BIBLIOTECA:         'Documentos compartidos',
+  BASE_PATH:          'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026',
   DEMO: false
 };
 
-/* ══ ESTADO ══ */
-let SESSION = { ruc:'', email:'', razonSocial:'', carpeta:'', analista:'', modo:'existente' };
-let otpTimer = null;
-
-/* ══ NAVEGACIÓN ══ */
-function irA(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  document.getElementById('prog-bar-wrap').style.display = id === 'screen-docs' ? 'block' : 'none';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-/* ══ ALERTAS ══ */
-function showAlert(id, type, msg) {
-  const el = document.getElementById(id);
-  el.className = `alert ${type}`;
-  el.style.display = 'flex';
-  el.innerHTML = type === 'loading'
-    ? `<div class="spin"></div><span>${msg}</span>`
-    : `<span>${msg}</span>`;
-}
-function hideAlert(id) {
-  const el = document.getElementById(id);
-  el.style.display = 'none';
-}
-
-/* ══ CALL FLOW ══ */
-async function callFlow(url, body) {
-  const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.json();
-}
-
-/* ══════════════════════════════════════════
-   PASO 1 — VERIFICAR ACCESO
-══════════════════════════════════════════ */
-async function verificarAcceso() {
-  const ruc   = document.getElementById('login-ruc').value.replace(/\D/g,'').slice(0,11);
-  const email = document.getElementById('login-email').value.trim();
-
-  if (ruc.length !== 11) return showAlert('login-alert','error','Ingresa el RUC de 11 dígitos.');
-  if (!email)            return showAlert('login-alert','error','Ingresa tu correo electrónico.');
-
-  showAlert('login-alert','loading','Verificando en el sistema...');
-
-  try {
-    // Consultar Google Sheet para verificar estado del proveedor
-    const url = CFG.GSHEET_URL + `?action=listar&analista=TODOS`;
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (!data.ok || !data.proveedores) {
-      return showAlert('login-alert','error','No se pudo conectar con el sistema. Intenta de nuevo.');
-    }
-
-    // Buscar el proveedor por RUC y email
-    const proveedor = data.proveedores.find(p =>
-      String(p.ruc) === String(ruc) &&
-      p.email.toLowerCase() === email.toLowerCase()
-    );
-
-    // No existe en el Sheet
-    if (!proveedor) {
-      return showAlert('login-alert','error','RUC o correo no encontrado. Verifica tus datos o contáctate con tu analista.');
-    }
-
-    // Existe pero no está aprobado
-    if (proveedor.estado !== 'aprobado') {
-      const mensajes = {
-        pendiente:  'Tu solicitud está siendo revisada por el analista. Te notificaremos cuando sea aprobada.',
-        rechazado:  'Tu solicitud fue rechazada. Contáctate con tu analista para más información.',
-        revision:   'Tu solicitud está en revisión. Por favor espera la confirmación del analista.',
-      };
-      return showAlert('login-alert','warning', mensajes[proveedor.estado] || 'Tu acceso aún no está habilitado.');
-    }
-
-    // ✅ Aprobado — guardar sesión y enviar OTP
-    SESSION = {
-      ruc,
-      email,
-      razonSocial: proveedor.razonSocial,
-      carpeta:     proveedor.carpeta || '',
-      analista:    proveedor.analista || '',
-      categoria:   proveedor.categoria || '',
-      modo:        'existente'
-    };
-
-    showAlert('login-alert','loading','Acceso confirmado — enviando código de verificación...');
-    await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc, email, contacto: proveedor.razonSocial });
-
-    hideAlert('login-alert');
-    mostrarOtp(email);
-
-  } catch(e) {
-    showAlert('login-alert','error','Error al verificar: ' + e.message);
-  }
-}
-
-/* ══ OTP ══ */
-function mostrarOtp(email) {
-  document.getElementById('otp-email-display').textContent = email;
-  clearOtp();
-  hideAlert('otp-alert');
-  startOtpCountdown();
-  irA('screen-otp');
-  if (CFG.DEMO) setTimeout(() => showAlert('otp-alert','warning','MODO DEMO: Usa el código 123456'), 400);
-}
-
-function otpInput(el) {
-  el.value = el.value.replace(/\D/,'');
-  el.classList.toggle('filled', el.value !== '');
-  if (el.value && el.nextElementSibling) el.nextElementSibling.focus();
-  if (getOtpValue().length === 6) verificarOtp();
-}
-
-function otpKeyDown(e, el) {
-  if (e.key === 'Backspace' && !el.value && el.previousElementSibling) {
-    el.previousElementSibling.value = '';
-    el.previousElementSibling.classList.remove('filled');
-    el.previousElementSibling.focus();
-  }
-}
-
-function getOtpValue() {
-  return [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
-}
-
-function clearOtp() {
-  document.querySelectorAll('.otp-digit').forEach(i => { i.value=''; i.classList.remove('filled'); });
-}
-
-function startOtpCountdown() {
-  if (otpTimer) clearInterval(otpTimer);
-  let secs = 600;
-  document.getElementById('otp-timer-wrap').style.display = 'block';
-  document.getElementById('otp-resend-wrap').style.display = 'none';
-  otpTimer = setInterval(() => {
-    secs--;
-    const m = Math.floor(secs/60), s = secs%60;
-    document.getElementById('otp-countdown').textContent = `${m}:${String(s).padStart(2,'0')}`;
-    if (secs <= 0) {
-      clearInterval(otpTimer);
-      document.getElementById('otp-timer-wrap').style.display = 'none';
-      document.getElementById('otp-resend-wrap').style.display = 'block';
-    }
-  }, 1000);
-}
-
-async function reenviarOtp() {
-  try {
-    await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, contacto: SESSION.razonSocial });
-    startOtpCountdown();
-    clearOtp();
-  } catch(e) { showAlert('otp-alert','error','Error al reenviar: ' + e.message); }
-}
-
-async function verificarOtp() {
-  const codigo = getOtpValue();
-  if (codigo.length !== 6) return showAlert('otp-alert','error','Ingresa el código de 6 dígitos.');
-  showAlert('otp-alert','loading','Verificando código...');
-
-  try {
-    let ok = false;
-    if (CFG.DEMO) {
-      ok = codigo === '123456';
-    } else {
-      const r = await callFlow(CFG.FLOW_VERIFICAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, codigo });
-      ok = r.valido === true || r.ok === true;
-      if (r.razonSocial) SESSION.razonSocial = r.razonSocial;
-      if (r.carpeta)     SESSION.carpeta     = r.carpeta;
-    }
-    if (!ok) {
-      showAlert('otp-alert','error','Código incorrecto o expirado. Intenta de nuevo.');
-      clearOtp();
-      return;
-    }
-    clearInterval(otpTimer);
-    hideAlert('otp-alert');
-    accederDocumentos();
-  } catch(e) {
-    showAlert('otp-alert','error','Error: ' + e.message);
-  }
-}
+/* ══ SESSION ══ */
+let SESSION = { ruc:'', email:'', razonSocial:'', carpeta:'', analista:'', categoria:'' };
+let otpInterval = null, otpSeconds = 600;
+const fileStore  = {};
+const aiRejected = new Set();
 
 /* ══ DOCUMENTOS ══ */
 const DOCS_EMPRESA = [
-  { id:'p01', name:'Contrato firmado',      req:true  },
-  { id:'p02', name:'Ficha RUC',             req:true  },
-  { id:'p03', name:'Reporte Sentinel',      req:true  },
-  { id:'p04', name:'Vigencia de Poder',     req:false },
-  { id:'p05', name:'SCTR Pensión',          req:true  },
-  { id:'p06', name:'SCTR Salud',            req:true  },
-  { id:'p07', name:'Póliza CAR',            req:false },
-  { id:'p08', name:'Cert. habilitación MTC',req:true  },
+  {id:'p01',name:'Contrato firmado',req:true},{id:'p02',name:'Ficha RUC',req:true},
+  {id:'p03',name:'Reporte Sentinel',req:true},{id:'p04',name:'Referencias comerciales',req:false},
+  {id:'p05',name:'Vigencia poder / DNI rep. legal',req:true},{id:'p06',name:'Brochure / carta presentación',req:false},
+  {id:'p07',name:'Lista Clinton',req:true},{id:'p08',name:'Carta conflictos de interés',req:true},
+  {id:'p09',name:'Carta de vinculación',req:true},{id:'p10',name:'Compromiso capacitación',req:true},
+  {id:'p11',name:'Compromiso control BUS',req:false},{id:'p12',name:'Deuda coactiva',req:true},
+  {id:'p13',name:'Carta compromiso tributario',req:true},{id:'p14',name:'Cotización',req:false},
+  {id:'p15',name:'Carta descanso transportista',req:false},{id:'p16',name:'Carta ETI',req:false},
+  {id:'p17',name:'Carta LAFT',req:false},
 ];
 const DOCS_CONDUCTOR = [
-  { id:'c01', name:'DNI',                   req:true  },
-  { id:'c02', name:'Licencia de conducir',  req:true  },
-  { id:'c03', name:'Antecedentes penales',  req:true  },
-  { id:'c04', name:'Antecedentes policiales',req:true },
-  { id:'c05', name:'Cert. médico',          req:false },
+  {id:'c01',name:'DNI conductor',req:true},{id:'c02',name:'Licencia de conducir',req:true},
+  {id:'c03',name:'Récord MTC',req:true},{id:'c04',name:'SCTR — Seguro complementario',req:true},
+  {id:'c05',name:'Contrato de conductores',req:true},{id:'c06',name:'Antecedentes penales',req:true},
+  {id:'c07',name:'Antecedentes policiales',req:true},{id:'c08',name:'Antecedentes judiciales',req:true},
+  {id:'c09',name:'Foto del conductor',req:false},
 ];
 const DOCS_UNIDAD = [
-  { id:'u01', name:'Tarjeta de propiedad',  req:true  },
-  { id:'u02', name:'SOAT',                  req:true  },
-  { id:'u03', name:'Revisión técnica',      req:true  },
-  { id:'u04', name:'Hab. complementaria',   req:false },
+  {id:'u01',name:'Tarjeta de propiedad',req:true},{id:'u02',name:'SOAT vigente',req:true},
+  {id:'u03',name:'Revisión técnica (RTV)',req:true},{id:'u04',name:'Tarjeta de circulación',req:true},
+  {id:'u05',name:'Póliza Beta / seguro',req:false},{id:'u06',name:'Boletín informativo',req:false},
+  {id:'u07',name:'Foto exterior unidad',req:false},{id:'u08',name:'Foto interior unidad',req:false},
 ];
+const DOC_NAME_MAP = {};
+[...DOCS_EMPRESA,...DOCS_CONDUCTOR,...DOCS_UNIDAD].forEach(d=>{DOC_NAME_MAP[d.id]=d.name;});
 
-let conductoresCount = 0;
-let unidadesCount    = 0;
+/* ══ ICONS ══ */
+const DOC_ICON  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>`;
+const DOC_CHECK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const DOC_X     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
-function renderDocGrid(containerId, docs, prefix) {
-  const c = document.getElementById(containerId);
-  c.innerHTML = '';
-  docs.forEach(d => {
-    const div = document.createElement('div');
-    div.className = 'doc-item';
-    div.id = `item-${prefix}-${d.id}`;
-    div.innerHTML = `
-      <input type="file" accept=".pdf,.jpg,.jpeg,.png" data-docid="${d.id}" data-docname="${d.name.replace(/\s+/g,'_').toUpperCase()}" onchange="fileSelected(this,'${prefix}-${d.id}')">
-      <div class="doc-face">
-        <div class="doc-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        </div>
-        <div class="doc-name">${d.req ? '★ ' : ''}${d.name}</div>
-        <div class="doc-status" id="status-${prefix}-${d.id}">Sin archivo</div>
-      </div>
-      ${d.req ? '<div class="doc-req-tag">req</div>' : ''}`;
-    c.appendChild(div);
+/* ══ NAV ══ */
+function irA(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('prog-bar-wrap').style.display = id==='screen-docs'?'block':'none';
+  if(id==='screen-docs') setTimeout(updateProgress,100);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ══ ALERTAS ══ */
+function showAlert(id,type,msg){
+  const b=document.getElementById(id); if(!b)return;
+  const ico=type==='success'?'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>'
+    :type==='error'?'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+    :type==='warning'?'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17"/></svg>'
+    :'<div class="spin"></div>';
+  b.className='alert '+type;
+  b.innerHTML=ico+'<span style="white-space:pre-line">'+msg+'</span>';
+  b.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function hideAlert(id){const b=document.getElementById(id);if(b)b.className='alert';}
+
+/* ══ HTTP ══ */
+async function callFlow(url,body){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  try{return await r.json();}catch{return{ok:true};}
+}
+async function callFlowDirecto(url,body,intentos=3){
+  if(CFG.DEMO){await new Promise(r=>setTimeout(r,600));return{ok:true};}
+  for(let i=1;i<=intentos;i++){
+    try{
+      const ctrl=new AbortController();
+      const tid=setTimeout(()=>ctrl.abort(),120000);
+      const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});
+      clearTimeout(tid);
+      if(res.status===502||res.status===504)return{ok:true};
+      if(!res.ok&&i<intentos){await new Promise(r=>setTimeout(r,3000*i));continue;}
+      try{return await res.json();}catch{return{ok:true};}
+    }catch(e){
+      if(i===intentos)throw new Error('No se pudo conectar: '+e.message);
+      await new Promise(r=>setTimeout(r,3000*i));
+    }
+  }
+  return{ok:true};
+}
+async function toBase64(file){
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+}
+
+/* ══ CLAUDE AI VALIDACIÓN ══ */
+async function validarConIA(docId, docName, file){
+  const item  = document.getElementById('docitem-'+docId);
+  const badge = document.getElementById('ai-badge-'+docId);
+  const stat  = document.getElementById('est-'+docId);
+  const icon  = document.getElementById('eicon-'+docId);
+
+  if(item){item.classList.remove('has-file','ai-rejected');item.classList.add('ai-checking');}
+  if(badge)badge.textContent='⏳ verificando...';
+  if(stat)stat.innerHTML='<span class="ai-spin"></span> Verificando con IA...';
+
+  try{
+    const b64=await toBase64(file);
+    const isImg=file.type.startsWith('image/');
+    const isPDF=file.type==='application/pdf';
+    if(!isImg&&!isPDF){setAprobado(docId,file,icon,badge,stat,item);return true;}
+
+    const parts=[
+      isImg?{type:'image',source:{type:'base64',media_type:file.type,data:b64}}
+           :{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
+      {type:'text',text:`Eres un validador de documentos de una empresa agroindustrial peruana.
+El campo es: "${docName}"
+Analiza el documento y responde ÚNICAMENTE con JSON (sin texto extra, sin markdown):
+{"valido":true/false,"motivo":"texto corto en español","nitido":true/false}
+- valido: true si el documento corresponde al campo. false si es claramente otro documento.
+- motivo: si válido di "Documento verificado". Si no, explica qué se necesita.
+- nitido: true si se puede leer. false si está borroso o ilegible.
+Sé flexible: acepta si tiene relación con el campo. Solo rechaza si es completamente diferente.`}
+    ];
+
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:parts}]})
+    });
+    const data=await resp.json();
+    const texto=data.content?.find(c=>c.type==='text')?.text||'{}';
+    let res;
+    try{res=JSON.parse(texto.replace(/```json|```/g,'').trim());}catch{setAprobado(docId,file,icon,badge,stat,item);return true;}
+
+    if(!res.nitido){setRechazado(docId,'📷 Documento poco nítido — sube una versión más clara y legible',icon,badge,stat,item);return false;}
+    if(!res.valido){setRechazado(docId,'❌ '+res.motivo,icon,badge,stat,item);return false;}
+    setAprobado(docId,file,icon,badge,stat,item);return true;
+  }catch(e){
+    console.warn('IA no disponible:',e.message);
+    setAprobado(docId,file,icon,badge,stat,item);return true;
+  }
+}
+
+function setAprobado(docId,file,icon,badge,stat,item){
+  aiRejected.delete(docId);fileStore[docId]=file;
+  if(item){item.classList.remove('ai-checking','ai-rejected');item.classList.add('has-file');}
+  if(icon)icon.innerHTML=DOC_CHECK;
+  if(badge)badge.textContent='✓ IA verificado';
+  if(stat)stat.textContent=file.name.length>22?file.name.slice(0,20)+'…':file.name;
+  // limpiar alerta anterior
+  const prev=document.getElementById('ai-err-'+docId);if(prev)prev.remove();
+  updateProgress();
+}
+function setRechazado(docId,motivo,icon,badge,stat,item){
+  aiRejected.add(docId);delete fileStore[docId];
+  if(item){item.classList.remove('ai-checking','has-file');item.classList.add('ai-rejected');}
+  if(icon)icon.innerHTML=DOC_X;
+  if(badge)badge.textContent='✗ Rechazado';
+  if(stat)stat.textContent='Sube el documento correcto';
+  // alerta inline debajo del item
+  const prev=document.getElementById('ai-err-'+docId);if(prev)prev.remove();
+  const el=document.createElement('div');
+  el.id='ai-err-'+docId;
+  el.style.cssText='grid-column:1/-1;margin-top:-4px;margin-bottom:4px;padding:8px 10px;background:var(--rl);border:1px solid var(--r);border-radius:8px;font-size:11.5px;color:var(--r);line-height:1.4;display:flex;gap:7px;align-items:flex-start';
+  el.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>'+motivo+'</span>';
+  if(item&&item.parentNode)item.parentNode.insertBefore(el,item.nextSibling);
+  updateProgress();
+}
+
+/* ══ RENDER GRIDS ══ */
+function renderDocGrid(containerId,docs){
+  const c=document.getElementById(containerId);if(!c)return;c.innerHTML='';
+  docs.forEach(doc=>{
+    const d=document.createElement('div');d.className='doc-item';d.id='docitem-'+doc.id;
+    d.innerHTML=`<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onFilePick('${doc.id}','${doc.name.replace(/'/g,"\\'")}',this)">
+<div class="doc-face">
+  <div class="doc-icon" id="eicon-${doc.id}">${DOC_ICON}</div>
+  <div class="doc-name">${doc.name}</div>
+  <div class="doc-status" id="est-${doc.id}">Sin archivo</div>
+</div>
+${doc.req?'<span class="doc-req-tag">★ req</span>':''}
+<span class="ai-badge" id="ai-badge-${doc.id}"></span>`;
+    c.appendChild(d);
   });
 }
 
-function fileSelected(input, key) {
-  const item = document.getElementById(`item-${key}`);
-  const status = document.getElementById(`status-${key}`);
-  if (input.files[0]) {
-    item.classList.add('has-file');
-    item.classList.remove('required-missing');
-    const name = input.files[0].name;
-    status.textContent = name.length > 20 ? name.slice(0,17)+'...' : name;
+async function onFilePick(docId,docName,input){
+  const file=input.files[0];if(!file)return;
+  const prev=document.getElementById('ai-err-'+docId);if(prev)prev.remove();
+  await validarConIA(docId,docName,file);
+}
+
+/* ══ MULTI CONDUCTOR / UNIDAD ══ */
+let condEntryCount=0,unidEntryCount=0;
+
+function makeEntryBlock(type,idx,docs){
+  const div=document.createElement('div');
+  div.id=`${type}-entry-${idx}`;
+  div.style.cssText='background:var(--pll);border:1px solid var(--s4);border-radius:var(--r12);padding:1rem;margin-bottom:.75rem;position:relative';
+  const isCond=type==='cond';
+  const label=isCond?`Conductor #${idx}`:`Unidad #${idx}`;
+  const removeBtn=idx>1?`<button onclick="removeEntry('${type}','${idx}')" style="background:none;border:1px solid var(--s4);cursor:pointer;color:var(--s3);font-size:11px;font-family:var(--f);font-weight:600;padding:2px 10px;border-radius:6px">✕ Quitar</button>`:'';
+  let fields='';
+  if(isCond){
+    fields=`<div class="g2" style="margin-bottom:.875rem">
+<div class="field"><label>Nombre del conductor</label><input type="text" id="cond-nombre-${idx}" placeholder="Ej: SANDOVAL SUCLUPE ELMER"></div>
+<div class="field"><label>Correo electrónico</label><input type="email" id="cond-email-${idx}" placeholder="conductor@empresa.com"></div>
+</div>`;
+  }else{
+    fields=`<div class="field" style="margin-bottom:.875rem"><label>Placa del vehículo</label><input type="text" id="unid-placa-${idx}" placeholder="Ej: M4M-966" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>`;
   }
-  updateProgress();
+  div.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+<span style="font-size:11px;font-weight:700;color:var(--p);letter-spacing:.06em;text-transform:uppercase">${label}</span>${removeBtn}</div>
+${fields}
+<div class="doc-grid" id="grid-${type}-${idx}" style="gap:7px"></div>`;
+  return div;
 }
 
-function updateProgress() {
-  const items = document.querySelectorAll('#screen-docs .doc-item');
-  const total = items.length;
-  const done  = [...items].filter(i => i.classList.contains('has-file')).length;
-  document.getElementById('prog-fill').style.width = total ? (done/total*100)+'%' : '0%';
-  document.getElementById('prog-count').textContent = `${done} / ${total}`;
+function buildEntryGrid(type,idx,docs){
+  const c=document.getElementById(`grid-${type}-${idx}`);if(!c)return;c.innerHTML='';
+  docs.forEach(doc=>{
+    const uid=`${type}${idx}_${doc.id}`;
+    const d=document.createElement('div');d.className='doc-item';d.id='docitem-'+uid;
+    d.innerHTML=`<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onFilePick('${uid}','${doc.name.replace(/'/g,"\\'")}',this)">
+<div class="doc-face">
+  <div class="doc-icon" id="eicon-${uid}">${DOC_ICON}</div>
+  <div class="doc-name">${doc.name}</div>
+  <div class="doc-status" id="est-${uid}">Sin archivo</div>
+</div>
+${doc.req?'<span class="doc-req-tag">★ req</span>':''}
+<span class="ai-badge" id="ai-badge-${uid}"></span>`;
+    c.appendChild(d);
+  });
 }
 
-function addConductorEntry() {
-  conductoresCount++;
-  const n = conductoresCount;
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'margin-bottom:1rem;padding:1rem;background:var(--pll);border-radius:var(--r12);border:1px solid var(--s4)';
-  wrap.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--p);margin-bottom:.75rem">Conductor ${n}</div>
-    <div class="field" style="margin-bottom:.5rem">
-      <label>Nombre completo</label>
-      <input type="text" placeholder="Nombres y apellidos" id="cond-nombre-${n}">
-    </div>
-    <div class="doc-grid" id="docs-conductor-${n}"></div>`;
-  document.getElementById('conductores-lista').appendChild(wrap);
-  renderDocGrid(`docs-conductor-${n}`, DOCS_CONDUCTOR, `cond${n}`);
-  updateProgress();
+function addConductorEntry(){
+  condEntryCount++;
+  document.getElementById('conductores-lista').appendChild(makeEntryBlock('cond',condEntryCount,DOCS_CONDUCTOR));
+  buildEntryGrid('cond',condEntryCount,DOCS_CONDUCTOR);updateProgress();
+}
+function addUnidadEntry(){
+  unidEntryCount++;
+  document.getElementById('unidades-lista').appendChild(makeEntryBlock('unid',unidEntryCount,DOCS_UNIDAD));
+  buildEntryGrid('unid',unidEntryCount,DOCS_UNIDAD);updateProgress();
+}
+function removeEntry(type,idx){
+  const el=document.getElementById(`${type}-entry-${idx}`);
+  if(el){Object.keys(fileStore).filter(k=>k.startsWith(`${type}${idx}_`)).forEach(k=>delete fileStore[k]);el.remove();updateProgress();}
 }
 
-function addUnidadEntry() {
-  unidadesCount++;
-  const n = unidadesCount;
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'margin-bottom:1rem;padding:1rem;background:var(--pll);border-radius:var(--r12);border:1px solid var(--s4)';
-  wrap.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--p);margin-bottom:.75rem">Unidad ${n}</div>
-    <div class="field" style="margin-bottom:.5rem">
-      <label>Placa del vehículo</label>
-      <input type="text" placeholder="Ej: ABC-123" id="unidad-placa-${n}" style="text-transform:uppercase">
-    </div>
-    <div class="doc-grid" id="docs-unidad-${n}"></div>`;
-  document.getElementById('unidades-lista').appendChild(wrap);
-  renderDocGrid(`docs-unidad-${n}`, DOCS_UNIDAD, `unid${n}`);
-  updateProgress();
+/* ══ PROGRESS ══ */
+function updateProgress(){
+  const total=DOCS_EMPRESA.length+condEntryCount*DOCS_CONDUCTOR.length+unidEntryCount*DOCS_UNIDAD.length;
+  const loaded=Object.keys(fileStore).length;
+  const pct=total>0?Math.round(loaded/total*100):0;
+  const fill=document.getElementById('prog-fill');const count=document.getElementById('prog-count');
+  if(fill)fill.style.width=pct+'%';
+  if(count)count.textContent=loaded+' / '+total+' archivos';
 }
 
-function accederDocumentos() {
-  document.getElementById('nav-session').style.display = 'flex';
-  document.getElementById('nav-avatar').textContent = (SESSION.razonSocial || SESSION.ruc).charAt(0).toUpperCase();
-  document.getElementById('nav-name').textContent = SESSION.razonSocial || SESSION.ruc;
-  document.getElementById('docs-banner-name').textContent = `¡Bienvenido, ${SESSION.razonSocial || SESSION.ruc}!`;
-  document.getElementById('docs-banner-sub').textContent = 'Tu carpeta en SharePoint está lista';
-  document.getElementById('docs-folder-path').innerHTML =
-    `Docs / CADENA_DE_SUMINISTROS / 2.Compras / TRANSPORTE 2026 / <span>${SESSION.categoria||''}</span> / <span>${SESSION.razonSocial || SESSION.ruc}</span>`;
-  renderDocGrid('docs-empresa', DOCS_EMPRESA, 'emp');
-  document.getElementById('conductores-lista').innerHTML = '';
-  document.getElementById('unidades-lista').innerHTML = '';
-  conductoresCount = 0; unidadesCount = 0;
+/* ══ NOMBRE ARCHIVO ══ */
+function getNombreArchivo(docId,file){
+  let baseId=docId;const m=docId.match(/^(?:cond|unid)\d+_(.+)$/);if(m)baseId=m[1];
+  const n=(DOC_NAME_MAP[baseId]||baseId).replace(/[\/\\:*?"<>|#%]/g,'-').trim();
+  const ext=file.name.includes('.')?'.'+file.name.split('.').pop().toLowerCase():'';
+  return n+ext;
+}
+
+/* ══ OTP ══ */
+function otpInput(el){
+  el.value=el.value.replace(/\D/g,'');el.classList.toggle('filled',el.value.length===1);
+  if(el.value.length===1){const n=el.nextElementSibling;if(n?.classList.contains('otp-digit'))n.focus();else if(getOtpValue().length===6)verificarOtp();}
+}
+function otpKeyDown(e,el){
+  if(e.key==='Backspace'&&!el.value){const p=el.previousElementSibling;if(p?.classList.contains('otp-digit')){p.value='';p.classList.remove('filled');p.focus();}}
+}
+function getOtpValue(){return[...document.querySelectorAll('.otp-digit')].map(i=>i.value).join('');}
+function clearOtp(){document.querySelectorAll('.otp-digit').forEach(i=>{i.value='';i.classList.remove('filled');});}
+function startOtpCountdown(){
+  clearInterval(otpInterval);otpSeconds=600;
+  document.getElementById('otp-timer-wrap').style.display='block';
+  document.getElementById('otp-resend-wrap').style.display='none';
+  document.getElementById('otp-countdown').textContent='10:00';
+  otpInterval=setInterval(()=>{
+    otpSeconds--;
+    const m=String(Math.floor(otpSeconds/60)).padStart(2,'0');
+    const s=String(otpSeconds%60).padStart(2,'0');
+    document.getElementById('otp-countdown').textContent=m+':'+s;
+    if(otpSeconds<=0){clearInterval(otpInterval);document.getElementById('otp-timer-wrap').style.display='none';document.getElementById('otp-resend-wrap').style.display='block';}
+  },1000);
+}
+
+/* ══ LOGIN ══ */
+async function solicitarOtpLogin(){
+  const ruc=document.getElementById('login-ruc').value.replace(/\D/g,'').slice(0,11);
+  const email=document.getElementById('login-email').value.trim();
+  if(ruc.length!==11)return showAlert('login-alert','error','Ingresa el RUC de 11 dígitos.');
+  if(!email)return showAlert('login-alert','error','Ingresa tu correo electrónico registrado.');
+
+  showAlert('login-alert','loading','Verificando RUC en el sistema...');
+  try{
+    const res=await fetch('https://portalbeta.betayazmingps.workers.dev/listar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({analista:'TODOS'})});
+    const data=await res.json();
+    if(!data.ok||!data.proveedores)throw new Error('No se pudo conectar con el sistema.');
+
+    const prov=data.proveedores.find(p=>String(p.ruc)===String(ruc)&&p.email.toLowerCase()===email.toLowerCase());
+    if(!prov)return showAlert('login-alert','error','RUC o correo no encontrado.\nVerifica tus datos o contáctate con tu analista.');
+
+    const msgs={pendiente:'Tu solicitud está siendo revisada. Espera la aprobación.',rechazado:'Tu solicitud fue rechazada. Contáctate con tu analista.',revision:'Tu solicitud está en revisión.'};
+    if(prov.estado!=='aprobado')return showAlert('login-alert','warning',msgs[prov.estado]||'Tu acceso aún no está habilitado.');
+
+    SESSION={ruc,email,razonSocial:prov.razonSocial||'',carpeta:prov.carpeta||'',analista:prov.analista||'',categoria:prov.categoria||''};
+    showAlert('login-alert','loading','Acceso confirmado — enviando código de verificación...');
+    await callFlow(CFG.FLOW_ENVIAR_OTP,{ruc,email,contacto:prov.razonSocial});
+    hideAlert('login-alert');
+    document.getElementById('otp-email-display').textContent=email;
+    clearOtp();startOtpCountdown();irA('screen-otp');
+  }catch(e){showAlert('login-alert','error','Error: '+e.message);}
+}
+
+async function reenviarOtp(){
+  try{
+    await callFlow(CFG.FLOW_ENVIAR_OTP,{ruc:SESSION.ruc,email:SESSION.email,contacto:SESSION.razonSocial});
+    startOtpCountdown();clearOtp();showAlert('otp-alert','success','Código reenviado a '+SESSION.email);
+  }catch(e){showAlert('otp-alert','error','Error al reenviar: '+e.message);}
+}
+
+async function verificarOtp(){
+  const otp=getOtpValue();
+  if(otp.length!==6)return showAlert('otp-alert','error','Ingresa el código completo de 6 dígitos.');
+  showAlert('otp-alert','loading','Verificando código...');
+  try{
+    const r=await callFlow(CFG.FLOW_VERIFICAR_OTP,{ruc:SESSION.ruc,email:SESSION.email,otp});
+    if(!r.valido&&!r.ok){showAlert('otp-alert','error','Código incorrecto o expirado. Inténtalo de nuevo.');clearOtp();return;}
+    clearInterval(otpInterval);hideAlert('otp-alert');accederDocumentos();
+  }catch(e){showAlert('otp-alert','error','Error al verificar: '+e.message);}
+}
+
+/* ══ ACCEDER ══ */
+function accederDocumentos(){
+  document.getElementById('nav-session').style.display='flex';
+  document.getElementById('nav-name').textContent=SESSION.razonSocial||SESSION.ruc;
+  document.getElementById('nav-avatar').textContent=(SESSION.razonSocial||SESSION.ruc).charAt(0).toUpperCase();
+  document.getElementById('docs-banner-name').textContent='¡Bienvenido, '+(SESSION.razonSocial||SESSION.ruc)+'!';
+  document.getElementById('docs-banner-sub').textContent='Tu carpeta en SharePoint está activa';
+  document.getElementById('docs-folder-path').innerHTML='Docs / CADENA_DE_SUMINISTROS / 2.Compras / TRANSPORTE 2026 / <span>'+(SESSION.categoria||'')+'</span> / <span>'+SESSION.analista+'</span> / <span>'+(SESSION.razonSocial||SESSION.ruc)+'</span>';
+  Object.keys(fileStore).forEach(k=>delete fileStore[k]);aiRejected.clear();
+  renderDocGrid('docs-empresa',DOCS_EMPRESA);
+  condEntryCount=0;unidEntryCount=0;
+  document.getElementById('conductores-lista').innerHTML='';
+  document.getElementById('unidades-lista').innerHTML='';
+  addConductorEntry();addUnidadEntry();
   irA('screen-docs');
-  setTimeout(updateProgress, 100);
 }
 
-/* ══ SUBMIT DOCS ══ */
-async function submitDocumentos() {
-  const requiredMissing = [];
-  document.querySelectorAll('#screen-docs .doc-item').forEach(item => {
-    const isReq = item.querySelector('.doc-req-tag');
-    const hasFile = item.classList.contains('has-file');
-    if (isReq && !hasFile) {
-      item.classList.add('required-missing');
-      requiredMissing.push(item.querySelector('.doc-name').textContent);
-    }
-  });
-  if (requiredMissing.length) {
-    showAlert('docs-alert','error',`Faltan documentos obligatorios: ${requiredMissing.join(', ')}`);
-    return;
+/* ══ SUBMIT ══ */
+async function submitDocumentos(){
+  if(aiRejected.size>0)return showAlert('docs-alert','error','Hay documentos rechazados por IA. Corrígelos antes de enviar.');
+  const faltanEmpresa=DOCS_EMPRESA.filter(d=>d.req&&!fileStore[d.id]);
+  if(faltanEmpresa.length>0){
+    faltanEmpresa.forEach(d=>{const el=document.getElementById('docitem-'+d.id);if(el)el.classList.add('required-missing');});
+    return showAlert('docs-alert','error','Faltan documentos obligatorios de empresa:\n'+faltanEmpresa.map(d=>d.name).join(', '));
   }
+  const btn=document.getElementById('btn-submit-docs');btn.disabled=true;
+  showAlert('docs-alert','loading','Preparando archivos...');
+  try{
+    const conductores=[],unidades=[];
+    for(let i=1;i<=condEntryCount;i++){if(!document.getElementById('cond-entry-'+i))continue;conductores.push({idx:i,nombre:(document.getElementById('cond-nombre-'+i)?.value.trim()||'Conductor_'+i)});}
+    for(let i=1;i<=unidEntryCount;i++){if(!document.getElementById('unid-entry-'+i))continue;unidades.push({idx:i,placa:(document.getElementById('unid-placa-'+i)?.value.trim()||'Unidad_'+i)});}
 
-  const btn = document.getElementById('btn-submit-docs');
-  btn.disabled = true;
-  showAlert('docs-alert','loading','Subiendo documentos a SharePoint...');
-
-  try {
-    const archivos = [];
-    for (const inp of document.querySelectorAll('#screen-docs input[type="file"]')) {
-      if (inp.files[0]) {
-        const b64  = await toBase64(inp.files[0]);
-        // Obtener el id del doc desde el atributo del input
-        const docId    = inp.dataset.docid || inp.id.replace('file-','');
-        const docName  = inp.dataset.docname || inp.files[0].name;
-        const ext      = inp.files[0].name.split('.').pop().toLowerCase();
-        // Renombrar con formato estándar: ID_NOMBRE.ext
-        const nombreFinal = `${docId}_${docName.replace(/[^a-zA-Z0-9]/g,'_').toUpperCase()}.${ext}`;
-        archivos.push({ id: docId, nombre: nombreFinal, contenido: b64, tipo: inp.files[0].type });
-      }
+    const archivos=[];
+    for(const[docId,file]of Object.entries(fileStore)){
+      const b64=await toBase64(file);
+      let subcarpeta='Proveedor',entidad='';
+      if(docId.startsWith('cond')){const m=docId.match(/^cond(\d+)_/);if(m){const idx=parseInt(m[1]);const c=conductores.find(x=>x.idx===idx);entidad=(c?c.nombre:'Conductor_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Conductor';}}
+      else if(docId.startsWith('unid')){const m=docId.match(/^unid(\d+)_/);if(m){const idx=parseInt(m[1]);const u=unidades.find(x=>x.idx===idx);entidad=(u?u.placa:'Unidad_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Unidad';}}
+      archivos.push({id:docId,nombre:getNombreArchivo(docId,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad});
     }
 
-    const obs = document.getElementById('doc-obs').value;
-    const basePayload = {
-      ruc: SESSION.ruc, razonSocial: SESSION.razonSocial,
-      email: SESSION.email, carpeta: SESSION.carpeta, obs
+    const partes=(SESSION.carpeta||'').split('/').map(p=>p.trim()).filter(Boolean);
+    const base={
+      ruc:SESSION.ruc,razonSocial:SESSION.razonSocial,email:SESSION.email,
+      analista:SESSION.analista,categoria:SESSION.categoria,
+      obs:document.getElementById('doc-obs').value.trim(),
+      conductores,unidades,
+      ruta_carpeta:SESSION.carpeta,
+      ruta_area:partes[0]||'',ruta_subarea:partes[1]||'',ruta_campania:partes[2]||'',
+      ruta_categoria:partes[3]||SESSION.categoria||'',ruta_analista:partes[4]||SESSION.analista||'',
+      ruta_carpeta_empresa:partes[5]||(SESSION.ruc+'_'+SESSION.razonSocial),
+      sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:archivos.length
     };
 
-    let enviados = 0;
-    for (const archivo of archivos) {
-      await callFlow(CFG.FLOW_SUBIR_DOCS, {
-        ...basePayload, archivos: [archivo],
-        indice: enviados + 1, es_ultimo: enviados + 1 === archivos.length
-      });
+    let enviados=0;
+    for(const archivo of archivos){
+      showAlert('docs-alert','loading',`Subiendo ${enviados+1} de ${archivos.length}: ${archivo.nombre}...`);
+      await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[archivo],indice:enviados+1,es_ultimo:enviados+1===archivos.length});
       enviados++;
-      document.getElementById('prog-fill').style.width = (enviados/archivos.length*100)+'%';
-      document.getElementById('prog-count').textContent = `${enviados} / ${archivos.length}`;
+      document.getElementById('prog-fill').style.width=Math.round(enviados/archivos.length*100)+'%';
+      document.getElementById('prog-count').textContent=enviados+' / '+archivos.length+' archivos';
     }
 
-    setTimeout(() => {
-      const meta = document.getElementById('success-meta');
-      meta.innerHTML =
-        `📁 <strong>${SESSION.carpeta || 'SharePoint'}</strong><br>` +
-        `📄 <strong>${archivos.length} archivo(s)</strong> enviados correctamente<br>` +
-        `✅ Proceso completado — ${new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'})}`;
+    setTimeout(()=>{
+      const meta=document.getElementById('success-meta');
+      meta.innerHTML='📁 <strong>'+(SESSION.carpeta||'SharePoint')+'</strong><br>📄 <strong>'+archivos.length+' archivo(s)</strong> enviados<br>✦ Verificados con IA<br>✅ Proceso completado — '+new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'});
       document.getElementById('screen-success').classList.add('show');
-      window.scrollTo({ top:0 });
-      lanzarConfeti();
-    }, 400);
-
-  } catch(e) {
-    showAlert('docs-alert','error','Error al enviar: ' + e.message);
-    btn.disabled = false;
-  }
+      window.scrollTo({top:0});lanzarConfeti();
+    },400);
+  }catch(e){showAlert('docs-alert','error','Error al enviar: '+e.message);btn.disabled=false;}
 }
 
-function toBase64(file) {
-  return new Promise((res,rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result.split(',')[1]);
-    r.onerror = () => rej(new Error('Error al leer archivo'));
-    r.readAsDataURL(file);
+/* ══ REGULARIZACIÓN FALTANTES ══ */
+const faltStore={};
+function showRegTab(id,btn){
+  document.querySelectorAll('#screen-regularizacion .tab').forEach(x=>x.classList.remove('active'));
+  if(btn)btn.classList.add('active');else{const t=document.getElementById('tab-'+id);if(t)t.classList.add('active');}
+  document.querySelectorAll('#screen-regularizacion .tab-panel').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='faltantes')renderFaltantes();
+}
+function renderFaltantes(){
+  const docsEmpFalt=DOCS_EMPRESA.filter(d=>!d.req);
+  renderFaltGrid('faltantes-empresa-grid',docsEmpFalt,'femp');
+  const empCount=document.getElementById('falt-emp-count');if(empCount)empCount.textContent=docsEmpFalt.length+' docs';
+  const docsCond=DOCS_CONDUCTOR.filter(d=>!d.req);
+  const condWrap=document.getElementById('faltantes-conductores-wrap');
+  const condCount=document.getElementById('falt-cond-count');
+  if(!docsCond.length){condWrap.innerHTML='<p style="font-size:12px;color:var(--s3);margin-bottom:1rem;font-style:italic">No hay documentos opcionales de conductor.</p>';if(condCount)condCount.textContent='0 docs';}
+  else{condWrap.innerHTML='';const g=document.createElement('div');g.className='doc-grid';g.style.marginBottom='1.25rem';g.id='faltantes-cond-grid';condWrap.appendChild(g);renderFaltGrid('faltantes-cond-grid',docsCond,'fcond');if(condCount)condCount.textContent=docsCond.length+' docs';}
+  const docsUnid=DOCS_UNIDAD.filter(d=>!d.req);
+  const unidWrap=document.getElementById('faltantes-unidades-wrap');
+  const unidCount=document.getElementById('falt-unid-count');
+  if(!docsUnid.length){unidWrap.innerHTML='<p style="font-size:12px;color:var(--s3);margin-bottom:1rem;font-style:italic">No hay documentos opcionales de unidad.</p>';if(unidCount)unidCount.textContent='0 docs';}
+  else{unidWrap.innerHTML='';const g=document.createElement('div');g.className='doc-grid';g.style.marginBottom='1.25rem';g.id='faltantes-unid-grid';unidWrap.appendChild(g);renderFaltGrid('faltantes-unid-grid',docsUnid,'funid');if(unidCount)unidCount.textContent=docsUnid.length+' docs';}
+}
+function renderFaltGrid(containerId,docs,prefix){
+  const c=document.getElementById(containerId);if(!c)return;c.innerHTML='';
+  docs.forEach(doc=>{
+    const uid=prefix+'_'+doc.id;
+    const d=document.createElement('div');d.className='doc-item';d.id='falt-item-'+uid;
+    d.innerHTML=`<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onFaltPick('${uid}','${doc.name.replace(/'/g,"\\'")}',this)">
+<div class="doc-face">
+  <div class="doc-icon" id="falt-icon-${uid}">${DOC_ICON}</div>
+  <div class="doc-name">${doc.name}</div>
+  <div class="doc-status" id="falt-stat-${uid}">Sin archivo</div>
+</div>
+<span class="doc-req-tag" style="background:rgba(91,173,30,.12);color:var(--g)">opcional</span>
+<span class="ai-badge" id="falt-badge-${uid}"></span>`;
+    c.appendChild(d);
   });
 }
-
-function cerrarExito() {
-  document.getElementById('screen-success').classList.remove('show');
-  document.querySelectorAll('.confetti-piece').forEach(el => el.remove());
-  cerrarSesion();
+async function onFaltPick(uid,docName,input){
+  const file=input.files[0];if(!file)return;
+  const item=document.getElementById('falt-item-'+uid);
+  const badge=document.getElementById('falt-badge-'+uid);
+  const stat=document.getElementById('falt-stat-'+uid);
+  const icon=document.getElementById('falt-icon-'+uid);
+  if(item){item.classList.remove('has-file','ai-rejected');item.classList.add('ai-checking');}
+  if(badge)badge.textContent='⏳ verificando...';
+  if(stat)stat.innerHTML='<span class="ai-spin"></span> Verificando...';
+  try{
+    const b64=await toBase64(file);
+    const isImg=file.type.startsWith('image/'),isPDF=file.type==='application/pdf';
+    if(!isImg&&!isPDF){faltStore[uid]={file};if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ OK';if(stat)stat.textContent=file.name.slice(0,20);return;}
+    const parts=[isImg?{type:'image',source:{type:'base64',media_type:file.type,data:b64}}:{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:`Campo: "${docName}". Responde solo JSON: {"valido":true/false,"motivo":"texto","nitido":true/false}`}];
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:150,messages:[{role:'user',content:parts}]})});
+    const data=await resp.json();
+    const texto=data.content?.find(c=>c.type==='text')?.text||'{}';
+    let res;try{res=JSON.parse(texto.replace(/```json|```/g,'').trim());}catch{faltStore[uid]={file};if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ OK';if(stat)stat.textContent=file.name.slice(0,20);return;}
+    if(!res.nitido||!res.valido){if(item){item.classList.remove('ai-checking','has-file');item.classList.add('ai-rejected');}if(icon)icon.innerHTML=DOC_X;if(badge)badge.textContent='✗ Rechazado';if(stat)stat.textContent=!res.nitido?'Imagen poco nítida':res.motivo;}
+    else{faltStore[uid]={file};if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ IA verificado';if(stat)stat.textContent=file.name.slice(0,20);}
+  }catch(e){faltStore[uid]={file};if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ OK';if(stat)stat.textContent=file.name.slice(0,20);}
+}
+async function submitFaltantes(){
+  const archivos=Object.entries(faltStore);
+  if(!archivos.length)return showAlert('falt-alert','warning','Selecciona al menos un documento.');
+  const btn=document.getElementById('btn-falt-submit');btn.disabled=true;
+  const obs=document.getElementById('falt-obs').value.trim();
+  const base={ruc:SESSION.ruc,razonSocial:SESSION.razonSocial,email:SESSION.email,analista:SESSION.analista,categoria:SESSION.categoria,obs,tipo_envio:'faltantes',sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:archivos.length};
+  try{
+    let i=0;
+    for(const[uid,obj]of archivos){
+      i++;showAlert('falt-alert','loading','Subiendo '+i+' de '+archivos.length+': '+obj.file.name+'...');
+      const b64=await toBase64(obj.file);
+      const parts=uid.split('_');const baseId=parts.slice(1).join('_');
+      const nombre=(DOC_NAME_MAP[baseId]||baseId).replace(/[\/\\:*?"<>|#%]/g,'-').trim();
+      const ext=obj.file.name.includes('.')?'.'+obj.file.name.split('.').pop().toLowerCase():'';
+      let subcarpeta='Proveedor';if(uid.startsWith('fcond'))subcarpeta='Conductor';if(uid.startsWith('funid'))subcarpeta='Unidad';
+      await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{id:uid,nombre:nombre+ext,tipo:obj.file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad:''}],indice:i,es_ultimo:i===archivos.length});
+    }
+    showAlert('falt-alert','success','✅ '+archivos.length+' documento(s) enviados correctamente.');
+    btn.disabled=false;Object.keys(faltStore).forEach(k=>delete faltStore[k]);renderFaltantes();
+  }catch(e){showAlert('falt-alert','error','No se pudo enviar: '+e.message);btn.disabled=false;}
 }
 
-function cerrarSesion() {
-  SESSION = { ruc:'', email:'', razonSocial:'', carpeta:'', analista:'', modo:'existente' };
-  document.getElementById('nav-session').style.display = 'none';
-  document.getElementById('login-ruc').value = '';
-  document.getElementById('login-email').value = '';
-  hideAlert('login-alert');
-  irA('screen-login');
+/* ══ VENCIDOS ══ */
+const vencStore=[];
+function onVencidosChange(input){
+  const lista=document.getElementById('lista-vencidos');lista.innerHTML='';vencStore.length=0;
+  [...input.files].forEach(f=>{vencStore.push(f);const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--pll);border:1px solid var(--s4);border-radius:8px;font-size:12px;color:var(--s1)';row.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</span><span style="color:var(--s3);flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>`;lista.appendChild(row);});
+}
+async function submitVencidos(){
+  if(!vencStore.length)return showAlert('venc-alert','warning','Selecciona al menos un documento.');
+  const btn=document.getElementById('btn-venc-submit');btn.disabled=true;
+  const base={ruc:SESSION.ruc,razonSocial:SESSION.razonSocial,email:SESSION.email,analista:SESSION.analista,categoria:SESSION.categoria,tipo_envio:'vencidos',sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:vencStore.length};
+  try{
+    let i=0;for(const f of vencStore){i++;showAlert('venc-alert','loading','Subiendo '+i+' de '+vencStore.length+': '+f.name+'...');const b64=await toBase64(f);await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{nombre:f.name,tipo:f.type||'application/octet-stream',contenido:b64,subcarpeta:'Proveedor',entidad:''}],indice:i,es_ultimo:i===vencStore.length});}
+    showAlert('venc-alert','success','✅ '+vencStore.length+' documento(s) vencidos enviados correctamente.');
+    btn.disabled=false;vencStore.length=0;document.getElementById('vencidos-input').value='';document.getElementById('lista-vencidos').innerHTML='';
+  }catch(e){showAlert('venc-alert','error','No se pudo enviar: '+e.message);btn.disabled=false;}
 }
 
-function lanzarConfeti() {
-  const colores = ['#79CC38','#5212A0','#F59E0B','#ffffff','#b4f06e','#8B4DD8'];
-  for (let i = 0; i < 80; i++) {
-    setTimeout(() => {
-      const p = document.createElement('div');
-      p.className = 'confetti-piece';
-      const size = Math.random()*10+6;
-      p.style.cssText = `left:${Math.random()*100}vw;width:${size}px;height:${size*(Math.random()>.5?1:2.5)}px;background:${colores[Math.floor(Math.random()*colores.length)]};opacity:${Math.random()*.6+.4};animation-duration:${Math.random()*2.5+2}s;transform:rotate(${Math.random()*360}deg)`;
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 5000);
-    }, i*40);
+/* ══ SESIÓN / ÉXITO ══ */
+function cerrarSesion(){
+  SESSION={ruc:'',email:'',razonSocial:'',carpeta:'',analista:'',categoria:''};
+  document.getElementById('nav-session').style.display='none';
+  document.getElementById('login-ruc').value='';document.getElementById('login-email').value='';
+  hideAlert('login-alert');irA('screen-entry');
+}
+function cerrarExito(){document.getElementById('screen-success').classList.remove('show');document.querySelectorAll('.confetti-piece').forEach(el=>el.remove());cerrarSesion();}
+function lanzarConfeti(){
+  const cols=['#79CC38','#5212A0','#F59E0B','#ffffff','#b4f06e','#8B4DD8'];
+  for(let i=0;i<90;i++){setTimeout(()=>{const p=document.createElement('div');p.className='confetti-piece';const sz=Math.random()*10+6;p.style.cssText=`left:${Math.random()*100}vw;width:${sz}px;height:${sz*(Math.random()>.5?1:2.5)}px;background:${cols[Math.floor(Math.random()*cols.length)]};opacity:${Math.random()*.6+.4};animation-duration:${Math.random()*2.5+2}s;transform:rotate(${Math.random()*360}deg)`;document.body.appendChild(p);setTimeout(()=>p.remove(),5000);},i*40);}
+}
+
+/* ══ ANALIZAR REGULARIZACIÓN CON IA ══ */
+async function analizarRegularizacion() {
+  // Ocultar estado inicial, mostrar loading
+  document.getElementById('reg-initial').style.display  = 'none';
+  document.getElementById('reg-loading').style.display  = 'block';
+  document.getElementById('reg-resultado').style.display = 'none';
+  document.getElementById('btn-analizar-reg').disabled   = true;
+
+  try {
+    // Construir lista de docs subidos vs esperados
+    const subidos = Object.keys(fileStore).map(id => {
+      let base = id; const m = id.match(/^(?:cond|unid)\d+_(.+)$/); if(m) base = m[1];
+      return DOC_NAME_MAP[base] || base;
+    });
+
+    const todosRequeridos = [
+      ...DOCS_EMPRESA.filter(d=>d.req).map(d=>({nombre:d.name,tipo:'Empresa'})),
+      ...DOCS_CONDUCTOR.filter(d=>d.req).map(d=>({nombre:d.name,tipo:'Conductor'})),
+      ...DOCS_UNIDAD.filter(d=>d.req).map(d=>({nombre:d.name,tipo:'Unidad'})),
+    ];
+
+    const subidosList = subidos.length > 0 ? subidos.map(s=>'- '+s).join('\n') : '- (ninguno subido aun)';
+    const requeridosList = todosRequeridos.map(d=>'- '+d.nombre+' ('+d.tipo+')').join('\n');
+    const prompt = 'Eres un asistente de gestion documental para una empresa agroindustrial peruana.\\n\\n'
+      + 'El proveedor '+SESSION.razonSocial+' (RUC: '+SESSION.ruc+') tiene los siguientes documentos YA SUBIDOS:\\n'
+      + subidosList + '\\n\\n'
+      + 'Lista completa de documentos REQUERIDOS:\\n'
+      + requeridosList + '\\n\\n'
+      + 'Analiza y responde SOLO con este JSON sin markdown ni texto extra:\\n'
+      + '{"faltantes":[{"nombre":"doc","tipo":"Empresa|Conductor|Unidad","urgencia":"alta|media"}],'
+      + '"vencidos":[{"nombre":"doc","tipo":"Empresa|Conductor|Unidad","estado":"vencido|por_vencer","detalle":"explicacion"}],'
+      + '"resumen":"frase corta"}\\n\\n'
+      + '- faltantes: docs requeridos NO subidos\\n'
+      + '- vencidos: docs con vencimiento (SOAT, licencias, RTV, contratos, SCTR) marcalos como por_vencer\\n'
+      + '- Si no hay faltantes devuelve array vacio. Igual para vencidos.';
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await resp.json();
+    const texto = data.content?.find(c=>c.type==='text')?.text || '{}';
+    let res;
+    try { res = JSON.parse(texto.replace(/```json|```/g,'').trim()); }
+    catch { res = { faltantes:[], vencidos:[], resumen:'No se pudo analizar' }; }
+
+    // Mostrar resultado
+    document.getElementById('reg-loading').style.display  = 'none';
+    document.getElementById('reg-resultado').style.display = 'block';
+
+    // Resumen chips
+    const resumen = document.getElementById('reg-resumen');
+    resumen.innerHTML = '';
+    const chips = [
+      { label: (res.faltantes?.length||0)+' faltantes', color: res.faltantes?.length>0 ? 'var(--p)' : 'var(--g)', bg: res.faltantes?.length>0 ? 'var(--pl)' : 'var(--gl)' },
+      { label: (res.vencidos?.length||0)+' vencidos', color: res.vencidos?.length>0 ? 'var(--r)' : 'var(--g)', bg: res.vencidos?.length>0 ? 'var(--rl)' : 'var(--gl)' },
+    ];
+    chips.forEach(ch => {
+      const s = document.createElement('span');
+      s.style.cssText = `font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;background:${ch.bg};color:${ch.color};font-family:var(--m)`;
+      s.textContent = ch.label;
+      resumen.appendChild(s);
+    });
+    if(res.resumen) {
+      const s = document.createElement('span');
+      s.style.cssText = 'font-size:11.5px;color:var(--s2);padding:4px 0;font-style:italic';
+      s.textContent = res.resumen;
+      resumen.appendChild(s);
+    }
+
+    // Bloque faltantes
+    if(res.faltantes?.length > 0) {
+      document.getElementById('bloque-faltantes').style.display = 'block';
+      document.getElementById('badge-faltantes').textContent = res.faltantes.length;
+      const lista = document.getElementById('lista-faltantes-ia');
+      lista.innerHTML = '';
+      res.faltantes.forEach(doc => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--pll);border:1px solid var(--s4);border-radius:10px';
+        const urgColor = doc.urgencia==='alta' ? 'var(--r)' : 'var(--amber)';
+        row.innerHTML = `
+          <div style="width:7px;height:7px;border-radius:50%;background:${urgColor};flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="font-size:12.5px;font-weight:600;color:var(--s1)">${doc.nombre}</div>
+            <div style="font-size:10.5px;color:var(--s3);font-family:var(--m)">${doc.tipo}</div>
+          </div>
+          <span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:99px;background:${doc.urgencia==='alta'?'var(--rl)':'var(--amberl)'};color:${urgColor}">${doc.urgencia==='alta'?'urgente':'pendiente'}</span>`;
+        lista.appendChild(row);
+      });
+    }
+
+    // Bloque vencidos
+    if(res.vencidos?.length > 0) {
+      document.getElementById('bloque-vencidos').style.display = 'block';
+      document.getElementById('badge-vencidos').textContent = res.vencidos.length;
+      const lista = document.getElementById('lista-vencidos-ia');
+      lista.innerHTML = '';
+      res.vencidos.forEach(doc => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--rl);border:1px solid rgba(224,32,32,.2);border-radius:10px';
+        row.innerHTML = `
+          <div style="width:7px;height:7px;border-radius:50%;background:var(--r);flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="font-size:12.5px;font-weight:600;color:var(--s1)">${doc.nombre}</div>
+            <div style="font-size:10.5px;color:var(--s3);font-family:var(--m)">${doc.tipo} · ${doc.detalle||''}</div>
+          </div>
+          <span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--rl);color:var(--r);border:1px solid rgba(224,32,32,.3)">${doc.estado==='vencido'?'vencido':'por vencer'}</span>`;
+        lista.appendChild(row);
+      });
+    }
+
+    // Todo OK
+    if(!res.faltantes?.length && !res.vencidos?.length) {
+      document.getElementById('reg-todo-ok').style.display = 'block';
+    }
+
+  } catch(e) {
+    document.getElementById('reg-loading').style.display = 'none';
+    document.getElementById('reg-initial').style.display = 'block';
+    document.getElementById('reg-initial').innerHTML = '<p style="color:var(--r);font-size:13px;text-align:center">Error al analizar: '+e.message+'</p>';
   }
+
+  document.getElementById('btn-analizar-reg').disabled = false;
 }
+
+document.addEventListener('DOMContentLoaded',()=>{renderDocGrid('docs-empresa',DOCS_EMPRESA);});
 </script>
 </body>
 </html>
