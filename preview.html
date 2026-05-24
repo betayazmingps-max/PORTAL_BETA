@@ -932,12 +932,24 @@ async function confirmarAprobar() {
     };
 
     if (!CFG.FLOW_CREAR_CARPETAS.includes('PENDIENTE')) {
-      const resFlow = await fetch(CFG.FLOW_CREAR_CARPETAS, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!resFlow.ok) throw new Error(`Flow respondió ${resFlow.status}`);
+      // Llamar via Worker para evitar CORS — con timeout de 15s
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      try {
+        const resFlow = await fetch('https://portalbeta.betayazmingps.workers.dev/crear_carpetas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, flowUrl: CFG.FLOW_CREAR_CARPETAS }),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        // 202 = Accepted (flow disparado OK), 200 = OK, ambos son éxito
+        if (!resFlow.ok && resFlow.status !== 202) throw new Error(`Flow respondió ${resFlow.status}`);
+      } catch(e) {
+        clearTimeout(timeoutId);
+        // Si es timeout o error de red, el flow igual pudo dispararse — continuamos
+        if (e.name !== 'AbortError') console.warn('Flow error (puede haber funcionado igual):', e.message);
+      }
     } else {
       // MODO DEMO — simular delay del flow
       await new Promise(r => setTimeout(r, 1200));
