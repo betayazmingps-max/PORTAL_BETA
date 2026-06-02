@@ -591,9 +591,11 @@ const CFG = {
   FLOW_ENVIAR_OTP:    'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
   FLOW_VERIFICAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/verificar_otp',
   FLOW_SUBIR_DOCS:    'https://portalbeta.betayazmingps.workers.dev/subir_docs',
+  FLOW_ANALIZAR_DOC:  'https://portalbeta.betayazmingps.workers.dev/analizar_doc', // proxy IA (API key en el Worker)
   SITIO_SP:           'https://betacompe.sharepoint.com/sites/Intranet',
   BIBLIOTECA:         'Documentos compartidos',
   BASE_PATH:          'CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026',
+  MAX_FILE_MB:        10,  // límite por archivo
   DEMO: false
 };
 
@@ -661,9 +663,17 @@ function hideAlert(id){const b=document.getElementById(id);if(b)b.className='ale
 
 /* ══ HTTP ══ */
 async function callFlow(url,body){
-  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  try{return await r.json();}catch{return{ok:true};}
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),30000); // timeout 30s
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    try{return await r.json();}catch{return{ok:true};}
+  }catch(e){
+    clearTimeout(tid);
+    throw new Error(e.name==='AbortError'?'Tiempo agotado. Verifica tu conexión.':e.message);
+  }
 }
 async function callFlowDirecto(url,body,intentos=3){
   if(CFG.DEMO){await new Promise(r=>setTimeout(r,600));return{ok:true};}
@@ -704,38 +714,20 @@ async function validarConIA(docId, docName, file){
     const isPDF=file.type==='application/pdf';
     if(!isImg&&!isPDF){setAprobado(docId,file,icon,badge,stat,item);return true;}
 
-    const parts=[
-      isImg?{type:'image',source:{type:'base64',media_type:file.type,data:b64}}
-           :{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},
-      {type:'text',text:`Eres un validador de documentos de una empresa agroindustrial peruana.
-El campo solicitado es: "${docName}"
-Analiza el documento y responde ÚNICAMENTE con este JSON (sin texto extra, sin markdown):
-{
-  "valido": true/false,
-  "nitido": true/false,
-  "motivo": "texto corto en español",
-  "datos": {
-    "titular": "nombre de la persona o empresa en el doc, o null",
-    "numero": "número de documento/placa/licencia/RUC que aparezca, o null",
-    "vencimiento": "fecha de vencimiento en formato YYYY-MM-DD si existe, o null",
-    "emision": "fecha de emisión en formato YYYY-MM-DD si existe, o null",
-    "observacion": "dato relevante adicional (ej: categoría licencia, tipo seguro), o null"
-  }
-}
-Reglas:
-- valido: true si el documento corresponde al campo. false si es claramente otro documento.
-- nitido: true si se puede leer bien. false si está borroso o ilegible.
-- motivo: si válido di "Documento verificado". Si no, explica brevemente qué se necesita.
-- datos: extrae la info aunque el doc no sea válido. Si un campo no existe en el doc pon null.
-- Sé flexible al validar: acepta si tiene relación con el campo. Solo rechaza si es completamente diferente.`}
-    ];
-
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:200,messages:[{role:'user',content:parts}]})
+    // Llamar al Worker de Cloudflare (que tiene la API key de Claude internamente)
+    const resp = await fetch(CFG.FLOW_ANALIZAR_DOC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        docName,
+        mediaType: file.type,
+        isImg,
+        data: b64
+      })
     });
-    const data=await resp.json();
-    const texto=data.content?.find(c=>c.type==='text')?.text||'{}';
+    if (!resp.ok) throw new Error('Worker IA devolvió ' + resp.status);
+    const data = await resp.json();
+    const texto = data.texto || data.content || '{}';
     let res;
     try{res=JSON.parse(texto.replace(/```json|```/g,'').trim());}catch{setAprobado(docId,file,icon,badge,stat,item);return true;}
 
@@ -811,6 +803,12 @@ ${doc.req?'<span class="doc-req-tag">★ req</span>':''}
 
 async function onFilePick(docId,docName,input){
   const file=input.files[0];if(!file)return;
+  if(file.size>CFG.MAX_FILE_MB*1024*1024){
+    input.value='';
+    const item=document.getElementById('docitem-'+docId);
+    if(item)item.style.borderColor='var(--r)';
+    return showAlert('docs-alert','error',`"${file.name}" supera el límite de ${CFG.MAX_FILE_MB}MB. Comprime el archivo antes de subirlo.`);
+  }
   const prev=document.getElementById('ai-err-'+docId);if(prev)prev.remove();
   await validarConIA(docId,docName,file);
 }
@@ -875,8 +873,12 @@ function removeEntry(type,idx){
 
 /* ══ PROGRESS ══ */
 function updateProgress(){
-  const total=DOCS_EMPRESA.length+condEntryCount*DOCS_CONDUCTOR.length+unidEntryCount*DOCS_UNIDAD.length;
-  const loaded=Object.keys(fileStore).length;
+  // Contar entradas activas leyendo el DOM real (no el contador, que no decrece al quitar)
+  const condActivos=document.querySelectorAll('[id^="cond-entry-"]').length;
+  const unidActivos=document.querySelectorAll('[id^="unid-entry-"]').length;
+  const total=DOCS_EMPRESA.length+condActivos*DOCS_CONDUCTOR.length+unidActivos*DOCS_UNIDAD.length;
+  // Solo contar archivos del screen-docs (no faltantes ni vencidos)
+  const loaded=Object.keys(fileStore).filter(k=>!k.startsWith('f')&&!k.startsWith('v')).length;
   const pct=total>0?Math.round(loaded/total*100):0;
   const fill=document.getElementById('prog-fill');const count=document.getElementById('prog-count');
   if(fill)fill.style.width=pct+'%';
@@ -1065,21 +1067,51 @@ function showRegTab(id,btn){
   document.querySelectorAll('#screen-regularizacion .tab-panel').forEach(x=>x.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(id==='faltantes')renderFaltantes();
+  if(id==='vencidos')renderVencidos();
 }
 function renderFaltantes(){
-  const docsEmpFalt=DOCS_EMPRESA.filter(d=>!d.req);
+  // Mostrar los documentos REQUERIDOS que aún no han sido subidos (no los opcionales)
+  const docsEmpFalt=DOCS_EMPRESA.filter(d=>d.req&&!fileStore[d.id]);
   renderFaltGrid('faltantes-empresa-grid',docsEmpFalt,'femp');
-  const empCount=document.getElementById('falt-emp-count');if(empCount)empCount.textContent=docsEmpFalt.length+' docs';
-  const docsCond=DOCS_CONDUCTOR.filter(d=>!d.req);
+  const empCount=document.getElementById('falt-emp-count');
+  if(empCount)empCount.textContent=docsEmpFalt.length+' faltantes';
+
+  const docsCond=DOCS_CONDUCTOR.filter(d=>d.req);
   const condWrap=document.getElementById('faltantes-conductores-wrap');
   const condCount=document.getElementById('falt-cond-count');
-  if(!docsCond.length){condWrap.innerHTML='<p style="font-size:12px;color:var(--s3);margin-bottom:1rem;font-style:italic">No hay documentos opcionales de conductor.</p>';if(condCount)condCount.textContent='0 docs';}
-  else{condWrap.innerHTML='';const g=document.createElement('div');g.className='doc-grid';g.style.marginBottom='1.25rem';g.id='faltantes-cond-grid';condWrap.appendChild(g);renderFaltGrid('faltantes-cond-grid',docsCond,'fcond');if(condCount)condCount.textContent=docsCond.length+' docs';}
-  const docsUnid=DOCS_UNIDAD.filter(d=>!d.req);
+  // Filtrar por cada conductor activo
+  const condFalt=[];
+  for(let i=1;i<=condEntryCount;i++){
+    if(!document.getElementById('cond-entry-'+i))continue;
+    docsCond.filter(d=>!fileStore[`cond${i}_${d.id}`]).forEach(d=>condFalt.push({...d,id:`cond${i}_${d.id}`,name:`${d.name} (Cond.${i})`}));
+  }
+  if(!condFalt.length){
+    condWrap.innerHTML='<p style="font-size:12px;color:var(--s3);margin-bottom:1rem;font-style:italic">✓ Todos los documentos de conductor están completos.</p>';
+    if(condCount)condCount.textContent='0 faltantes';
+  }else{
+    condWrap.innerHTML='';
+    const g=document.createElement('div');g.className='doc-grid';g.style.marginBottom='1.25rem';g.id='faltantes-cond-grid';condWrap.appendChild(g);
+    renderFaltGrid('faltantes-cond-grid',condFalt,'fcond');
+    if(condCount)condCount.textContent=condFalt.length+' faltantes';
+  }
+
+  const docsUnid=DOCS_UNIDAD.filter(d=>d.req);
   const unidWrap=document.getElementById('faltantes-unidades-wrap');
   const unidCount=document.getElementById('falt-unid-count');
-  if(!docsUnid.length){unidWrap.innerHTML='<p style="font-size:12px;color:var(--s3);margin-bottom:1rem;font-style:italic">No hay documentos opcionales de unidad.</p>';if(unidCount)unidCount.textContent='0 docs';}
-  else{unidWrap.innerHTML='';const g=document.createElement('div');g.className='doc-grid';g.style.marginBottom='1.25rem';g.id='faltantes-unid-grid';unidWrap.appendChild(g);renderFaltGrid('faltantes-unid-grid',docsUnid,'funid');if(unidCount)unidCount.textContent=docsUnid.length+' docs';}
+  const unidFalt=[];
+  for(let i=1;i<=unidEntryCount;i++){
+    if(!document.getElementById('unid-entry-'+i))continue;
+    docsUnid.filter(d=>!fileStore[`unid${i}_${d.id}`]).forEach(d=>unidFalt.push({...d,id:`unid${i}_${d.id}`,name:`${d.name} (Unid.${i})`}));
+  }
+  if(!unidFalt.length){
+    unidWrap.innerHTML='<p style="font-size:12px;color:var(--s3);margin-bottom:1rem;font-style:italic">✓ Todos los documentos de unidad están completos.</p>';
+    if(unidCount)unidCount.textContent='0 faltantes';
+  }else{
+    unidWrap.innerHTML='';
+    const g=document.createElement('div');g.className='doc-grid';g.style.marginBottom='1.25rem';g.id='faltantes-unid-grid';unidWrap.appendChild(g);
+    renderFaltGrid('faltantes-unid-grid',unidFalt,'funid');
+    if(unidCount)unidCount.textContent=unidFalt.length+' faltantes';
+  }
 }
 function renderFaltGrid(containerId,docs,prefix){
   const c=document.getElementById(containerId);if(!c)return;c.innerHTML='';
@@ -1110,10 +1142,10 @@ async function onFaltPick(uid,docName,input){
     const b64=await toBase64(file);
     const isImg=file.type.startsWith('image/'),isPDF=file.type==='application/pdf';
     if(!isImg&&!isPDF){faltStore[uid]={file};if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ OK';if(stat)stat.textContent=file.name.slice(0,20);return;}
-    const parts=[isImg?{type:'image',source:{type:'base64',media_type:file.type,data:b64}}:{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:`Campo: "${docName}". Responde solo JSON: {"valido":true/false,"motivo":"texto","nitido":true/false}`}];
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:150,messages:[{role:'user',content:parts}]})});
-    const data=await resp.json();
-    const texto=data.content?.find(c=>c.type==='text')?.text||'{}';
+    // Usar Worker como proxy (tiene la API key internamente)
+    const resp=await fetch(CFG.FLOW_ANALIZAR_DOC,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({docName,mediaType:file.type,isImg,data:b64,modo:'simple'})});
+    const data=resp.ok?await resp.json():{};
+    const texto=data.texto||data.content||'{}';
     let res;try{res=JSON.parse(texto.replace(/```json|```/g,'').trim());}catch{faltStore[uid]={file};if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ OK';if(stat)stat.textContent=file.name.slice(0,20);return;}
     if(!res.nitido||!res.valido){if(item){item.classList.remove('ai-checking','has-file');item.classList.add('ai-rejected');}if(icon)icon.innerHTML=DOC_X;if(badge)badge.textContent='✗ Rechazado';if(stat)stat.textContent=!res.nitido?'Imagen poco nítida':res.motivo;}
     else{faltStore[uid]={file};if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ IA verificado';if(stat)stat.textContent=file.name.slice(0,20);}
@@ -1142,19 +1174,129 @@ async function submitFaltantes(){
 }
 
 /* ══ VENCIDOS ══ */
-const vencStore=[];
-function onVencidosChange(input){
-  const lista=document.getElementById('lista-vencidos');lista.innerHTML='';vencStore.length=0;
-  [...input.files].forEach(f=>{vencStore.push(f);const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--pll);border:1px solid var(--s4);border-radius:8px;font-size:12px;color:var(--s1)';row.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</span><span style="color:var(--s3);flex-shrink:0">${(f.size/1024).toFixed(0)} KB</span>`;lista.appendChild(row);});
+const vencStore={};  // { uid: file } igual que faltStore
+
+function renderVencidos(){
+  // Poblar grids de vencidos con TODOS los documentos (para renovar la versión)
+  const empGrid=document.getElementById('venc-empresa-grid');
+  if(empGrid){empGrid.innerHTML='';DOCS_EMPRESA.forEach(doc=>{
+    const uid='vemp_'+doc.id;
+    const d=document.createElement('div');d.className='doc-item';d.id='venc-item-'+uid;
+    d.innerHTML=`<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onVencPick('${uid}','${doc.name.replace(/'/g,"\\'")}',this)">
+<div class="doc-face">
+  <div class="doc-icon" id="venc-icon-${uid}">${DOC_ICON}</div>
+  <div class="doc-name">${doc.name}</div>
+  <div class="doc-status" id="venc-stat-${uid}">Sin archivo</div>
+</div>
+${doc.req?'<span class="doc-req-tag">★ req</span>':''}
+<span class="ai-badge" id="venc-badge-${uid}"></span>`;
+    empGrid.appendChild(d);
+  });}
+
+  // Conductores
+  const condWrap=document.getElementById('venc-conductores-wrap');
+  if(condWrap){condWrap.innerHTML='';
+    for(let i=1;i<=condEntryCount;i++){
+      if(!document.getElementById('cond-entry-'+i))continue;
+      const label=document.createElement('div');label.style.cssText='font-size:11px;font-weight:700;color:var(--p);margin:.75rem 0 .4rem;text-transform:uppercase;letter-spacing:.05em';label.textContent='Conductor #'+i;condWrap.appendChild(label);
+      const g=document.createElement('div');g.className='doc-grid';g.style.marginBottom='.75rem';condWrap.appendChild(g);
+      DOCS_CONDUCTOR.forEach(doc=>{
+        const uid=`vcond${i}_${doc.id}`;
+        const d=document.createElement('div');d.className='doc-item';d.id='venc-item-'+uid;
+        d.innerHTML=`<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onVencPick('${uid}','${doc.name.replace(/'/g,"\\'")}',this)">
+<div class="doc-face">
+  <div class="doc-icon" id="venc-icon-${uid}">${DOC_ICON}</div>
+  <div class="doc-name">${doc.name}</div>
+  <div class="doc-status" id="venc-stat-${uid}">Sin archivo</div>
+</div>
+${doc.req?'<span class="doc-req-tag">★ req</span>':''}
+<span class="ai-badge" id="venc-badge-${uid}"></span>`;
+        g.appendChild(d);
+      });
+    }
+    if(condEntryCount===0)condWrap.innerHTML='<p style="font-size:12px;color:var(--s3);font-style:italic">No hay conductores registrados.</p>';
+  }
+
+  // Unidades
+  const unidWrap=document.getElementById('venc-unidades-wrap');
+  if(unidWrap){unidWrap.innerHTML='';
+    for(let i=1;i<=unidEntryCount;i++){
+      if(!document.getElementById('unid-entry-'+i))continue;
+      const label=document.createElement('div');label.style.cssText='font-size:11px;font-weight:700;color:var(--p);margin:.75rem 0 .4rem;text-transform:uppercase;letter-spacing:.05em';label.textContent='Unidad #'+i;unidWrap.appendChild(label);
+      const g=document.createElement('div');g.className='doc-grid';g.style.marginBottom='.75rem';unidWrap.appendChild(g);
+      DOCS_UNIDAD.forEach(doc=>{
+        const uid=`vunid${i}_${doc.id}`;
+        const d=document.createElement('div');d.className='doc-item';d.id='venc-item-'+uid;
+        d.innerHTML=`<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onVencPick('${uid}','${doc.name.replace(/'/g,"\\'")}',this)">
+<div class="doc-face">
+  <div class="doc-icon" id="venc-icon-${uid}">${DOC_ICON}</div>
+  <div class="doc-name">${doc.name}</div>
+  <div class="doc-status" id="venc-stat-${uid}">Sin archivo</div>
+</div>
+${doc.req?'<span class="doc-req-tag">★ req</span>':''}
+<span class="ai-badge" id="venc-badge-${uid}"></span>`;
+        g.appendChild(d);
+      });
+    }
+    if(unidEntryCount===0)unidWrap.innerHTML='<p style="font-size:12px;color:var(--s3);font-style:italic">No hay unidades registradas.</p>';
+  }
 }
-async function submitVencidos(){
-  if(!vencStore.length)return showAlert('venc-alert','warning','Selecciona al menos un documento.');
-  const btn=document.getElementById('btn-venc-submit');btn.disabled=true;
-  const base={ruc:SESSION.ruc,razonSocial:SESSION.razonSocial,email:SESSION.email,analista:SESSION.analista,categoria:SESSION.categoria,tipo_envio:'vencidos',sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:vencStore.length};
+
+async function onVencPick(uid,docName,input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>CFG.MAX_FILE_MB*1024*1024){input.value='';return showAlert('venc-alert','error',`"${file.name}" supera el límite de ${CFG.MAX_FILE_MB}MB.`);}
+  const item=document.getElementById('venc-item-'+uid);
+  const badge=document.getElementById('venc-badge-'+uid);
+  const stat=document.getElementById('venc-stat-'+uid);
+  const icon=document.getElementById('venc-icon-'+uid);
+  if(item){item.classList.remove('has-file','ai-rejected');item.classList.add('ai-checking');}
+  if(badge)badge.textContent='⏳ verificando...';
+  if(stat)stat.innerHTML='<span class="ai-spin"></span> Verificando...';
   try{
-    let i=0;for(const f of vencStore){i++;showAlert('venc-alert','loading','Subiendo '+i+' de '+vencStore.length+': '+f.name+'...');const b64=await toBase64(f);await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{nombre:f.name,tipo:f.type||'application/octet-stream',contenido:b64,subcarpeta:'Proveedor',entidad:''}],indice:i,es_ultimo:i===vencStore.length});}
-    showAlert('venc-alert','success','✅ '+vencStore.length+' documento(s) vencidos enviados correctamente.');
-    btn.disabled=false;vencStore.length=0;document.getElementById('vencidos-input').value='';document.getElementById('lista-vencidos').innerHTML='';
+    const b64=await toBase64(file);
+    const isImg=file.type.startsWith('image/'),isPDF=file.type==='application/pdf';
+    if(!isImg&&!isPDF){vencStore[uid]=file;if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ OK';if(stat)stat.textContent=file.name.slice(0,20);return;}
+    const resp=await fetch(CFG.FLOW_ANALIZAR_DOC,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({docName,mediaType:file.type,isImg,data:b64,modo:'simple'})});
+    const data=resp.ok?await resp.json():{};
+    const texto=data.texto||data.content||'{}';
+    let res;try{res=JSON.parse(texto.replace(/```json|```/g,'').trim());}catch{res={valido:true,nitido:true};}
+    if(!res.nitido||!res.valido){
+      if(item){item.classList.remove('ai-checking','has-file');item.classList.add('ai-rejected');}
+      if(icon)icon.innerHTML=DOC_X;if(badge)badge.textContent='✗ Rechazado';
+      if(stat)stat.textContent=!res.nitido?'Imagen poco nítida':res.motivo;
+    }else{
+      vencStore[uid]=file;
+      if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}
+      if(icon)icon.innerHTML=DOC_CHECK;
+      if(badge)badge.textContent=res.datos?.vencimiento?'✓ Vence: '+res.datos.vencimiento:'✓ IA verificado';
+      if(stat)stat.textContent=file.name.slice(0,20);
+    }
+  }catch(e){
+    vencStore[uid]=file;
+    if(item){item.classList.remove('ai-checking');item.classList.add('has-file');}
+    if(icon)icon.innerHTML=DOC_CHECK;if(badge)badge.textContent='✓ OK';if(stat)stat.textContent=file.name.slice(0,20);
+  }
+}
+
+async function submitVencidos(){
+  const archivos=Object.entries(vencStore);
+  if(!archivos.length)return showAlert('venc-alert','warning','Selecciona al menos un documento para renovar.');
+  const btn=document.getElementById('btn-venc-submit');btn.disabled=true;
+  const base={ruc:SESSION.ruc,razonSocial:SESSION.razonSocial,email:SESSION.email,analista:SESSION.analista,categoria:SESSION.categoria,tipo_envio:'vencidos',sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:archivos.length};
+  try{
+    let i=0;
+    for(const[uid,file]of archivos){
+      i++;showAlert('venc-alert','loading','Subiendo '+i+' de '+archivos.length+': '+file.name+'...');
+      const b64=await toBase64(file);
+      let subcarpeta='Proveedor';
+      if(uid.startsWith('vcond'))subcarpeta='Conductor';
+      if(uid.startsWith('vunid'))subcarpeta='Unidad';
+      await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{nombre:getNombreArchivo(uid,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad:''}],indice:i,es_ultimo:i===archivos.length});
+    }
+    showAlert('venc-alert','success','✅ '+archivos.length+' documento(s) renovados enviados correctamente.');
+    btn.disabled=false;
+    Object.keys(vencStore).forEach(k=>delete vencStore[k]);
+    renderVencidos();
   }catch(e){showAlert('venc-alert','error','No se pudo enviar: '+e.message);btn.disabled=false;}
 }
 
@@ -1207,17 +1349,15 @@ async function analizarRegularizacion() {
       + '- vencidos: docs con vencimiento (SOAT, licencias, RTV, contratos, SCTR) marcalos como por_vencer\\n'
       + '- Si no hay faltantes devuelve array vacio. Igual para vencidos.';
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    // Usar Worker como proxy (tiene la API key internamente)
+    const resp = await fetch(CFG.FLOW_ANALIZAR_DOC, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 800,
-        messages: [{ role: 'user', content: prompt }]
-      })
+      body: JSON.stringify({ prompt, modo: 'regularizacion' })
     });
+    if (!resp.ok) throw new Error('Worker IA devolvió ' + resp.status);
     const data = await resp.json();
-    const texto = data.content?.find(c=>c.type==='text')?.text || '{}';
+    const texto = data.texto || data.content || '{}';
     let res;
     try { res = JSON.parse(texto.replace(/```json|```/g,'').trim()); }
     catch { res = { faltantes:[], vencidos:[], resumen:'No se pudo analizar' }; }
