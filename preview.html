@@ -379,6 +379,9 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
   </div>
 </div>
 
+<!-- ══ TOAST DE NOTIFICACIÓN ══ -->
+<div id="toast" style="display:none;position:fixed;bottom:2rem;right:2rem;z-index:9999;background:var(--s1);color:#fff;padding:1rem 1.5rem;border-radius:var(--r12);box-shadow:0 8px 32px rgba(0,0,0,.3);font-size:13px;font-weight:600;max-width:380px;line-height:1.5;border-left:4px solid var(--g);animation:fadeUp .3s ease"></div>
+
 <!-- ══ MODAL RECHAZAR ══ -->
 <div class="modal-overlay" id="modal-rechazar">
   <div class="modal">
@@ -422,17 +425,10 @@ const CFG = {
 };
 
 /* ══════════════════════════════════════════
-   🔐 ANALISTAS Y CONTRASEÑAS
-   Cambia las contraseñas antes de publicar
+   🔐 AUTENTICACIÓN — validación en el Worker
+   Las contraseñas YA NO están en el frontend.
+   El Worker /login_analista verifica y responde {ok, nombre, esAdmin}
 ══════════════════════════════════════════ */
-const ANALISTAS_AUTH = {
-  'NORTE':       { pass: 'beta2026',  nombre: 'NORTE'          },
-  'SUR':         { pass: 'beta2026',  nombre: 'SUR'            },
-  'C. REGALADO': { pass: 'beta2026',  nombre: 'C. REGALADO'    },
-  'E. ODAR':     { pass: 'beta2026',  nombre: 'E. ODAR'        },
-  'J. PADILLA':  { pass: 'beta2026',  nombre: 'J. PADILLA'     },
-  'ADMIN':       { pass: 'admin2026', nombre: 'Administrador'  },
-};
 
 /* ══ ESTADO ══ */
 let SESSION_ADMIN = { analista: '', nombre: '', esAdmin: false };
@@ -478,36 +474,89 @@ function acortarNombre(nombre, max = 40) {
   return r;
 }
 
-function login() {
+async function login() {
   const analista = document.getElementById('login-analista').value;
   const pass     = document.getElementById('login-pass').value;
   if (!analista) return showAlert('login-alert','error','Selecciona tu nombre.');
   if (!pass)     return showAlert('login-alert','error','Ingresa tu contraseña.');
 
-  const auth = ANALISTAS_AUTH[analista];
-  if (!auth || auth.pass !== pass) {
-    return showAlert('login-alert','error','Contraseña incorrecta.');
+  showAlert('login-alert','loading','Verificando credenciales...');
+  const btn = document.querySelector('[onclick="login()"]');
+  if (btn) btn.disabled = true;
+
+  try {
+    let nombre, esAdmin;
+
+    if (CFG.DEMO) {
+      // Modo demo: contraseña demo123 para todos
+      if (pass !== 'demo123') throw new Error('Contraseña incorrecta.');
+      nombre  = analista;
+      esAdmin = analista === 'ADMIN';
+    } else {
+      // Validar contra el Worker (las contraseñas viven en el Worker, no aquí)
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 15000);
+      const res  = await fetch('https://portalbeta.betayazmingps.workers.dev/login_analista', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analista, pass }),
+        signal: ctrl.signal
+      });
+      clearTimeout(tid);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Contraseña incorrecta.');
+      nombre  = data.nombre || analista;
+      esAdmin = data.esAdmin || false;
+    }
+
+    SESSION_ADMIN = { analista, nombre, esAdmin };
+    // Persistir sesión en la pestaña (se borra al cerrar el navegador)
+    sessionStorage.setItem('panel_session', JSON.stringify(SESSION_ADMIN));
+
+    document.getElementById('nav-user').style.display = 'flex';
+    document.getElementById('nav-avatar').textContent = nombre.charAt(0);
+    document.getElementById('nav-name').textContent   = nombre;
+    document.getElementById('nav-analista-pill').style.display = '';
+    document.getElementById('nav-analista-pill').textContent = esAdmin ? '👑 Admin' : '📋 Analista';
+
+    hideAlert('login-alert');
+    irA('screen-dash');
+    cargarProveedores();
+
+  } catch(e) {
+    showAlert('login-alert','error', e.name === 'AbortError' ? 'Tiempo agotado. Verifica tu conexión.' : e.message);
+  } finally {
+    if (btn) btn.disabled = false;
   }
-
-  SESSION_ADMIN = { analista, nombre: auth.nombre, esAdmin: analista === 'ADMIN' };
-  document.getElementById('nav-user').style.display = 'flex';
-  document.getElementById('nav-avatar').textContent = auth.nombre.charAt(0);
-  document.getElementById('nav-name').textContent = auth.nombre;
-  document.getElementById('nav-analista-pill').style.display = '';
-  document.getElementById('nav-analista-pill').textContent = SESSION_ADMIN.esAdmin ? '👑 Admin' : '📋 Analista';
-
-  irA('screen-dash');
-  cargarProveedores();
 }
 
 function cerrarSesion() {
   SESSION_ADMIN = { analista:'', nombre:'', esAdmin:false };
+  sessionStorage.removeItem('panel_session');
   document.getElementById('nav-user').style.display = 'none';
   document.getElementById('nav-analista-pill').style.display = 'none';
   document.getElementById('login-pass').value = '';
   hideAlert('login-alert');
   irA('screen-login');
 }
+
+// Restaurar sesión si el usuario recargó la página
+(function restaurarSesion() {
+  try {
+    const saved = sessionStorage.getItem('panel_session');
+    if (!saved) return;
+    const s = JSON.parse(saved);
+    if (!s.analista) return;
+    SESSION_ADMIN = s;
+    document.getElementById('nav-user').style.display = 'flex';
+    document.getElementById('nav-avatar').textContent = s.nombre.charAt(0);
+    document.getElementById('nav-name').textContent   = s.nombre;
+    document.getElementById('nav-analista-pill').style.display = '';
+    document.getElementById('nav-analista-pill').textContent = s.esAdmin ? '👑 Admin' : '📋 Analista';
+    irA('screen-dash');
+    cargarProveedores();
+  } catch(e) { sessionStorage.removeItem('panel_session'); }
+})();
 
 /* ══════════════════════════════════════════
    CARGAR PROVEEDORES DEL SHEET
@@ -882,20 +931,27 @@ async function guardarAIEnSheet(ruc, docId, datos) {
 async function guardarObservaciones() {
   const notas = document.getElementById('notas-analista')?.value || '';
   PROVEEDOR_ACTUAL.notas = notas;
-  // Guardar en sheet
-  if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
-    await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'notas', ruc: PROVEEDOR_ACTUAL.ruc, notas })
-    });
-  }
-  // Feedback visual breve
   const btn = document.querySelector('[onclick="guardarObservaciones()"]');
-  const orig = btn.innerHTML;
-  btn.innerHTML = '✓ Guardado';
-  btn.style.color = 'var(--g)';
-  setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1500);
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.innerHTML = '⏳ Guardando...'; btn.disabled = true; }
+  try {
+    if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(() => ctrl.abort(), 15000);
+      await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'notas', ruc: PROVEEDOR_ACTUAL.ruc, notas }),
+        signal: ctrl.signal
+      });
+      clearTimeout(tid);
+    }
+    if (btn) { btn.innerHTML = '✓ Guardado'; btn.style.color = 'var(--g)'; }
+    setTimeout(() => { if(btn){btn.innerHTML=orig;btn.style.color='';btn.disabled=false;} }, 1800);
+  } catch(e) {
+    if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+    showToast('No se pudieron guardar las notas: ' + (e.name==='AbortError'?'Tiempo agotado':e.message), 'error');
+  }
 }
 
 /* ══ APROBAR ══ */
@@ -981,11 +1037,11 @@ async function confirmarAprobar() {
 
     cerrarDetalle();
     renderDash();
-    alert(`✅ Carpetas creadas y proveedor aprobado.\n\n📁 ${p.razonSocial}\n📧 Link enviado a: ${p.email}`);
+    showToast(`✅ Aprobado: ${p.razonSocial} — Link enviado a ${p.email}`);
 
   } catch(e) {
     if (btnAprobar) { btnAprobar.disabled = false; btnAprobar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="15" height="15"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg> Crear carpeta y aprobar'; }
-    alert('❌ Error al crear carpetas: ' + e.message);
+    showToast('❌ Error al crear carpetas: ' + e.message, 'error', 6000);
   }
 }
 
@@ -997,22 +1053,40 @@ function abrirModalRechazar() {
 
 async function confirmarRechazar() {
   const motivo = document.getElementById('modal-motivo').value.trim();
-  if (!motivo) { alert('Indica el motivo del rechazo.'); return; }
+  if (!motivo) { showToast('Indica el motivo del rechazo.', 'warn'); return; }
 
   const p = PROVEEDOR_ACTUAL;
   p.estado = 'rechazado';
   cerrarModal('modal-rechazar');
 
-  if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
-    await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'rechazar', ruc: p.ruc, motivo })
-    });
-  }
+  try {
+    if (!CFG.DEMO && !CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
+      // 1 — Actualizar estado en Sheet
+      await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ action:'rechazar', ruc: p.ruc, motivo })
+      });
 
-  cerrarDetalle();
-  renderDash();
+      // 2 — Notificar al proveedor por correo (estaba prometido en el modal pero nunca se hacía)
+      await fetch(CFG.FLOW_NOTIFICAR, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          email: p.email, contacto: p.contacto,
+          razonSocial: p.razonSocial, ruc: p.ruc,
+          motivo, tipo: 'rechazo'
+        })
+      });
+    }
+    cerrarDetalle();
+    renderDash();
+    showToast(`Proveedor rechazado — Notificación enviada a ${p.email}`, 'warn');
+  } catch(e) {
+    cerrarDetalle();
+    renderDash();
+    showToast('Rechazado localmente, pero no se pudo notificar: ' + e.message, 'error');
+  }
 }
 
 /* ══ UTILIDADES ══ */
@@ -1036,6 +1110,16 @@ function showAlert(id, type, msg) {
 }
 
 function hideAlert(id) { const b = document.getElementById(id); if(b) b.className='alert'; }
+
+function showToast(msg, tipo='ok', duracion=4000) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.style.borderLeftColor = tipo === 'error' ? 'var(--r)' : tipo === 'warn' ? 'var(--amber)' : 'var(--g)';
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => { t.style.display = 'none'; }, duracion);
+}
 
 function cerrarModal(id) {
   document.getElementById(id).classList.remove('open');
