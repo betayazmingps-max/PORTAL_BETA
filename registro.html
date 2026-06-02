@@ -465,14 +465,25 @@ async function guardarEnSheet(datos) {
     console.warn('Google Sheet URL no configurada — saltando escritura en Sheet');
     return { ok: true, skipped: true };
   }
-  const res = await fetch(CFG.GSHEET_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(datos),
-    mode: 'no-cors'   // Apps Script requiere no-cors
-  });
-  // no-cors no devuelve JSON, pero si no lanza es que llegó
-  return { ok: true };
+  // Apps Script requiere no-cors, por eso no podemos leer la respuesta.
+  // Usamos AbortController para cancelar si tarda más de 30s.
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 30000);
+  try {
+    await fetch(CFG.GSHEET_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(datos),
+      mode:    'no-cors',
+      signal:  ctrl.signal
+    });
+    clearTimeout(tid);
+    return { ok: true };
+  } catch (e) {
+    clearTimeout(tid);
+    if (e.name === 'AbortError') throw new Error('Tiempo agotado guardando en Google Sheets. Verifica tu conexión.');
+    throw new Error('No se pudo guardar el registro: ' + e.message);
+  }
 }
 
 /* ════════════════════════════════════
@@ -511,12 +522,23 @@ function renderDocGrid(containerId, docs) {
   });
 }
 
+const MAX_FILE_MB = 10; // límite por archivo
+
 function onFileChange(docId, input) {
   const file = input.files[0];
   const item = document.getElementById('doc-item-' + docId);
   const status = document.getElementById('doc-status-' + docId);
   if (!item || !status) return;
   if (file) {
+    // Validar tamaño máximo
+    if (file.size > MAX_FILE_MB * 1024 * 1024) {
+      input.value = '';
+      item.style.borderColor = 'var(--r)';
+      status.textContent = '⚠ Máx ' + MAX_FILE_MB + 'MB';
+      showAlert('reg-alert', 'error', `"${file.name}" supera el límite de ${MAX_FILE_MB}MB. Usa un archivo más liviano.`);
+      return;
+    }
+    item.style.borderColor = ''; // limpiar borde rojo previo
     fileStore[docId] = file;
     item.classList.add('has-file');
     status.textContent = file.name.length > 20 ? file.name.slice(0,18) + '…' : file.name;
@@ -535,6 +557,25 @@ function irA(id) {
   const t = document.getElementById(id);
   if (t) t.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Avanza el indicador visual de pasos (1, 2 o 3)
+function setStep(n) {
+  [1, 2, 3].forEach(i => {
+    const row  = document.getElementById('step-row-' + i);
+    const circ = document.getElementById('step-circ-' + i);
+    if (!row || !circ) return;
+    row.classList.remove('active', 'done');
+    if (i < n) {
+      row.classList.add('done');
+      circ.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else if (i === n) {
+      row.classList.add('active');
+      circ.textContent = i;
+    } else {
+      circ.textContent = i;
+    }
+  });
 }
 
 /* ════════════════════════════════════
@@ -601,6 +642,7 @@ function fillSunatData(data) {
   const mw = document.getElementById('razon-manual-wrap');
   if (mw) mw.style.display = 'none';
   setRucState('ok', '✓ ' + razon);
+  setStep(2); // RUC validado → activar paso 2
 }
 
 async function buscarRuc(ruc) {
@@ -750,7 +792,8 @@ async function toBase64(file) {
 async function submitRegistro() {
   const g = id => document.getElementById(id);
   const ruc      = g('reg-ruc').value.trim();
-  const razon    = SUNAT_DATA.razonSocial || SUNAT_DATA.nombre || (g('reg-razon') ? g('reg-razon').value.trim() : '') || g('sb-razon').textContent.trim().replace('—', '');
+  const razonManual = g('reg-razon') ? g('reg-razon').value.trim() : '';
+  const razon = SUNAT_DATA.razonSocial || SUNAT_DATA.nombre || razonManual;
   const email    = g('reg-email').value.trim();
   const contacto = g('reg-contacto').value.trim();
   const analista = g('reg-analista').value;
@@ -776,6 +819,9 @@ async function submitRegistro() {
     });
     return showAlert('reg-alert', 'error', `Faltan documentos obligatorios (★):\n${faltantes.join(', ')}`);
   }
+
+  // Avanzar indicador de pasos al paso 3 (todos los datos completos)
+  setStep(3);
 
   // Guardar datos en SESSION para usarlos después del OTP
   SESSION = { ruc, razonSocial: razon, email, contacto, telefono, categoria: cat, analista, obs };
@@ -823,9 +869,16 @@ async function verificarOtp() {
 
     // 1 — Convertir archivos a base64
     const archivos = [];
+    let totalBytes = 0;
     for (const [docId, file] of Object.entries(fileStore)) {
+      totalBytes += file.size;
       const b64 = await toBase64(file);
       archivos.push({ id: docId, nombre: file.name, tipo: file.type || 'application/octet-stream', contenido: b64 });
+    }
+    // Advertir si el peso total supera ~30MB (riesgo de fallo en Google Sheets)
+    if (totalBytes > 30 * 1024 * 1024) {
+      showAlert('otp-alert', 'warning', `⚠ El total de documentos (${(totalBytes/1024/1024).toFixed(1)}MB) es muy grande. Si falla el guardado, reduce el tamaño de los archivos.`);
+      await new Promise(r => setTimeout(r, 3000)); // dar tiempo a leer el aviso
     }
 
     // 2 — Guardar en Google Sheet (incluye docs en base64 para que el panel los lea)
@@ -884,6 +937,8 @@ function nuevoRegistro() {
   document.getElementById('reg-categoria').value = '';
   document.getElementById('reg-analista').innerHTML = '<option value="">— Selecciona categoría —</option>';
   clearSunatData();
+  setRucState('idle');       // limpiar spinner/check/error del RUC
+  setStep(1);                // volver al paso 1 en el indicador visual
   renderDocGrid('reg-docs-grid', DOCS_REGISTRO);
   hideAlert('reg-alert');
   const ss = document.getElementById('screen-success');
