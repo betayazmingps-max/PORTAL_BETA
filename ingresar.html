@@ -158,6 +158,13 @@ footer{background:var(--s1);padding:1.5rem 2rem;display:flex;flex-direction:colu
 .tab.active{background:var(--p);color:var(--w);box-shadow:0 2px 8px rgba(82,18,160,.3)}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
+/* ── MODO OSCURO ── */
+body.dark{--bg:#0f0f1a;--w:#1a1a2e;--s1:#e8e0f0;--s2:#b8a8d0;--s3:#7a6898;--s4:#2d2445;--s5:#1e1835;--pll:#1a1228;--pl:#251840;--gll:#0f1a0a;--gl:#152210;--rl:#1a0808;--amberl:#1a1400;}
+body.dark input,body.dark select,body.dark textarea{background:var(--s5);border-color:var(--s4);color:var(--s1);}
+body.dark .card{background:var(--w);border-color:var(--s4);}
+body.dark .doc-item{background:var(--s5);}
+.dark-toggle{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;font-family:var(--f);}
+
 /* ÉXITO */
 #screen-success{display:none;position:fixed;inset:0;z-index:9000;background:linear-gradient(135deg,#1C0840 0%,#3a0d7a 50%,#1a3a0a 100%);flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;animation:fadeInSuccess .5s ease}
 #screen-success.show{display:flex}
@@ -189,6 +196,7 @@ footer{background:var(--s1);padding:1.5rem 2rem;display:flex;flex-direction:colu
   <div class="nav-right">
     <span class="nav-pill">Portal Proveedores</span>
     <span class="nav-pill nav-pill-g">✦ IA Activa</span>
+    <button class="dark-toggle" onclick="toggleDark()" id="dark-btn">🌙</button>
     <div id="nav-session" class="nav-session" style="display:none" onclick="cerrarSesion()">
       <div class="nav-session-avatar" id="nav-avatar">?</div>
       <span class="nav-session-name" id="nav-name">Proveedor</span>
@@ -981,8 +989,67 @@ function accederDocumentos(){
   irA('screen-docs');
 }
 
+/* ══ RESUMEN ANTES DE ENVIAR ══ */
+function mostrarResumenEnvio() {
+  const condActivos = document.querySelectorAll('[id^="cond-entry-"]').length;
+  const unidActivos = document.querySelectorAll('[id^="unid-entry-"]').length;
+
+  const calcResumen = (docs, prefix, count) => {
+    let ok = 0, falta = 0;
+    for (let i = 1; i <= count; i++) {
+      docs.forEach(d => {
+        const key = prefix ? `${prefix}${i}_${d.id}` : d.id;
+        if (d.req) { fileStore[key] ? ok++ : falta++; }
+      });
+    }
+    return { ok, falta };
+  };
+
+  const emp  = calcResumen(DOCS_EMPRESA, '', 1);
+  const cond = calcResumen(DOCS_CONDUCTOR, 'cond', condActivos);
+  const unid = calcResumen(DOCS_UNIDAD, 'unid', unidActivos);
+
+  const total   = emp.ok + cond.ok + unid.ok;
+  const faltaT  = emp.falta + cond.falta + unid.falta;
+  const pct     = Math.round(total / (total + faltaT) * 100) || 0;
+
+  const fila = (emoji, label, r) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--s5)">
+      <span style="font-size:16px">${emoji}</span>
+      <span style="flex:1;font-size:13px;color:var(--s1)">${label}</span>
+      <span style="font-size:12px;font-weight:700;color:var(--g)">${r.ok} ✅</span>
+      ${r.falta > 0 ? `<span style="font-size:12px;font-weight:700;color:var(--r)">${r.falta} ❌</span>` : ''}
+    </div>`;
+
+  const modal = document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(28,8,64,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem';
+  modal.innerHTML = `
+    <div style="background:var(--w);border-radius:var(--r16);padding:2rem;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.3)">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-size:2rem;font-weight:900;color:var(--p);margin-bottom:.25rem">${pct}%</div>
+        <div style="font-size:13px;color:var(--s2)">documentos obligatorios completados</div>
+        <div style="height:6px;border-radius:99px;background:var(--s4);margin-top:.75rem;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--p),var(--g));border-radius:99px;transition:.4s"></div>
+        </div>
+      </div>
+      ${fila('🏢','Empresa / Proveedor',emp)}
+      ${fila('👤',`Conductores (${condActivos})`,cond)}
+      ${fila('🚛',`Unidades (${unidActivos})`,unid)}
+      ${faltaT > 0 ? `<div style="margin-top:1rem;padding:.875rem;background:var(--amberl);border:1px solid var(--amber);border-radius:var(--r8);font-size:12px;color:#92400e">⚠ Hay <strong>${faltaT} documentos obligatorios</strong> sin subir. Puedes enviar igual y completarlos después.</div>` : `<div style="margin-top:1rem;padding:.875rem;background:var(--gl);border:1px solid var(--g);border-radius:var(--r8);font-size:12px;color:#2d6010">✅ ¡Todos los documentos obligatorios están completos!</div>`}
+      <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:.75rem;background:var(--s5);border:1.5px solid var(--s4);border-radius:var(--r8);font-family:var(--f);font-size:13px;font-weight:600;color:var(--s2);cursor:pointer">Volver</button>
+        <button onclick="this.closest('[style*=fixed]').remove();submitDocumentos(true)" style="flex:2;padding:.75rem;background:linear-gradient(135deg,var(--p),var(--p2));border:none;border-radius:var(--r8);font-family:var(--f);font-size:13px;font-weight:700;color:#fff;cursor:pointer">
+          ${faltaT > 0 ? 'Enviar de todas formas' : '📤 Enviar documentos'}
+        </button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
 /* ══ SUBMIT ══ */
-async function submitDocumentos(){
+async function submitDocumentos(confirmado=false){
+  // Mostrar resumen si aún no se confirmó
+  if(!confirmado){mostrarResumenEnvio();return;}
   if(aiRejected.size>0)return showAlert('docs-alert','error','Hay documentos rechazados por IA. Corrígelos antes de enviar.');
   const faltanEmpresa=DOCS_EMPRESA.filter(d=>d.req&&!fileStore[d.id]);
   if(faltanEmpresa.length>0){
@@ -1442,7 +1509,17 @@ async function analizarRegularizacion() {
   document.getElementById('btn-analizar-reg').disabled = false;
 }
 
-document.addEventListener('DOMContentLoaded',()=>{renderDocGrid('docs-empresa',DOCS_EMPRESA);});
+/* ══ MODO OSCURO ══ */
+function toggleDark(){
+  const d=document.body.classList.toggle('dark');
+  localStorage.setItem('beta_dark',d?'1':'0');
+  const b=document.getElementById('dark-btn');
+  if(b)b.textContent=d?'☀️':'🌙';
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  renderDocGrid('docs-empresa',DOCS_EMPRESA);
+  if(localStorage.getItem('beta_dark')==='1'){document.body.classList.add('dark');const b=document.getElementById('dark-btn');if(b)b.textContent='☀️';}
+});
 </script>
 </body>
 </html>

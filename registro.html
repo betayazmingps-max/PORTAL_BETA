@@ -177,6 +177,16 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .confetti-piece{position:fixed;top:-10px;border-radius:2px;animation:cfFall linear forwards;pointer-events:none;z-index:9001}
 @keyframes cfFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
 
+/* ── MODO OSCURO ── */
+body.dark{--bg:#0f0f1a;--w:#1a1a2e;--s1:#e8e0f0;--s2:#b8a8d0;--s3:#7a6898;--s4:#2d2445;--s5:#1e1835;--pll:#1a1228;--pl:#251840;--gll:#0f1a0a;--gl:#152210;--rl:#1a0808;--amberl:#1a1400;}
+body.dark input,body.dark select,body.dark textarea{background:var(--s5);border-color:var(--s4);color:var(--s1);}
+body.dark input:focus,body.dark select:focus,body.dark textarea:focus{background:var(--w);}
+body.dark .card{background:var(--w);border-color:var(--s4);}
+body.dark .sunat-banner{background:var(--gll);}
+body.dark .doc-item{background:var(--s5);}
+.dark-toggle{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;transition:.15s;font-family:var(--f);}
+.dark-toggle:hover{background:rgba(255,255,255,.2);}
+
 /* ── FOOTER ── */
 footer{background:var(--s1);padding:1.25rem 1.5rem;display:flex;flex-direction:column;align-items:center;gap:.6rem;border-top:3px solid var(--g)}
 .footer-dev{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(121,204,56,.3);border-radius:12px;padding:.55rem 1rem}
@@ -194,7 +204,10 @@ footer{background:var(--s1);padding:1.25rem 1.5rem;display:flex;flex-direction:c
     <div class="nav-logo-name">bet<span>a</span></div>
     <div class="nav-logo-sub">complejo agroindustrial</div>
   </div>
-  <span class="nav-pill">✦ Registro de Proveedor</span>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="nav-pill">✦ Registro de Proveedor</span>
+    <button class="dark-toggle" onclick="toggleDark()" id="dark-btn">🌙 Oscuro</button>
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -280,8 +293,8 @@ footer{background:var(--s1);padding:1.25rem 1.5rem;display:flex;flex-direction:c
             </div>
             <div class="field">
               <label>Correo electrónico <span class="req">*</span></label>
-              <input type="email" id="reg-email" placeholder="empresa@correo.com">
-              <span class="hint">Recibirás el código de verificación aquí</span>
+              <input type="email" id="reg-email" placeholder="empresa@correo.com" oninput="validarEmail(this)">
+              <span class="hint" id="email-hint">Recibirás el código de verificación aquí</span>
             </div>
           </div>
           <div class="field-group">
@@ -751,7 +764,9 @@ function fillSunatData(data) {
   const mw = document.getElementById('razon-manual-wrap');
   if (mw) mw.style.display = 'none';
   setRucState('ok', '✓ ' + razon);
-  setStep(2); // RUC validado → activar paso 2
+  setStep(2);
+  // Verificar si el RUC ya está registrado
+  verificarRucDuplicado(ruc);
 }
 
 async function buscarRuc(ruc) {
@@ -1030,6 +1045,10 @@ async function verificarOtp() {
       docs:        JSON.stringify(archivos),  // ← el analista los revisa en preview.html
     });
 
+    // Limpiar progreso guardado tras registro exitoso
+    localStorage.removeItem(LS_KEY);
+    // Notificar al analista asignado
+    notificarAnalista(SESSION);
     hideAlert('otp-alert');
     mostrarExito();
 
@@ -1093,8 +1112,152 @@ function lanzarConfeti() {
   }
 }
 
+/* ════════════════════════════════════
+   #1 — DETECTAR RUC DUPLICADO
+   ════════════════════════════════════ */
+async function verificarRucDuplicado(ruc) {
+  try {
+    const res  = await fetch('https://portalbeta.betayazmingps.workers.dev/ruc_existe', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ruc })
+    });
+    const data = await res.json();
+    if (!data.existe) return; // no existe → continuar normalmente
+
+    const msgs = {
+      aprobado:  '✅ Este RUC ya tiene acceso al portal. Ve a <a href="ingresar.html" style="color:var(--p);font-weight:700">ingresar.html</a> para subir tus documentos.',
+      pendiente: '⏳ Este RUC ya tiene una solicitud pendiente. El analista te contactará pronto.',
+      rechazado: '❌ Este RUC fue rechazado anteriormente. Contacta a tu analista para más información.',
+      revision:  '🔍 Este RUC está actualmente en revisión por el analista.',
+    };
+    const msg = msgs[data.estado] || `⚠ Este RUC ya está registrado (estado: ${data.estado}).`;
+    showAlert('reg-alert', data.estado === 'aprobado' ? 'success' : 'warning', msg);
+    setRucState('error', `RUC ya registrado — estado: ${data.estado}`);
+  } catch(e) {
+    console.warn('No se pudo verificar duplicado:', e.message);
+    // Si falla la verificación, no bloquear el registro
+  }
+}
+
+/* ════════════════════════════════════
+   #2 — NOTIFICAR AL ANALISTA
+   ════════════════════════════════════ */
+const EMAILS_ANALISTAS = {
+  'NORTE':       '',  // ← agrega el email de cada analista
+  'SUR':         '',
+  'C. REGALADO': '',
+  'E. ODAR':     '',
+  'J. PADILLA':  '',
+};
+
+async function notificarAnalista(session) {
+  const emailAnalista = EMAILS_ANALISTAS[session.analista] || '';
+  if (!emailAnalista) return; // sin email configurado, saltar
+  try {
+    await fetch('https://portalbeta.betayazmingps.workers.dev/notificar_analista', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        analista:       session.analista,
+        email_analista: emailAnalista,
+        ruc:            session.ruc,
+        razonSocial:    session.razonSocial,
+        categoria:      session.categoria,
+        email_proveedor: session.email,
+      })
+    });
+  } catch(e) { console.warn('No se pudo notificar al analista:', e.message); }
+}
+
+/* ════════════════════════════════════
+   #5 — GUARDAR PROGRESO EN localStorage
+   ════════════════════════════════════ */
+const LS_KEY = 'registro_beta_progreso';
+
+function guardarProgreso() {
+  const g = id => document.getElementById(id);
+  const datos = {
+    ruc:      g('reg-ruc')?.value      || '',
+    email:    g('reg-email')?.value    || '',
+    contacto: g('reg-contacto')?.value || '',
+    telefono: g('reg-telefono')?.value || '',
+    obs:      g('reg-obs')?.value      || '',
+    categoria: g('reg-categoria')?.value || '',
+    analista:  g('reg-analista')?.value  || '',
+  };
+  localStorage.setItem(LS_KEY, JSON.stringify(datos));
+}
+
+function restaurarProgreso() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const datos = JSON.parse(raw);
+    if (!datos.ruc && !datos.email) return;
+
+    const g = id => document.getElementById(id);
+    if (datos.email)    { if(g('reg-email'))    g('reg-email').value    = datos.email; }
+    if (datos.contacto) { if(g('reg-contacto')) g('reg-contacto').value = datos.contacto; }
+    if (datos.telefono) { if(g('reg-telefono')) g('reg-telefono').value = datos.telefono; }
+    if (datos.obs)      { if(g('reg-obs'))      g('reg-obs').value      = datos.obs; }
+    if (datos.categoria){ if(g('reg-categoria')){ g('reg-categoria').value = datos.categoria; actualizarAnalistas(datos.categoria); }}
+    if (datos.analista) { setTimeout(() => { if(g('reg-analista')) g('reg-analista').value = datos.analista; }, 100); }
+
+    // Restaurar RUC y buscar en SUNAT
+    if (datos.ruc && datos.ruc.length === 11) {
+      if(g('reg-ruc')) g('reg-ruc').value = datos.ruc;
+      setTimeout(() => buscarRuc(datos.ruc), 500);
+    }
+
+    // Aviso al usuario
+    const banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:70px;right:1rem;z-index:9999;background:var(--p);color:#fff;padding:.75rem 1.25rem;border-radius:var(--r12);font-size:12.5px;font-weight:600;box-shadow:0 4px 20px rgba(82,18,160,.4);display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease';
+    banner.innerHTML = '💾 Progreso restaurado — puedes continuar donde lo dejaste <button onclick="this.parentNode.remove();localStorage.removeItem(\''+LS_KEY+'\')" style="background:rgba(255,255,255,.2);border:none;color:#fff;padding:2px 8px;border-radius:6px;cursor:pointer;font-family:var(--f);font-size:11px;margin-left:4px">✕ Limpiar</button>';
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 6000);
+  } catch(e) { localStorage.removeItem(LS_KEY); }
+}
+
+/* ════════════════════════════════════
+   #9 — VALIDACIÓN EMAIL EN TIEMPO REAL
+   ════════════════════════════════════ */
+let emailTimer = null;
+function validarEmail(input) {
+  clearTimeout(emailTimer);
+  guardarProgreso();
+  emailTimer = setTimeout(() => {
+    const hint = document.getElementById('email-hint');
+    if (!hint) return;
+    const val = input.value.trim();
+    if (!val) { hint.textContent = 'Recibirás el código de verificación aquí'; hint.className = 'hint'; return; }
+    const valido = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val);
+    if (valido) { hint.textContent = '✓ Correo válido'; hint.className = 'hint ok'; input.style.borderColor = 'var(--g)'; }
+    else        { hint.textContent = '✗ Formato inválido (ej: nombre@empresa.com)'; hint.className = 'hint err'; input.style.borderColor = 'var(--r)'; }
+  }, 600);
+}
+
+/* ════════════════════════════════════
+   #10 — MODO OSCURO
+   ════════════════════════════════════ */
+function toggleDark() {
+  const isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('beta_dark', isDark ? '1' : '0');
+  const btn = document.getElementById('dark-btn');
+  if (btn) btn.textContent = isDark ? '☀️ Claro' : '🌙 Oscuro';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderDocGrid('reg-docs-grid', DOCS_REGISTRO);
+  restaurarProgreso();
+
+  // Aplicar modo oscuro guardado
+  if (localStorage.getItem('beta_dark') === '1') { document.body.classList.add('dark'); const b = document.getElementById('dark-btn'); if(b) b.textContent = '☀️ Claro'; }
+
+  // Guardar progreso al cambiar cualquier campo
+  ['reg-email','reg-contacto','reg-telefono','reg-obs','reg-categoria','reg-analista'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', guardarProgreso);
+    if (el) el.addEventListener('change', guardarProgreso);
+  });
 });
 </script>
 </body>

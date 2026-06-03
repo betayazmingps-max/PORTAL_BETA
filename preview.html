@@ -209,6 +209,14 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
 .modal-sub{font-size:12.5px;color:var(--s2);text-align:center;line-height:1.6;margin-bottom:1.5rem}
 .modal-actions{display:flex;gap:.75rem}
 
+/* ── MODO OSCURO ── */
+body.dark{--bg:#0f0f1a;--w:#1a1a2e;--s1:#e8e0f0;--s2:#b8a8d0;--s3:#7a6898;--s4:#2d2445;--s5:#1e1835;--pll:#1a1228;--pl:#251840;--gll:#0f1a0a;--gl:#152210;--rl:#1a0808;--amberl:#1a1400;}
+body.dark input,body.dark select{background:var(--s5);border-color:var(--s4);color:var(--s1);}
+body.dark .card,.dark .stat-card,.dark .tabla-wrap,.dark .detalle-panel,.dark .modal{background:var(--w);border-color:var(--s4);}
+body.dark .tabla-head{background:var(--s5);}
+body.dark .tabla-row:hover{background:var(--s5);}
+.dark-toggle{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:4px 12px;font-size:11px;font-weight:600;color:rgba(255,255,255,.85);cursor:pointer;font-family:var(--f);}
+
 @media(max-width:768px){
   .tabla-head,.tabla-row{grid-template-columns:2fr 1fr 1fr}
   .tabla-head>*:nth-child(3),.tabla-head>*:nth-child(5),
@@ -228,8 +236,9 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
     <div class="nav-logo-name">bet<span>a</span></div>
     <div class="nav-logo-sub">panel analista</div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
+  <div style="display:flex;align-items:center;gap:8px">
     <span class="nav-pill" id="nav-analista-pill" style="display:none"></span>
+    <button class="dark-toggle" onclick="toggleDark()" id="dark-btn">🌙</button>
     <div class="nav-user" id="nav-user" style="display:none" onclick="cerrarSesion()">
       <div class="nav-avatar" id="nav-avatar">A</div>
       <span class="nav-name" id="nav-name">Analista</span>
@@ -330,6 +339,11 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
       <div class="filter-pill" onclick="setFiltro('pendiente',this)">Pendientes</div>
       <div class="filter-pill" onclick="setFiltro('revision',this)">En revisión</div>
       <div class="filter-pill" onclick="setFiltro('aprobado',this)">Aprobados</div>
+      <div class="filter-pill" onclick="setFiltro('por_vencer',this)" style="border-color:var(--amber);color:var(--amber)">⚠ Por vencer</div>
+      <button onclick="exportarCSV()" style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:600;border:1.5px solid var(--s4);background:var(--w);color:var(--s2);cursor:pointer;font-family:var(--f);transition:.15s" onmouseover="this.style.borderColor='var(--p)';this.style.color='var(--p)'" onmouseout="this.style.borderColor='var(--s4)';this.style.color='var(--s2)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
     </div>
 
     <!-- Tabla -->
@@ -545,6 +559,7 @@ async function login() {
     document.getElementById('nav-analista-pill').textContent = esAdmin ? '👑 Admin' : '📋 Analista';
 
     hideAlert('login-alert');
+    resetSesionTimer(); // iniciar countdown de sesión
     irA('screen-dash');
     cargarProveedores();
 
@@ -764,7 +779,10 @@ function abrirDetalle(idx) {
       </div>
       <div id="docs-review-list">${renderDocsReview(p)}</div>
 
-      <div class="section-title" style="margin-top:1.25rem">Notas del analista</div>
+      <div class="section-title" style="margin-top:1.25rem">Historial de acciones</div>
+      <div style="margin-bottom:1.25rem">${renderLog(p.ruc)}</div>
+
+      <div class="section-title">Notas del analista</div>
       <textarea id="notas-analista" style="width:100%;min-height:80px;font-family:var(--f);font-size:13px;border:1.5px solid var(--s4);border-radius:var(--r8);padding:.75rem;background:var(--pll);color:var(--s1);outline:none;resize:vertical" placeholder="Agrega observaciones sobre este proveedor...">${p.notas||''}</textarea>
     </div>
 
@@ -774,6 +792,7 @@ function abrirDetalle(idx) {
     </div>
   `;
 
+  registrarAccion(p.ruc, '👁 Revisado por analista');
   document.getElementById('detalle-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -1221,6 +1240,7 @@ async function guardarObservaciones() {
       });
       clearTimeout(tid);
     }
+    registrarAccion(PROVEEDOR_ACTUAL.ruc, '📝 Notas actualizadas', notas.slice(0, 60) + (notas.length > 60 ? '…' : ''));
     if (btn) { btn.innerHTML = '✓ Guardado'; btn.style.color = 'var(--g)'; }
     setTimeout(() => { if(btn){btn.innerHTML=orig;btn.style.color='';btn.disabled=false;} }, 1800);
   } catch(e) {
@@ -1407,6 +1427,159 @@ document.addEventListener('keydown', e => {
     cerrarModal('modal-aprobar');
     cerrarModal('modal-rechazar');
     cerrarModal('modal-ver-doc');
+  }
+});
+
+/* ══════════════════════════════════════════
+   #3 — TIMEOUT DE SESIÓN (30 min inactividad)
+══════════════════════════════════════════ */
+let _sesionTimer = null;
+let _warningTimer = null;
+const SESION_TIMEOUT = 30 * 60 * 1000; // 30 min
+const SESION_WARNING =  5 * 60 * 1000; // aviso a los 5 min restantes
+
+function resetSesionTimer() {
+  clearTimeout(_sesionTimer);
+  clearTimeout(_warningTimer);
+  const toast = document.getElementById('toast');
+  if (toast && toast.dataset.tipo === 'timeout') toast.style.display = 'none';
+
+  _warningTimer = setTimeout(() => {
+    showToast('⚠ Tu sesión expirará en 5 minutos por inactividad. Mueve el mouse para mantenerla activa.', 'warn', 60000);
+    if (document.getElementById('toast')) document.getElementById('toast').dataset.tipo = 'timeout';
+  }, SESION_TIMEOUT - SESION_WARNING);
+
+  _sesionTimer = setTimeout(() => {
+    showToast('🔒 Sesión cerrada por inactividad.', 'warn', 5000);
+    setTimeout(cerrarSesion, 1500);
+  }, SESION_TIMEOUT);
+}
+
+// Reiniciar timer en cualquier actividad
+['mousemove','keydown','click','scroll'].forEach(ev =>
+  document.addEventListener(ev, resetSesionTimer, { passive: true })
+);
+
+/* ══════════════════════════════════════════
+   #6 — FILTRO POR VENCIMIENTO
+══════════════════════════════════════════ */
+function setFiltro(filtro, el) {
+  filtroActivo = filtro;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  filtrar();
+}
+
+function filtrar() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let lista = PROVEEDORES;
+
+  if (filtroActivo === 'por_vencer') {
+    // Mostrar proveedores con al menos 1 doc que vence en menos de 60 días
+    lista = lista.filter(p => {
+      return Object.values(p.ai_extraido || {}).some(d => {
+        if (!d.vencimiento) return false;
+        const dias = diasParaVencer(d.vencimiento);
+        return dias !== null && dias < 60;
+      });
+    });
+  } else if (filtroActivo !== 'todos') {
+    lista = lista.filter(p => p.estado === filtroActivo);
+  }
+
+  if (q) lista = lista.filter(p =>
+    (p.razonSocial || '').toLowerCase().includes(q) || String(p.ruc).includes(q)
+  );
+  renderTabla(lista);
+}
+
+/* ══════════════════════════════════════════
+   #7 — LOG DE ACCIONES
+══════════════════════════════════════════ */
+const LOG_KEY = 'beta_log_acciones';
+
+function registrarAccion(ruc, accion, detalle = '') {
+  const logs = JSON.parse(localStorage.getItem(LOG_KEY) || '{}');
+  if (!logs[ruc]) logs[ruc] = [];
+  logs[ruc].unshift({
+    fecha:    new Date().toLocaleString('es-PE'),
+    analista: SESSION_ADMIN.nombre,
+    accion,
+    detalle
+  });
+  // Máximo 20 logs por proveedor
+  logs[ruc] = logs[ruc].slice(0, 20);
+  localStorage.setItem(LOG_KEY, JSON.stringify(logs));
+}
+
+function renderLog(ruc) {
+  const logs = JSON.parse(localStorage.getItem(LOG_KEY) || '{}');
+  const items = logs[ruc] || [];
+  if (!items.length) return '<p style="font-size:12px;color:var(--s3);padding:.5rem 0">Sin acciones registradas aún.</p>';
+  return items.map(l => `
+    <div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--s5)">
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--pl);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:var(--p)">${l.analista.charAt(0)}</div>
+      <div style="flex:1">
+        <div style="font-size:12.5px;font-weight:600;color:var(--s1)">${l.accion}</div>
+        ${l.detalle ? `<div style="font-size:11px;color:var(--s3)">${l.detalle}</div>` : ''}
+        <div style="font-size:10.5px;color:var(--s3);font-family:var(--m);margin-top:2px">${l.analista} · ${l.fecha}</div>
+      </div>
+    </div>`).join('');
+}
+
+// Registrar aprobaciones y rechazos
+const _confirmarAprobarOrig = confirmarAprobar;
+confirmarAprobar = async function() {
+  if (PROVEEDOR_ACTUAL) registrarAccion(PROVEEDOR_ACTUAL.ruc, '✅ Aprobado', 'Carpetas creadas en SharePoint');
+  return _confirmarAprobarOrig.apply(this, arguments);
+};
+
+const _confirmarRechazarOrig = confirmarRechazar;
+confirmarRechazar = async function() {
+  const motivo = document.getElementById('modal-motivo')?.value || '';
+  if (PROVEEDOR_ACTUAL) registrarAccion(PROVEEDOR_ACTUAL.ruc, '❌ Rechazado', motivo);
+  return _confirmarRechazarOrig.apply(this, arguments);
+};
+
+/* ══════════════════════════════════════════
+   #8 — EXPORTAR CSV
+══════════════════════════════════════════ */
+function exportarCSV() {
+  if (!PROVEEDORES.length) return showToast('No hay proveedores para exportar.', 'warn');
+
+  const encabezado = ['Fecha','RUC','Razón Social','Contacto','Email','Teléfono','Categoría','Analista','Estado','Estado SUNAT','Dirección'];
+  const filas = PROVEEDORES.map(p => [
+    p.fecha || '', p.ruc || '', p.razonSocial || '', p.contacto || '',
+    p.email || '', p.telefono || '', p.categoria || '', p.analista || '',
+    p.estado || '', p.estadoSunat || '', p.direccion || ''
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+
+  const csv     = [encabezado.join(','), ...filas].join('\n');
+  const blob    = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url     = URL.createObjectURL(blob);
+  const link    = document.createElement('a');
+  link.href     = url;
+  link.download = `proveedores_beta_${new Date().toISOString().slice(0,10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast(`✅ CSV exportado con ${PROVEEDORES.length} proveedores`, 'ok');
+}
+
+/* ══════════════════════════════════════════
+   #10 — MODO OSCURO
+══════════════════════════════════════════ */
+function toggleDark() {
+  const d = document.body.classList.toggle('dark');
+  localStorage.setItem('beta_dark', d ? '1' : '0');
+  const b = document.getElementById('dark-btn');
+  if (b) b.textContent = d ? '☀️' : '🌙';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('beta_dark') === '1') {
+    document.body.classList.add('dark');
+    const b = document.getElementById('dark-btn');
+    if (b) b.textContent = '☀️';
   }
 });
 </script>
