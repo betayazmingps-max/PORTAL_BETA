@@ -178,6 +178,8 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 @keyframes cfFall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
 
 /* ── MODO OSCURO ── */
+*{transition:background-color .25s,border-color .25s,color .15s;}
+nav,button,.btn{transition:background .15s,transform .15s,box-shadow .15s!important;}
 body.dark{--bg:#0f0f1a;--w:#1a1a2e;--s1:#e8e0f0;--s2:#b8a8d0;--s3:#7a6898;--s4:#2d2445;--s5:#1e1835;--pll:#1a1228;--pl:#251840;--gll:#0f1a0a;--gl:#152210;--rl:#1a0808;--amberl:#1a1400;}
 body.dark input,body.dark select,body.dark textarea{background:var(--s5);border-color:var(--s4);color:var(--s1);}
 body.dark input:focus,body.dark select:focus,body.dark textarea:focus{background:var(--w);}
@@ -1142,26 +1144,17 @@ async function verificarRucDuplicado(ruc) {
 /* ════════════════════════════════════
    #2 — NOTIFICAR AL ANALISTA
    ════════════════════════════════════ */
-const EMAILS_ANALISTAS = {
-  'NORTE':       '',  // ← agrega el email de cada analista
-  'SUR':         '',
-  'C. REGALADO': '',
-  'E. ODAR':     '',
-  'J. PADILLA':  '',
-};
-
+/* ── Emails de analistas guardados en el Worker (env.ANALISTAS_EMAILS_JSON) ── */
 async function notificarAnalista(session) {
-  const emailAnalista = EMAILS_ANALISTAS[session.analista] || '';
-  if (!emailAnalista) return; // sin email configurado, saltar
   try {
+    // El Worker lee los emails de env.ANALISTAS_EMAILS_JSON (secret en Cloudflare)
     await fetch('https://portalbeta.betayazmingps.workers.dev/notificar_analista', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        analista:       session.analista,
-        email_analista: emailAnalista,
-        ruc:            session.ruc,
-        razonSocial:    session.razonSocial,
-        categoria:      session.categoria,
+        analista:        session.analista,
+        ruc:             session.ruc,
+        razonSocial:     session.razonSocial,
+        categoria:       session.categoria,
         email_proveedor: session.email,
       })
     });

@@ -210,6 +210,8 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
 .modal-actions{display:flex;gap:.75rem}
 
 /* ── MODO OSCURO ── */
+*{transition:background-color .25s,border-color .25s,color .15s;}
+nav,button,.btn,.btn-p,.btn-g{transition:background .15s,transform .15s,box-shadow .15s!important;}
 body.dark{--bg:#0f0f1a;--w:#1a1a2e;--s1:#e8e0f0;--s2:#b8a8d0;--s3:#7a6898;--s4:#2d2445;--s5:#1e1835;--pll:#1a1228;--pl:#251840;--gll:#0f1a0a;--gl:#152210;--rl:#1a0808;--amberl:#1a1400;}
 body.dark input,body.dark select{background:var(--s5);border-color:var(--s4);color:var(--s1);}
 body.dark .card,.dark .stat-card,.dark .tabla-wrap,.dark .detalle-panel,.dark .modal{background:var(--w);border-color:var(--s4);}
@@ -602,9 +604,12 @@ function cerrarSesion() {
    CARGAR PROVEEDORES DEL SHEET
 ══════════════════════════════════════════ */
 async function cargarProveedores() {
-  // Mostrar estado de carga en la tabla
+  // Skeleton loading mientras carga
   const tablaBody = document.getElementById('tabla-body');
-  if (tablaBody) tablaBody.innerHTML = `<div class="empty"><div class="spin" style="margin:0 auto 1rem;width:28px;height:28px;border-width:3px"></div><p>Cargando proveedores...</p></div>`;
+  if (tablaBody) tablaBody.innerHTML = [1,2,3,4,5].map(() => `
+    <div style="display:grid;grid-template-columns:2fr 1.2fr 1fr 1fr 1.2fr 1fr;gap:0;padding:.875rem 1.25rem;border-bottom:1px solid var(--s5);align-items:center">
+      ${[140,80,60,40,70,40].map(w=>`<div style="height:12px;border-radius:6px;background:linear-gradient(90deg,var(--s4) 25%,var(--s5) 50%,var(--s4) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;width:${w}px"></div>`).join('')}
+    </div>`).join('') + `<style>@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}</style>`;
 
   document.getElementById('dash-sub').textContent = 'Actualizando datos...';
 
@@ -625,13 +630,20 @@ async function cargarProveedores() {
     });
     const data = await res.json();
     if (!data.ok && !data.proveedores) throw new Error(data.error || 'Respuesta inválida del servidor');
-    // Normalizar formato de docs de cada proveedor
     PROVEEDORES = (data.proveedores || []).map(normalizarProveedor);
+    paginaActual = 1;
     renderDash();
+    showToast(`✅ ${PROVEEDORES.length} proveedores cargados`, 'ok', 2500);
   } catch(e) {
     console.error('Error cargando Sheet:', e);
-    if (tablaBody) tablaBody.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg><p style="color:var(--r)">Error al cargar: ${e.message}</p></div>`;
-    document.getElementById('dash-sub').textContent = 'Error al cargar datos';
+    if (tablaBody) tablaBody.innerHTML = `
+      <div class="empty" style="padding:2rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--r)" stroke-width="1.5" width="48" height="48" style="margin:0 auto .75rem;display:block"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+        <p style="color:var(--r);font-weight:600;margin-bottom:.5rem">Error al cargar proveedores</p>
+        <p style="font-size:12px;color:var(--s3);margin-bottom:1rem">${e.message}</p>
+        <button onclick="cargarProveedores()" style="padding:6px 16px;background:var(--p);color:#fff;border:none;border-radius:var(--r8);cursor:pointer;font-family:var(--f);font-size:12px;font-weight:600">🔄 Reintentar</button>
+      </div>`;
+    document.getElementById('dash-sub').textContent = 'Error al cargar — verifica tu conexión';
   }
 }
 
@@ -661,20 +673,16 @@ function renderDash() {
   renderTabla(PROVEEDORES);
 }
 
-function filtrar() {
-  const q = document.getElementById('search-input').value.toLowerCase();
-  let lista = PROVEEDORES;
-  if (filtroActivo !== 'todos') lista = lista.filter(p => p.estado === filtroActivo);
-  if (q) lista = lista.filter(p => p.razonSocial.toLowerCase().includes(q) || p.ruc.includes(q));
-  renderTabla(lista);
+// filtrar() y setFiltro() definidas más abajo con lógica mejorada (filtro por vencimiento)
+
+// Sanitizar texto para prevenir XSS en innerHTML
+function s(txt) {
+  return String(txt||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function setFiltro(filtro, el) {
-  filtroActivo = filtro;
-  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  filtrar();
-}
+// Paginación
+let paginaActual = 1;
+const POR_PAGINA = 20;
 
 function renderTabla(lista) {
   const body = document.getElementById('tabla-body');
@@ -682,30 +690,50 @@ function renderTabla(lista) {
     body.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay proveedores en esta categoría</p></div>`;
     return;
   }
-  body.innerHTML = lista.map((p) => {
-    const badgeMap = { pendiente:'pendiente', revision:'revision', aprobado:'aprobado', rechazado:'rechazado' };
-    const badgeLbl = { pendiente:'Pendiente', revision:'En revisión', aprobado:'Aprobado', rechazado:'Rechazado' };
-    const ndocs = Object.keys(p.docs || {}).length;
+  // Paginación
+  const total  = lista.length;
+  const pages  = Math.ceil(total / POR_PAGINA);
+  if (paginaActual > pages) paginaActual = 1;
+  const slice  = lista.slice((paginaActual-1)*POR_PAGINA, paginaActual*POR_PAGINA);
+  const badgeMap = { pendiente:'pendiente', revision:'revision', aprobado:'aprobado', rechazado:'rechazado' };
+  const badgeLbl = { pendiente:'Pendiente', revision:'En revisión', aprobado:'Aprobado', rechazado:'Rechazado' };
+
+  body.innerHTML = slice.map((p) => {
+    const ndocs    = Object.keys(p.docs || {}).length;
     const proxVenc = getProxVencimiento(p);
-    // Usar RUC como identificador único en vez de indexOf (que puede retornar -1 con lista filtrada)
-    const rucKey = p.ruc;
+    const rucKey   = s(p.ruc);
 
     return `<div class="tabla-row" onclick="abrirDetallePorRuc('${rucKey}')">
       <div>
-        <div class="prov-name">${p.razonSocial}</div>
-        <div class="prov-ruc">${p.ruc} · ${p.fecha}</div>
+        <div class="prov-name">${s(p.razonSocial)}</div>
+        <div class="prov-ruc">${s(p.ruc)} · ${s(p.fecha)}</div>
       </div>
-      <div style="font-size:12px;color:var(--s2)">${p.categoria?.split(' ').slice(-2).join(' ') || '—'}</div>
+      <div style="font-size:12px;color:var(--s2)">${s(p.categoria?.split(' ').slice(-2).join(' ') || '—')}</div>
       <div><span class="badge ${badgeMap[p.estado]||'pendiente'}">${badgeLbl[p.estado]||'Pendiente'}</span></div>
       <div style="font-size:12px;color:var(--s2)">${ndocs} doc${ndocs!==1?'s':''}</div>
       <div>${proxVenc}</div>
       <div>
-        <button class="btn btn-sm btn-p" onclick="event.stopPropagation();abrirDetallePorRuc('${rucKey}')" style="width:auto">
-          Ver
-        </button>
+        <button class="btn btn-sm btn-p" onclick="event.stopPropagation();abrirDetallePorRuc('${rucKey}')" style="width:auto">Ver</button>
       </div>
     </div>`;
   }).join('');
+
+  // Paginación
+  if (pages > 1) {
+    const pg = document.createElement('div');
+    pg.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;padding:.875rem;border-top:1px solid var(--s5);font-size:12.5px;color:var(--s2)';
+    pg.innerHTML = `
+      <button onclick="cambiarPagina(${paginaActual-1})" ${paginaActual===1?'disabled':''} style="padding:4px 12px;border:1.5px solid var(--s4);border-radius:var(--r8);background:var(--w);cursor:pointer;font-family:var(--f);font-size:12px;color:var(--s2)">‹ Ant</button>
+      <span>Página <strong>${paginaActual}</strong> de <strong>${pages}</strong> · ${total} proveedores</span>
+      <button onclick="cambiarPagina(${paginaActual+1})" ${paginaActual===pages?'disabled':''} style="padding:4px 12px;border:1.5px solid var(--s4);border-radius:var(--r8);background:var(--w);cursor:pointer;font-family:var(--f);font-size:12px;color:var(--s2)">Sig ›</button>`;
+    body.appendChild(pg);
+  }
+}
+
+function cambiarPagina(n) {
+  paginaActual = n;
+  filtrar();
+  document.getElementById('tabla-body')?.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 function getProxVencimiento(p) {
@@ -1420,13 +1448,30 @@ function cerrarModal(id) {
   document.getElementById(id).classList.remove('open');
 }
 
-// Cerrar modales con Escape
+// Atajos de teclado
 document.addEventListener('keydown', e => {
+  // Esc → cerrar paneles/modales
   if (e.key === 'Escape') {
     cerrarDetalle();
     cerrarModal('modal-aprobar');
     cerrarModal('modal-rechazar');
     cerrarModal('modal-ver-doc');
+  }
+  // Ctrl+F → enfocar búsqueda
+  if ((e.ctrlKey || e.metaKey) && e.key === 'f' && SESSION_ADMIN.analista) {
+    e.preventDefault();
+    const s = document.getElementById('search-input');
+    if (s) { s.focus(); s.select(); }
+  }
+  // Ctrl+E → exportar CSV
+  if ((e.ctrlKey || e.metaKey) && e.key === 'e' && SESSION_ADMIN.analista) {
+    e.preventDefault();
+    exportarCSV();
+  }
+  // Ctrl+R → refrescar proveedores
+  if ((e.ctrlKey || e.metaKey) && e.key === 'r' && SESSION_ADMIN.analista) {
+    e.preventDefault();
+    cargarProveedores();
   }
 });
 

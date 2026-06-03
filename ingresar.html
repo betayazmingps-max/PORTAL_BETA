@@ -159,6 +159,8 @@ footer{background:var(--s1);padding:1.5rem 2rem;display:flex;flex-direction:colu
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 /* ── MODO OSCURO ── */
+*{transition:background-color .25s,border-color .25s,color .15s;}
+nav,button,.btn{transition:background .15s,transform .15s,box-shadow .15s!important;}
 body.dark{--bg:#0f0f1a;--w:#1a1a2e;--s1:#e8e0f0;--s2:#b8a8d0;--s3:#7a6898;--s4:#2d2445;--s5:#1e1835;--pll:#1a1228;--pl:#251840;--gll:#0f1a0a;--gl:#152210;--rl:#1a0808;--amberl:#1a1400;}
 body.dark input,body.dark select,body.dark textarea{background:var(--s5);border-color:var(--s4);color:var(--s1);}
 body.dark .card{background:var(--w);border-color:var(--s4);}
