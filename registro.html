@@ -712,8 +712,17 @@ function onRucInput(val) {
   document.getElementById('reg-ruc').value = clean;
   clearTimeout(rucTimer);
   setRucState('idle');
-  if (clean.length === 11) rucTimer = setTimeout(() => buscarRuc(clean), 700);
-  else clearSunatData();
+  if (clean.length === 11) {
+    // Validar que empiece en 10 (persona natural) o 20 (empresa) — RUC peruano
+    if (!clean.startsWith('10') && !clean.startsWith('20')) {
+      setRucState('error', 'RUC inválido — debe empezar en 10 (persona natural) o 20 (empresa)');
+      clearSunatData();
+      return;
+    }
+    rucTimer = setTimeout(() => buscarRuc(clean), 700);
+  } else {
+    clearSunatData();
+  }
 }
 
 function buscarRucManual() {

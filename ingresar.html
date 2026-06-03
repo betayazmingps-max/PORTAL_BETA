@@ -933,6 +933,9 @@ async function solicitarOtpLogin(){
   if(ruc.length!==11)return showAlert('login-alert','error','Ingresa el RUC de 11 dígitos.');
   if(!email)return showAlert('login-alert','error','Ingresa tu correo electrónico registrado.');
 
+  // #2 — Deshabilitar botón para evitar múltiples OTPs
+  const btn=document.querySelector('[onclick="solicitarOtpLogin()"]');
+  if(btn)btn.disabled=true;
   showAlert('login-alert','loading','Verificando RUC en el sistema...');
   try{
     // Usar endpoint dedicado que solo devuelve datos del proveedor buscado (no expone toda la lista)
@@ -951,6 +954,7 @@ async function solicitarOtpLogin(){
     document.getElementById('otp-email-display').textContent=email;
     clearOtp();startOtpCountdown();irA('screen-otp');
   }catch(e){showAlert('login-alert','error','Error: '+e.message);}
+  finally{if(btn)btn.disabled=false;}
 }
 
 async function reenviarOtp(){
@@ -1043,7 +1047,8 @@ function mostrarResumenEnvio() {
     </div>`;
 
   const modal = document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(28,8,64,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem';
+  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(28,8,64,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;cursor:pointer';
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
   modal.innerHTML = `
     <div style="background:var(--w);border-radius:var(--r16);padding:2rem;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.3)">
       <div style="text-align:center;margin-bottom:1.5rem">
@@ -1409,6 +1414,12 @@ async function submitVencidos(){
 function cerrarSesion(){
   SESSION={ruc:'',email:'',razonSocial:'',carpeta:'',analista:'',categoria:''};
   sessionStorage.removeItem('ingresar_session');
+  // #3 — Limpiar todos los stores para que no persistan en nueva sesión
+  Object.keys(fileStore).forEach(k=>delete fileStore[k]);
+  Object.keys(faltStore).forEach(k=>delete faltStore[k]);
+  Object.keys(vencStore).forEach(k=>delete vencStore[k]);
+  aiRejected.clear();
+  Object.keys(aiStore).forEach(k=>delete aiStore[k]);
   document.getElementById('nav-session').style.display='none';
   document.getElementById('login-ruc').value='';document.getElementById('login-email').value='';
   hideAlert('login-alert');irA('screen-entry');

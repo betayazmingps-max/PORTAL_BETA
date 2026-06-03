@@ -1132,37 +1132,39 @@ async function analizarDocumento(ruc, docId) {
       reg_vigencia:'Vigencia poder rep. legal',
     };
 
-    // Llamar al Worker con el formato correcto
-    const isImg   = (docData.tipo || '').startsWith('image/');
-    const res     = await fetch('https://portalbeta.betayazmingps.workers.dev/analizar_doc', {
+    const isImg = (docData.tipo || '').startsWith('image/');
+    const ctrl  = new AbortController();
+    const tid   = setTimeout(() => ctrl.abort(), 45000); // 45s timeout
+    const res   = await fetch('https://portalbeta.betayazmingps.workers.dev/analizar_doc', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
         docName:   NOMBRES_DOC[docId] || docId,
         mediaType: docData.tipo || 'application/pdf',
         isImg,
-        data:      docData.b64,
+        data:      docData.b64,       // campo correcto (normalizado en normalizarProveedor)
         modo:      'completo'
-      })
+      }),
+      signal: ctrl.signal
     });
+    clearTimeout(tid);
 
+    if (!res.ok) throw new Error('Worker respondió ' + res.status);
     const respData = await res.json();
-    if (!respData.ok) throw new Error(respData.error || 'Error en análisis');
 
-    // Parsear la respuesta de texto JSON
+    // Parsear respuesta y mapear a campos de preview
     let resultado = {};
     try {
       const parsed = JSON.parse((respData.texto || '{}').replace(/```json|```/g,'').trim());
-      // Mapear campos del formato completo al formato de preview
       resultado = {
-        tipo_documento: parsed.datos?.titular    ? 'Detectado' : '',
+        tipo_documento: parsed.datos?.numero      || '',
         estado:         parsed.datos?.observacion || '',
         vencimiento:    parsed.datos?.vencimiento || '',
         titular:        parsed.datos?.titular     || '',
-        domicilio:      '',
+        domicilio:      parsed.datos?.observacion || '',
         empresa:        parsed.datos?.titular     || '',
-        observaciones:  parsed.motivo             || '',
-        condicion:      '',
+        observaciones:  parsed.nitido === false ? '⚠ Documento poco nítido' : (parsed.motivo || ''),
+        condicion:      parsed.valido ? 'VÁLIDO' : 'NO VÁLIDO',
       };
     } catch { resultado = simularExtraccionIA(docId, p); }
 
@@ -1446,6 +1448,13 @@ function showToast(msg, tipo='ok', duracion=4000) {
 
 function cerrarModal(id) {
   document.getElementById(id).classList.remove('open');
+  // #5 — Limpiar contenido del visor de docs al cerrar (evitar memory leak del iframe)
+  if (id === 'modal-ver-doc') {
+    const c = document.getElementById('modal-doc-content');
+    if (c) c.innerHTML = '<p style="color:rgba(255,255,255,.4);font-size:13px">Cargando...</p>';
+    const link = document.getElementById('modal-doc-descargar');
+    if (link) { link.href = '#'; link.download = ''; }
+  }
 }
 
 // Atajos de teclado
@@ -1544,17 +1553,28 @@ function filtrar() {
 const LOG_KEY = 'beta_log_acciones';
 
 function registrarAccion(ruc, accion, detalle = '') {
-  const logs = JSON.parse(localStorage.getItem(LOG_KEY) || '{}');
-  if (!logs[ruc]) logs[ruc] = [];
-  logs[ruc].unshift({
+  const entrada = {
     fecha:    new Date().toLocaleString('es-PE'),
     analista: SESSION_ADMIN.nombre,
     accion,
     detalle
-  });
-  // Máximo 20 logs por proveedor
+  };
+
+  // #6 — Guardar en localStorage (para acceso rápido) Y en Sheet (persistente entre dispositivos)
+  const logs = JSON.parse(localStorage.getItem(LOG_KEY) || '{}');
+  if (!logs[ruc]) logs[ruc] = [];
+  logs[ruc].unshift(entrada);
   logs[ruc] = logs[ruc].slice(0, 20);
   localStorage.setItem(LOG_KEY, JSON.stringify(logs));
+
+  // Guardar en Sheet en segundo plano (no bloquea la UI)
+  if (!CFG.DEMO) {
+    fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ action: 'log', ruc, ...entrada })
+    }).catch(e => console.warn('No se pudo guardar log en Sheet:', e.message));
+  }
 }
 
 function renderLog(ruc) {
