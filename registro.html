@@ -401,7 +401,7 @@ const CFG = {
   /* Google Apps Script — guarda datos + docs para que el panel los lea */
   GSHEET_URL: 'https://script.google.com/macros/s/AKfycbxu-TP4IduJCTk-qoVrJLjCjR2i7GWK6zrC28Uxs79iUAYJmc5-99Y7JSz1Flc3hQ8WWA/exec',
 
-  APIS_NET_PE_TOKEN: '7ddcc309a88f8187d073fc1a59121919',
+  // Token de SUNAT movido al Worker (no debe estar en el frontend)
   DEMO: false  // ← cambiar a false en producción
 };
 
@@ -650,7 +650,7 @@ async function buscarRuc(ruc) {
   try {
     const res = await fetch('https://portalbeta.betayazmingps.workers.dev/sunat_ruc', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ruc, token: CFG.APIS_NET_PE_TOKEN })
+      body: JSON.stringify({ ruc }) // token vive en el Worker
     });
     if (res.ok) {
       const d = await res.json();
@@ -790,6 +790,9 @@ async function toBase64(file) {
    SUBMIT REGISTRO
    ════════════════════════════════════ */
 async function submitRegistro() {
+  const btnSubmit = document.getElementById('btn-submit');
+  if (btnSubmit) { btnSubmit.disabled = true; }
+
   const g = id => document.getElementById(id);
   const ruc      = g('reg-ruc').value.trim();
   const razonManual = g('reg-razon') ? g('reg-razon').value.trim() : '';
@@ -801,22 +804,24 @@ async function submitRegistro() {
   const obs      = g('reg-obs').value.trim();
   const cat      = g('reg-categoria').value;
 
+  const reactivar = () => { if (btnSubmit) btnSubmit.disabled = false; };
+
   // Validar campos
-  if (!ruc || ruc.length !== 11) return showAlert('reg-alert', 'error', 'Ingresa un RUC válido de 11 dígitos.');
-  if (!razon)    return showAlert('reg-alert', 'error', 'La razón social es requerida.');
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert('reg-alert', 'error', 'Ingresa un correo válido.');
-  if (!contacto) return showAlert('reg-alert', 'error', 'El nombre de contacto es requerido.');
-  if (!cat)      return showAlert('reg-alert', 'error', 'Selecciona la categoría de transporte.');
-  if (!analista) return showAlert('reg-alert', 'error', 'Selecciona el analista responsable.');
+  if (!ruc || ruc.length !== 11) { reactivar(); return showAlert('reg-alert', 'error', 'Ingresa un RUC válido de 11 dígitos.'); }
+  if (!razon)    { reactivar(); return showAlert('reg-alert', 'error', 'La razón social es requerida.'); }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { reactivar(); return showAlert('reg-alert', 'error', 'Ingresa un correo válido.'); }
+  if (!contacto) { reactivar(); return showAlert('reg-alert', 'error', 'El nombre de contacto es requerido.'); }
+  if (!cat)      { reactivar(); return showAlert('reg-alert', 'error', 'Selecciona la categoría de transporte.'); }
+  if (!analista) { reactivar(); return showAlert('reg-alert', 'error', 'Selecciona el analista responsable.'); }
 
   // Validar documentos obligatorios
   const faltantes = DOCS_REGISTRO.filter(d => d.req && !fileStore[d.id]).map(d => d.name);
   if (faltantes.length) {
-    // Marcar visualmente los que faltan
     DOCS_REGISTRO.filter(d => d.req && !fileStore[d.id]).forEach(d => {
       const item = document.getElementById('doc-item-' + d.id);
       if (item) item.style.borderColor = 'var(--r)';
     });
+    reactivar();
     return showAlert('reg-alert', 'error', `Faltan documentos obligatorios (★):\n${faltantes.join(', ')}`);
   }
 
@@ -836,6 +841,7 @@ async function submitRegistro() {
     mostrarOtp(email);
   } catch(e) {
     showAlert('reg-alert', 'error', 'No se pudo enviar el código: ' + e.message);
+    if (btnSubmit) { btnSubmit.disabled = false; } // reactivar si falla
   }
 }
 
@@ -854,7 +860,8 @@ async function verificarOtp() {
       valido = (otp === '123456');
     } else {
       const r = await callFlow(CFG.FLOW_VERIFICAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, otp });
-      valido = r.valido || r.ok;
+      // Verificar explícitamente r.valido — r.ok solo indica que el servidor respondió, no que el OTP sea correcto
+      valido = r.valido === true;
     }
 
     if (!valido) {

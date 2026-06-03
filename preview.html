@@ -562,7 +562,14 @@ function cerrarSesion() {
    CARGAR PROVEEDORES DEL SHEET
 ══════════════════════════════════════════ */
 async function cargarProveedores() {
+  // Mostrar estado de carga en la tabla
+  const tablaBody = document.getElementById('tabla-body');
+  if (tablaBody) tablaBody.innerHTML = `<div class="empty"><div class="spin" style="margin:0 auto 1rem;width:28px;height:28px;border-width:3px"></div><p>Cargando proveedores...</p></div>`;
+
+  document.getElementById('dash-sub').textContent = 'Actualizando datos...';
+
   if (CFG.DEMO) {
+    await new Promise(r => setTimeout(r, 600)); // simular carga en demo
     PROVEEDORES = SESSION_ADMIN.esAdmin
       ? DEMO_DATA
       : DEMO_DATA.filter(p => p.analista === SESSION_ADMIN.analista);
@@ -571,19 +578,19 @@ async function cargarProveedores() {
   }
 
   try {
-    // Pasa por el Worker para evitar CORS con Google Sheet
     const res = await fetch('https://portalbeta.betayazmingps.workers.dev/listar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ analista: SESSION_ADMIN.esAdmin ? 'TODOS' : SESSION_ADMIN.analista })
     });
     const data = await res.json();
+    if (!data.ok && !data.proveedores) throw new Error(data.error || 'Respuesta inválida del servidor');
     PROVEEDORES = data.proveedores || [];
     renderDash();
   } catch(e) {
     console.error('Error cargando Sheet:', e);
-    PROVEEDORES = DEMO_DATA.filter(p => SESSION_ADMIN.esAdmin || p.analista === SESSION_ADMIN.analista);
-    renderDash();
+    if (tablaBody) tablaBody.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg><p style="color:var(--r)">Error al cargar: ${e.message}</p></div>`;
+    document.getElementById('dash-sub').textContent = 'Error al cargar datos';
   }
 }
 
@@ -634,13 +641,15 @@ function renderTabla(lista) {
     body.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay proveedores en esta categoría</p></div>`;
     return;
   }
-  body.innerHTML = lista.map((p, i) => {
+  body.innerHTML = lista.map((p) => {
     const badgeMap = { pendiente:'pendiente', revision:'revision', aprobado:'aprobado', rechazado:'rechazado' };
     const badgeLbl = { pendiente:'Pendiente', revision:'En revisión', aprobado:'Aprobado', rechazado:'Rechazado' };
     const ndocs = Object.keys(p.docs || {}).length;
     const proxVenc = getProxVencimiento(p);
+    // Usar RUC como identificador único en vez de indexOf (que puede retornar -1 con lista filtrada)
+    const rucKey = p.ruc;
 
-    return `<div class="tabla-row" onclick="abrirDetalle(${PROVEEDORES.indexOf(p)})">
+    return `<div class="tabla-row" onclick="abrirDetallePorRuc('${rucKey}')">
       <div>
         <div class="prov-name">${p.razonSocial}</div>
         <div class="prov-ruc">${p.ruc} · ${p.fecha}</div>
@@ -650,7 +659,7 @@ function renderTabla(lista) {
       <div style="font-size:12px;color:var(--s2)">${ndocs} doc${ndocs!==1?'s':''}</div>
       <div>${proxVenc}</div>
       <div>
-        <button class="btn btn-sm btn-p" onclick="event.stopPropagation();abrirDetalle(${PROVEEDORES.indexOf(p)})" style="width:auto">
+        <button class="btn btn-sm btn-p" onclick="event.stopPropagation();abrirDetallePorRuc('${rucKey}')" style="width:auto">
           Ver
         </button>
       </div>
@@ -683,7 +692,15 @@ function diasParaVencer(fechaStr) {
 /* ══════════════════════════════════════════
    PANEL DETALLE
 ══════════════════════════════════════════ */
+// Buscar por RUC — seguro con lista filtrada (indexOf ya no aplica)
+function abrirDetallePorRuc(ruc) {
+  const p = PROVEEDORES.find(p => String(p.ruc) === String(ruc));
+  if (!p) return console.warn('Proveedor no encontrado:', ruc);
+  abrirDetalle(PROVEEDORES.indexOf(p));
+}
+
 function abrirDetalle(idx) {
+  if (idx < 0 || idx >= PROVEEDORES.length) return console.warn('Índice inválido:', idx);
   PROVEEDOR_ACTUAL = PROVEEDORES[idx];
   const p = PROVEEDOR_ACTUAL;
 

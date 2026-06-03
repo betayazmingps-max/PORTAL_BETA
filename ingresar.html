@@ -926,14 +926,13 @@ async function solicitarOtpLogin(){
 
   showAlert('login-alert','loading','Verificando RUC en el sistema...');
   try{
-    const res=await fetch('https://portalbeta.betayazmingps.workers.dev/listar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({analista:'TODOS'})});
+    // Usar endpoint dedicado que solo devuelve datos del proveedor buscado (no expone toda la lista)
+    const res=await fetch('https://portalbeta.betayazmingps.workers.dev/verificar_proveedor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ruc,email})});
     const data=await res.json();
-    if(!data.ok||!data.proveedores)throw new Error('No se pudo conectar con el sistema.');
+    if(!data.ok)return showAlert('login-alert','error',data.error||'RUC o correo no encontrado.\nVerifica tus datos o contáctate con tu analista.');
 
-    const prov=data.proveedores.find(p=>String(p.ruc)===String(ruc)&&p.email.toLowerCase()===email.toLowerCase());
-    if(!prov)return showAlert('login-alert','error','RUC o correo no encontrado.\nVerifica tus datos o contáctate con tu analista.');
-
-    const msgs={pendiente:'Tu solicitud está siendo revisada. Espera la aprobación.',rechazado:'Tu solicitud fue rechazada. Contáctate con tu analista.',revision:'Tu solicitud está en revisión.'};
+    const prov=data.proveedor;
+    const msgs={pendiente:'Tu solicitud está siendo revisada. Espera la aprobación del analista.',rechazado:'Tu solicitud fue rechazada. Contáctate con tu analista.',revision:'Tu solicitud está en revisión por el analista.'};
     if(prov.estado!=='aprobado')return showAlert('login-alert','warning',msgs[prov.estado]||'Tu acceso aún no está habilitado.');
 
     SESSION={ruc,email,razonSocial:prov.razonSocial||'',carpeta:prov.carpeta||'',analista:prov.analista||'',categoria:prov.categoria||''};
@@ -958,7 +957,8 @@ async function verificarOtp(){
   showAlert('otp-alert','loading','Verificando código...');
   try{
     const r=await callFlow(CFG.FLOW_VERIFICAR_OTP,{ruc:SESSION.ruc,email:SESSION.email,otp});
-    if(!r.valido&&!r.ok){showAlert('otp-alert','error','Código incorrecto o expirado. Inténtalo de nuevo.');clearOtp();return;}
+    // Verificar explícitamente r.valido === true — r.ok solo indica que el servidor respondió
+    if(r.valido!==true){showAlert('otp-alert','error','Código incorrecto o expirado. Inténtalo de nuevo.');clearOtp();return;}
     clearInterval(otpInterval);hideAlert('otp-alert');accederDocumentos();
   }catch(e){showAlert('otp-alert','error','Error al verificar: '+e.message);}
 }
@@ -1054,6 +1054,7 @@ async function submitDocumentos(){
       const meta=document.getElementById('success-meta');
       meta.innerHTML='📁 <strong>'+(SESSION.carpeta||'SharePoint')+'</strong><br>📄 <strong>'+archivos.length+' archivo(s)</strong> enviados<br>✦ Verificados con IA<br>✅ Proceso completado — '+new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'});
       document.getElementById('screen-success').classList.add('show');
+      btn.disabled=false; // reactivar tras éxito por si el usuario quiere volver a enviar
       window.scrollTo({top:0});lanzarConfeti();
     },400);
   }catch(e){showAlert('docs-alert','error','Error al enviar: '+e.message);btn.disabled=false;}
