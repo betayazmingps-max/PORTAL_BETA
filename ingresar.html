@@ -724,17 +724,16 @@ async function validarConIA(docId, docName, file){
     const isPDF=file.type==='application/pdf';
     if(!isImg&&!isPDF){setAprobado(docId,file,icon,badge,stat,item);return true;}
 
-    // Llamar al Worker de Cloudflare (que tiene la API key de Claude internamente)
-    const resp = await fetch(CFG.FLOW_ANALIZAR_DOC, {
-      method: 'POST',
+    // #2 — Timeout de 30s para la validación IA
+    const ctrlIA = new AbortController();
+    const tidIA  = setTimeout(() => ctrlIA.abort(), 30000);
+    const resp   = await fetch(CFG.FLOW_ANALIZAR_DOC, {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        docName,
-        mediaType: file.type,
-        isImg,
-        data: b64
-      })
+      body:    JSON.stringify({ docName, mediaType: file.type, isImg, data: b64 }),
+      signal:  ctrlIA.signal
     });
+    clearTimeout(tidIA);
     if (!resp.ok) throw new Error('Worker IA devolvió ' + resp.status);
     const data = await resp.json();
     const texto = data.texto || data.content || '{}';
@@ -836,11 +835,11 @@ function makeEntryBlock(type,idx,docs){
   let fields='';
   if(isCond){
     fields=`<div class="g2" style="margin-bottom:.875rem">
-<div class="field"><label>Nombre del conductor</label><input type="text" id="cond-nombre-${idx}" placeholder="Ej: SANDOVAL SUCLUPE ELMER"></div>
-<div class="field"><label>Correo electrónico</label><input type="email" id="cond-email-${idx}" placeholder="conductor@empresa.com"></div>
+<div class="field"><label>Nombre del conductor <span style="color:var(--p)">*</span></label><input type="text" id="cond-nombre-${idx}" placeholder="Ej: SANDOVAL SUCLUPE ELMER" oninput="this.style.borderColor=this.value.trim()?'var(--g)':'var(--r)'"></div>
+<div class="field"><label>Correo electrónico</label><input type="email" id="cond-email-${idx}" placeholder="conductor@empresa.com" oninput="validarEmailCond(this)"><span class="hint" id="hint-cond-email-${idx}">Opcional</span></div>
 </div>`;
   }else{
-    fields=`<div class="field" style="margin-bottom:.875rem"><label>Placa del vehículo</label><input type="text" id="unid-placa-${idx}" placeholder="Ej: M4M-966" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>`;
+    fields=`<div class="field" style="margin-bottom:.875rem"><label>Placa del vehículo <span style="color:var(--p)">*</span></label><input type="text" id="unid-placa-${idx}" placeholder="Ej: M4M-966" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.style.borderColor=this.value.trim()?'var(--g)':'var(--r)'"></div>`;
   }
   div.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
 <span style="font-size:11px;font-weight:700;color:var(--p);letter-spacing:.06em;text-transform:uppercase">${label}</span>${removeBtn}</div>
@@ -973,14 +972,22 @@ async function verificarOtp(){
   }catch(e){showAlert('otp-alert','error','Error al verificar: '+e.message);}
 }
 
+// #1 — Sanitizar texto para prevenir XSS
+function esc(txt){ return String(txt||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 /* ══ ACCEDER ══ */
 function accederDocumentos(){
+  // Persistir sesión en sessionStorage
+  sessionStorage.setItem('ingresar_session', JSON.stringify(SESSION));
+
   document.getElementById('nav-session').style.display='flex';
   document.getElementById('nav-name').textContent=SESSION.razonSocial||SESSION.ruc;
   document.getElementById('nav-avatar').textContent=(SESSION.razonSocial||SESSION.ruc).charAt(0).toUpperCase();
   document.getElementById('docs-banner-name').textContent='¡Bienvenido, '+(SESSION.razonSocial||SESSION.ruc)+'!';
   document.getElementById('docs-banner-sub').textContent='Tu carpeta en SharePoint está activa';
-  document.getElementById('docs-folder-path').innerHTML='Docs / CADENA_DE_SUMINISTROS / 2.Compras / TRANSPORTE 2026 / <span>'+(SESSION.categoria||'')+'</span> / <span>'+SESSION.analista+'</span> / <span>'+(SESSION.razonSocial||SESSION.ruc)+'</span>';
+  // #1 — Sanitizar SESSION antes de insertar en innerHTML
+  document.getElementById('docs-folder-path').innerHTML=
+    'Docs / CADENA_DE_SUMINISTROS / 2.Compras / TRANSPORTE 2026 / <span>'+esc(SESSION.categoria)+'</span> / <span>'+esc(SESSION.analista)+'</span> / <span>'+esc(SESSION.razonSocial||SESSION.ruc)+'</span>';
   Object.keys(fileStore).forEach(k=>delete fileStore[k]);aiRejected.clear();
   Object.keys(aiStore).forEach(k=>delete aiStore[k]);
   renderDocGrid('docs-empresa',DOCS_EMPRESA);
@@ -990,6 +997,18 @@ function accederDocumentos(){
   addConductorEntry();addUnidadEntry();
   irA('screen-docs');
 }
+
+// #3 — Restaurar sesión si el proveedor recarga la página
+(function restaurarSesionProveedor(){
+  try{
+    const raw=sessionStorage.getItem('ingresar_session');
+    if(!raw)return;
+    const s=JSON.parse(raw);
+    if(!s.ruc||!s.email)return;
+    SESSION=s;
+    accederDocumentos();
+  }catch(e){ sessionStorage.removeItem('ingresar_session'); }
+})();
 
 /* ══ RESUMEN ANTES DE ENVIAR ══ */
 function mostrarResumenEnvio() {
@@ -1050,8 +1069,13 @@ function mostrarResumenEnvio() {
 
 /* ══ SUBMIT ══ */
 async function submitDocumentos(confirmado=false){
-  // Mostrar resumen si aún no se confirmó
-  if(!confirmado){mostrarResumenEnvio();return;}
+  if(!confirmado){
+    // #9 — Validar nombres y placas antes de mostrar resumen
+    const errNombres=validarNombresYPlacas();
+    if(errNombres.length)return showAlert('docs-alert','error','Completa los campos obligatorios:\n'+errNombres.join('\n'));
+    mostrarResumenEnvio();
+    return;
+  }
   if(aiRejected.size>0)return showAlert('docs-alert','error','Hay documentos rechazados por IA. Corrígelos antes de enviar.');
   const faltanEmpresa=DOCS_EMPRESA.filter(d=>d.req&&!fileStore[d.id]);
   if(faltanEmpresa.length>0){
@@ -1065,14 +1089,8 @@ async function submitDocumentos(confirmado=false){
     for(let i=1;i<=condEntryCount;i++){if(!document.getElementById('cond-entry-'+i))continue;conductores.push({idx:i,nombre:(document.getElementById('cond-nombre-'+i)?.value.trim()||'Conductor_'+i)});}
     for(let i=1;i<=unidEntryCount;i++){if(!document.getElementById('unid-entry-'+i))continue;unidades.push({idx:i,placa:(document.getElementById('unid-placa-'+i)?.value.trim()||'Unidad_'+i)});}
 
-    const archivos=[];
-    for(const[docId,file]of Object.entries(fileStore)){
-      const b64=await toBase64(file);
-      let subcarpeta='Proveedor',entidad='';
-      if(docId.startsWith('cond')){const m=docId.match(/^cond(\d+)_/);if(m){const idx=parseInt(m[1]);const c=conductores.find(x=>x.idx===idx);entidad=(c?c.nombre:'Conductor_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Conductor';}}
-      else if(docId.startsWith('unid')){const m=docId.match(/^unid(\d+)_/);if(m){const idx=parseInt(m[1]);const u=unidades.find(x=>x.idx===idx);entidad=(u?u.placa:'Unidad_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Unidad';}}
-      archivos.push({id:docId,nombre:getNombreArchivo(docId,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad});
-    }
+    // #5 — Limpiar bordes rojos de docs faltantes al reintentar
+    document.querySelectorAll('.doc-item.required-missing').forEach(el=>el.classList.remove('required-missing'));
 
     const partes=(SESSION.carpeta||'').split('/').map(p=>p.trim()).filter(Boolean);
     const base={
@@ -1084,39 +1102,56 @@ async function submitDocumentos(confirmado=false){
       ruta_area:partes[0]||'',ruta_subarea:partes[1]||'',ruta_campania:partes[2]||'',
       ruta_categoria:partes[3]||SESSION.categoria||'',ruta_analista:partes[4]||SESSION.analista||'',
       ruta_carpeta_empresa:partes[5]||(SESSION.ruc+'_'+SESSION.razonSocial),
-      sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:archivos.length
+      sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:Object.keys(fileStore).length
     };
 
+    // #4 — Convertir y subir UN archivo a la vez (no todos en RAM simultáneamente)
+    const docIds=Object.keys(fileStore);
     let enviados=0;
-    for(const archivo of archivos){
-      showAlert('docs-alert','loading',`Subiendo ${enviados+1} de ${archivos.length}: ${archivo.nombre}...`);
-      await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[archivo],indice:enviados+1,es_ultimo:enviados+1===archivos.length});
+    for(const docId of docIds){
+      const file=fileStore[docId];
       enviados++;
-      document.getElementById('prog-fill').style.width=Math.round(enviados/archivos.length*100)+'%';
-      document.getElementById('prog-count').textContent=enviados+' / '+archivos.length+' archivos';
+      const pct=Math.round(enviados/docIds.length*100);
+      showAlert('docs-alert','loading',`📤 Subiendo ${enviados}/${docIds.length}: ${getNombreArchivo(docId,file)} (${pct}%)`);
+      document.getElementById('prog-fill').style.width=pct+'%';
+      document.getElementById('prog-count').textContent=enviados+' / '+docIds.length+' archivos';
+
+      // Convertir solo este archivo
+      const b64=await toBase64(file);
+      let subcarpeta='Proveedor',entidad='';
+      if(docId.startsWith('cond')){const m=docId.match(/^cond(\d+)_/);if(m){const idx=parseInt(m[1]);const c=conductores.find(x=>x.idx===idx);entidad=(c?c.nombre:'Conductor_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Conductor';}}
+      else if(docId.startsWith('unid')){const m=docId.match(/^unid(\d+)_/);if(m){const idx=parseInt(m[1]);const u=unidades.find(x=>x.idx===idx);entidad=(u?u.placa:'Unidad_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Unidad';}}
+
+      await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{id:docId,nombre:getNombreArchivo(docId,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad}],indice:enviados,es_ultimo:enviados===docIds.length});
     }
 
-    // Guardar datos IA en el Google Sheet (acción 'guardarAI')
+    // #6 — Guardar aiStore (fechas de vencimiento) en Sheet hoja "Vencimientos"
     if(Object.keys(aiStore).length>0){
-      showAlert('docs-alert','loading','Guardando datos de documentos en el sistema...');
+      showAlert('docs-alert','loading','💾 Guardando fechas de vencimiento en el sistema...');
       try{
-        await fetch(CFG.GSHEET_URL,{
+        await fetch('https://portalbeta.betayazmingps.workers.dev/sheet',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
           body:JSON.stringify({
-            action:'guardarAI',
-            ruc:SESSION.ruc,
-            docId:'__ingresar__',   // clave especial para datos de ingresar
-            datos:{
-              fecha:new Date().toLocaleString('es-PE'),
-              conductores: conductores.map(c=>c.nombre),
-              unidades:    unidades.map(u=>u.placa),
-              documentos:  Object.entries(aiStore).map(([id,d])=>({id,...d}))
-            }
-          }),
-          mode:'no-cors'
+            action:    'guardarVencimientos',
+            ruc:       SESSION.ruc,
+            razonSocial: SESSION.razonSocial,
+            analista:  SESSION.analista,
+            fecha:     new Date().toLocaleString('es-PE'),
+            conductores: conductores.map(c=>c.nombre),
+            unidades:    unidades.map(u=>u.placa),
+            vencimientos: Object.entries(aiStore)
+              .filter(([,d])=>d.vencimiento)
+              .map(([id,d])=>({
+                id,
+                docNombre:   d.docNombre||id,
+                titular:     d.titular||'',
+                vencimiento: d.vencimiento,
+                numero:      d.numero||''
+              }))
+          })
         });
-      }catch(e){console.warn('No se pudieron guardar datos IA en Sheet:',e.message);}
+      }catch(e){console.warn('No se pudieron guardar vencimientos:', e.message);}
     }
 
     setTimeout(()=>{
@@ -1373,6 +1408,7 @@ async function submitVencidos(){
 /* ══ SESIÓN / ÉXITO ══ */
 function cerrarSesion(){
   SESSION={ruc:'',email:'',razonSocial:'',carpeta:'',analista:'',categoria:''};
+  sessionStorage.removeItem('ingresar_session');
   document.getElementById('nav-session').style.display='none';
   document.getElementById('login-ruc').value='';document.getElementById('login-email').value='';
   hideAlert('login-alert');irA('screen-entry');
@@ -1509,6 +1545,42 @@ async function analizarRegularizacion() {
   }
 
   document.getElementById('btn-analizar-reg').disabled = false;
+}
+
+/* ══ #7 — VALIDACIÓN EMAIL CONDUCTOR ══ */
+function validarEmailCond(input){
+  const hint=document.getElementById('hint-cond-email-'+input.id.split('-').pop());
+  if(!hint)return;
+  const val=input.value.trim();
+  if(!val){hint.textContent='Opcional';hint.className='hint';input.style.borderColor='';return;}
+  const ok=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val);
+  hint.textContent=ok?'✓ Email válido':'✗ Formato inválido';
+  hint.className='hint '+(ok?'ok':'err');
+  input.style.borderColor=ok?'var(--g)':'var(--r)';
+}
+
+/* ══ #9 — VALIDAR NOMBRE/PLACA ANTES DE ENVIAR ══ */
+function validarNombresYPlacas(){
+  const errores=[];
+  for(let i=1;i<=condEntryCount;i++){
+    if(!document.getElementById('cond-entry-'+i))continue;
+    const nombre=document.getElementById('cond-nombre-'+i)?.value.trim()||'';
+    if(!nombre){
+      errores.push(`Conductor #${i}: ingresa el nombre`);
+      const el=document.getElementById('cond-nombre-'+i);
+      if(el)el.style.borderColor='var(--r)';
+    }
+  }
+  for(let i=1;i<=unidEntryCount;i++){
+    if(!document.getElementById('unid-entry-'+i))continue;
+    const placa=document.getElementById('unid-placa-'+i)?.value.trim()||'';
+    if(!placa){
+      errores.push(`Unidad #${i}: ingresa la placa`);
+      const el=document.getElementById('unid-placa-'+i);
+      if(el)el.style.borderColor='var(--r)';
+    }
+  }
+  return errores;
 }
 
 /* ══ MODO OSCURO ══ */
