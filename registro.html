@@ -985,11 +985,34 @@ async function verificarOtp() {
       return;
     }
 
-    // OTP válido → guardar datos y subir docs a SharePoint
+    // OTP válido → guardar TODO en Google Sheets para que el analista lo revise en preview.html
     clearInterval(otpInterval);
+    showAlert('otp-alert', 'loading', '📊 Guardando registro...');
 
-    // 1 — Guardar datos del proveedor en Google Sheets (SIN documentos)
-    showAlert('otp-alert', 'loading', '📊 Guardando registro en el sistema...');
+    // Convertir cada documento a base64 (el analista los verá en preview.html)
+    const archivos = [];
+    let totalBytes = 0;
+    for (const [docId, file] of Object.entries(fileStore)) {
+      totalBytes += file.size;
+      const b64    = await toBase64(file);
+      const nombre = (DOCS_REGISTRO.find(d => d.id === docId)?.name || docId)
+        .replace(/[\/\\:*?"<>|#%]/g, '-').trim();
+      const ext    = file.name.includes('.') ? '.' + file.name.split('.').pop().toLowerCase() : '';
+      archivos.push({
+        id:       docId,
+        nombre:   nombre + ext,
+        tipo:     file.type || 'application/octet-stream',
+        contenido: b64
+      });
+    }
+
+    // Advertir si el total supera 25MB
+    if (totalBytes > 25 * 1024 * 1024) {
+      showAlert('otp-alert', 'warning', `⚠ El total de documentos (${(totalBytes/1024/1024).toFixed(1)}MB) es grande. Reducir el tamaño de los archivos asegura mejor rendimiento.`);
+      await new Promise(r => setTimeout(r, 2500));
+    }
+
+    // Guardar datos + docs en Google Sheets → el analista los verá en preview.html
     await guardarEnSheet({
       ruc:         SESSION.ruc,
       razonSocial: SESSION.razonSocial,
@@ -999,38 +1022,13 @@ async function verificarOtp() {
       categoria:   SESSION.categoria,
       analista:    SESSION.analista,
       obs:         SESSION.obs,
-      estadoSunat: SUNAT_DATA.estado     || '',
-      condicion:   SUNAT_DATA.condicion  || '',
-      direccion:   SUNAT_DATA.direccion  || SUNAT_DATA.domicilioFiscal || '',
+      estadoSunat: SUNAT_DATA.estado    || '',
+      condicion:   SUNAT_DATA.condicion || '',
+      direccion:   SUNAT_DATA.direccion || SUNAT_DATA.domicilioFiscal || '',
       fecha:       new Date().toLocaleString('es-PE'),
       estado:      'pendiente',
+      docs:        JSON.stringify(archivos),  // ← el analista los revisa en preview.html
     });
-
-    // 2 — Subir documentos a SharePoint via Power Automate
-    const archivos = Object.entries(fileStore);
-    if (archivos.length > 0) {
-      let enviados = 0;
-      for (const [docId, file] of archivos) {
-        enviados++;
-        showAlert('otp-alert', 'loading', `📤 Subiendo documento ${enviados} de ${archivos.length}: ${file.name}...`);
-        const b64    = await toBase64(file);
-        const nombre = (DOCS_REGISTRO.find(d => d.id === docId)?.name || docId)
-          .replace(/[\/\\:*?"<>|#%]/g, '-').trim();
-        const ext    = file.name.includes('.') ? '.' + file.name.split('.').pop().toLowerCase() : '';
-        await callFlow(CFG.FLOW_SUBIR_DOCS, {
-          ruc:          SESSION.ruc,
-          razonSocial:  SESSION.razonSocial,
-          analista:     SESSION.analista,
-          categoria:    SESSION.categoria,
-          sitio_sharepoint: CFG.SITIO_SP,
-          biblioteca:   CFG.BIBLIOTECA,
-          archivos:     [{ id: docId, nombre: nombre + ext, tipo: file.type || 'application/octet-stream', contenido: b64, subcarpeta: 'Proveedor', entidad: '' }],
-          indice:       enviados,
-          es_ultimo:    enviados === archivos.length,
-          total_archivos: archivos.length,
-        });
-      }
-    }
 
     hideAlert('otp-alert');
     mostrarExito();
