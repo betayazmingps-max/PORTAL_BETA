@@ -172,7 +172,32 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
 .empty svg{width:48px;height:48px;margin:0 auto .75rem;opacity:.4}
 .empty p{font-size:13px}
 
-/* ── MODAL APROBAR ── */
+<!-- ══ MODAL VER DOCUMENTO ══ -->
+<div class="modal-overlay" id="modal-ver-doc">
+  <div class="modal" style="max-width:680px;width:95%;padding:0;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:var(--s5);border-bottom:1.5px solid var(--s4)">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--s1)" id="modal-doc-nombre">Documento</div>
+        <div style="font-size:11px;color:var(--s3);font-family:var(--m)" id="modal-doc-tipo"></div>
+      </div>
+      <button class="detalle-close" onclick="cerrarModal('modal-ver-doc')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="modal-doc-content" style="background:#1a1a2e;min-height:420px;display:flex;align-items:center;justify-content:center;padding:1rem">
+      <p style="color:rgba(255,255,255,.4);font-size:13px">Cargando...</p>
+    </div>
+    <div style="padding:.75rem 1.25rem;background:var(--s5);border-top:1.5px solid var(--s4);display:flex;justify-content:flex-end;gap:.75rem">
+      <a id="modal-doc-descargar" download style="display:inline-flex;align-items:center;gap:6px;padding:.5rem 1rem;background:var(--p);color:#fff;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:var(--f);text-decoration:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
+      </a>
+      <button class="btn-outline btn-sm" onclick="cerrarModal('modal-ver-doc')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL APROBAR ── -->
 .modal-overlay{display:none;position:fixed;inset:0;z-index:900;background:rgba(28,8,64,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:var(--w);border-radius:var(--r16);padding:2rem;max-width:420px;width:90%;box-shadow:0 24px 80px rgba(28,8,64,.3);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
@@ -585,7 +610,8 @@ async function cargarProveedores() {
     });
     const data = await res.json();
     if (!data.ok && !data.proveedores) throw new Error(data.error || 'Respuesta inválida del servidor');
-    PROVEEDORES = data.proveedores || [];
+    // Normalizar formato de docs de cada proveedor
+    PROVEEDORES = (data.proveedores || []).map(normalizarProveedor);
     renderDash();
   } catch(e) {
     console.error('Error cargando Sheet:', e);
@@ -738,37 +764,86 @@ function abrirDetalle(idx) {
   document.body.style.overflow = 'hidden';
 }
 
+/* ══ NORMALIZAR DOCS ══
+   registro.html guarda: [{id, nombre, tipo, contenido}]
+   preview.html necesita: {reg_brochure: {nombre, b64, tipo}}
+*/
+function normalizarProveedor(p) {
+  if (!p.docs) return p;
+  // Si ya es objeto (formato viejo o demo), no hacer nada
+  if (!Array.isArray(p.docs)) {
+    // Si es string JSON, parsear
+    if (typeof p.docs === 'string') {
+      try {
+        const parsed = JSON.parse(p.docs);
+        if (Array.isArray(parsed)) {
+          // Convertir array → objeto
+          p.docs = {};
+          parsed.forEach(d => {
+            p.docs[d.id] = { nombre: d.nombre, b64: d.contenido || null, tipo: d.tipo || 'application/pdf' };
+          });
+        }
+      } catch {}
+    }
+    return p;
+  }
+  // Es array → convertir a objeto
+  const docsObj = {};
+  p.docs.forEach(d => {
+    docsObj[d.id] = { nombre: d.nombre, b64: d.contenido || null, tipo: d.tipo || 'application/pdf' };
+  });
+  p.docs = docsObj;
+  return p;
+}
+
 function renderDocsReview(p) {
   const NOMBRES_DOC = {
-    reg_brochure: 'Brochure / Cotización',
-    reg_carta:    'Carta de presentación',
-    reg_ficha:    'Ficha RUC SUNAT',
-    reg_deuda:    'Deudas coactivas',
-    reg_ref:      'Referencias comerciales',
-    reg_vigencia: 'Vigencia poder rep. legal',
+    reg_brochure:   'Brochure',
+    reg_cotizacion: 'Cotización',
+    reg_carta:      'Carta de presentación',
+    reg_ficha:      'Ficha RUC SUNAT',
+    reg_deuda:      'Deudas coactivas',
+    reg_ref:        'Referencias comerciales',
+    reg_vigencia:   'Vigencia poder rep. legal',
   };
 
   const CAMPOS_IA = {
-    reg_ficha:    [{ key:'estado', lbl:'Estado' }, { key:'condicion', lbl:'Condición' }, { key:'domicilio', lbl:'Domicilio fiscal' }, { key:'vencimiento', lbl:'Fecha vencimiento', tipo:'fecha' }],
-    reg_vigencia: [{ key:'titular', lbl:'Representante legal' }, { key:'vencimiento', lbl:'Vigencia hasta', tipo:'fecha' }],
-    reg_brochure: [{ key:'empresa', lbl:'Empresa' }, { key:'vencimiento', lbl:'Validez oferta', tipo:'fecha' }],
-    reg_carta:    [{ key:'referencia', lbl:'Referencia' }, { key:'vencimiento', lbl:'Fecha carta', tipo:'fecha' }],
-    reg_deuda:    [{ key:'estado', lbl:'Estado deuda' }, { key:'vencimiento', lbl:'Fecha consulta', tipo:'fecha' }],
-    reg_ref:      [{ key:'empresa_ref', lbl:'Empresa referente' }, { key:'vencimiento', lbl:'Fecha', tipo:'fecha' }],
+    reg_ficha:      [{ key:'estado', lbl:'Estado SUNAT' }, { key:'condicion', lbl:'Condición' }, { key:'domicilio', lbl:'Domicilio fiscal' }, { key:'vencimiento', lbl:'Fecha vencimiento', tipo:'fecha' }],
+    reg_vigencia:   [{ key:'titular', lbl:'Representante legal' }, { key:'vencimiento', lbl:'Vigencia hasta', tipo:'fecha' }],
+    reg_brochure:   [{ key:'empresa', lbl:'Empresa' }, { key:'vencimiento', lbl:'Fecha', tipo:'fecha' }],
+    reg_cotizacion: [{ key:'empresa', lbl:'Empresa' }, { key:'vencimiento', lbl:'Validez', tipo:'fecha' }],
+    reg_carta:      [{ key:'referencia', lbl:'Referencia' }, { key:'vencimiento', lbl:'Fecha carta', tipo:'fecha' }],
+    reg_deuda:      [{ key:'estado', lbl:'Estado deuda' }, { key:'vencimiento', lbl:'Fecha consulta', tipo:'fecha' }],
+    reg_ref:        [{ key:'empresa_ref', lbl:'Empresa referente' }, { key:'vencimiento', lbl:'Fecha', tipo:'fecha' }],
   };
 
   const docs = p.docs || {};
-  if (!Object.keys(docs).length) return '<p style="color:var(--s3);font-size:13px;padding:1rem 0">No se subieron documentos en el registro.</p>';
+  if (!Object.keys(docs).length) {
+    return '<p style="color:var(--s3);font-size:13px;padding:1.5rem 0;text-align:center">📂 No se subieron documentos en el registro.</p>';
+  }
 
   return Object.entries(docs).map(([docId, docData]) => {
     const aiData   = (p.ai_extraido || {})[docId] || {};
     const campos   = CAMPOS_IA[docId] || [];
-    const checked  = aiData._revisado ? 'checked' : '';
-    const claseDoc = aiData._revisado ? 'ok' : '';
+    const revisado = aiData._revisado || false;
+    const tieneB64 = !!(docData.b64);
+
+    // Determinar clase del card según vencimiento
+    let claseDoc = revisado ? 'ok' : '';
+    let vencBadge = '';
+    if (aiData.vencimiento) {
+      const dias = diasParaVencer(aiData.vencimiento);
+      if (dias !== null) {
+        if (dias < 0)        { claseDoc = 'error';  vencBadge = `<span class="venc-exp">⚠ Vencido hace ${Math.abs(dias)}d</span>`; }
+        else if (dias < 15)  { claseDoc = 'error';  vencBadge = `<span class="venc-exp">⚠ Vence en ${dias} días</span>`; }
+        else if (dias < 60)  { claseDoc = 'warn';   vencBadge = `<span class="venc-warn">⚡ Vence en ${dias} días</span>`; }
+        else                 {                       vencBadge = `<span class="venc-ok">✓ Vigente (${dias}d)</span>`; }
+      }
+    }
 
     const camposHtml = campos.map(c => {
-      const val  = aiData[c.key] || '';
-      let clase  = '';
+      const val   = aiData[c.key] || '';
+      let clase   = '';
       if (c.tipo === 'fecha' && val) {
         const dias = diasParaVencer(val);
         if (dias !== null) clase = dias < 0 ? 'venc-exp' : dias < 30 ? 'venc-warn' : 'venc-ok';
@@ -785,17 +860,51 @@ function renderDocsReview(p) {
       <div class="doc-review-head">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span class="doc-review-name">${NOMBRES_DOC[docId] || docId}</span>
-        <span style="font-size:11px;color:var(--s3);font-family:var(--m)">${docData.nombre||''}</span>
-        <button class="ai-btn" id="ai-btn-${docId}" onclick="analizarDocumento('${p.ruc}','${docId}')">
-          ✦ Analizar con IA
-        </button>
-        <div class="doc-check ${checked}" id="check-${docId}" onclick="toggleCheck('${p.ruc}','${docId}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        ${vencBadge}
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          ${tieneB64 ? `<button class="ai-btn" style="background:var(--s5);color:var(--s2);border-color:var(--s4)" onclick="verDocumento('${docId}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Ver
+          </button>` : `<span style="font-size:10px;color:var(--s3);font-family:var(--m)">sin archivo</span>`}
+          <button class="ai-btn" id="ai-btn-${docId}" onclick="analizarDocumento('${p.ruc}','${docId}')" ${!tieneB64?'disabled style="opacity:.4;cursor:not-allowed"':''}>
+            ✦ Analizar con IA
+          </button>
+          <div class="doc-check ${revisado?'checked':''}" id="check-${docId}" onclick="toggleCheck('${p.ruc}','${docId}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
         </div>
       </div>
+      <div style="font-size:10.5px;color:var(--s3);font-family:var(--m);margin-top:2px;margin-bottom:${campos.length?'.75rem':'0'}">${docData.nombre||'—'}</div>
       ${campos.length ? `<div class="ai-fields">${camposHtml}</div>` : ''}
     </div>`;
   }).join('');
+}
+
+// Ver documento en modal
+function verDocumento(docId) {
+  const docData = (PROVEEDOR_ACTUAL?.docs || {})[docId];
+  if (!docData?.b64) return;
+
+  const esPDF = (docData.tipo || '').includes('pdf');
+  const mimeType = docData.tipo || (esPDF ? 'application/pdf' : 'image/jpeg');
+  const dataUrl  = `data:${mimeType};base64,${docData.b64}`;
+
+  document.getElementById('modal-doc-nombre').textContent = docData.nombre || docId;
+  document.getElementById('modal-doc-tipo').textContent   = mimeType;
+
+  const content = document.getElementById('modal-doc-content');
+  if (esPDF) {
+    content.innerHTML = `<iframe src="${dataUrl}" style="width:100%;height:520px;border:none;border-radius:0"></iframe>`;
+  } else {
+    content.innerHTML = `<img src="${dataUrl}" style="max-width:100%;max-height:520px;object-fit:contain;border-radius:8px">`;
+  }
+
+  // Configurar descarga
+  const link = document.getElementById('modal-doc-descargar');
+  link.href     = dataUrl;
+  link.download = docData.nombre || 'documento';
+
+  document.getElementById('modal-ver-doc').classList.add('open');
 }
 
 function cerrarDetalle(e) {
@@ -808,60 +917,63 @@ function cerrarDetalle(e) {
    CLAUDE AI — ANALIZAR DOCUMENTO
 ══════════════════════════════════════════ */
 async function analizarDocumento(ruc, docId) {
-  const p = PROVEEDOR_ACTUAL;
+  const p       = PROVEEDOR_ACTUAL;
   const docData = (p.docs || {})[docId];
   if (!docData) return;
 
   const btn = document.getElementById(`ai-btn-${docId}`);
-  btn.classList.add('loading');
-  btn.innerHTML = '<div class="ai-spin"></div> Analizando...';
+  if (btn) { btn.classList.add('loading'); btn.innerHTML = '<div class="ai-spin"></div> Analizando...'; }
 
   try {
-    // Construir prompt para Claude
-    const PROMPT_IA = `Eres un asistente de revisión de documentos para una empresa de logística en Perú.
-Analiza el siguiente documento PDF y extrae la información en formato JSON puro, sin texto adicional.
-Devuelve SOLO un objeto JSON con estos campos (los que apliquen según el tipo de documento):
-{
-  "tipo_documento": "nombre del documento detectado",
-  "estado": "estado o condición encontrada",
-  "condicion": "habido/no habido u otra condición",
-  "vencimiento": "fecha en formato YYYY-MM-DD o vacío si no aplica",
-  "titular": "nombre del titular o representante legal",
-  "domicilio": "dirección fiscal si aparece",
-  "empresa": "nombre de empresa si aparece",
-  "referencia": "número de referencia si aplica",
-  "empresa_ref": "empresa que da la referencia",
-  "observaciones": "cualquier alerta o dato importante"
-}
-Solo incluye los campos que realmente encuentres en el documento.`;
-
-    let messages;
-
-    if (docData.b64) {
-      // Si tiene contenido real (base64 del PDF)
-      messages = [{ role:'user', content:[
-        { type:'document', source:{ type:'base64', media_type:'application/pdf', data: docData.b64 } },
-        { type:'text', text: PROMPT_IA }
-      ]}];
-    } else {
-      // Modo demo: simular extracción
-      await new Promise(r => setTimeout(r, 1800));
-      const demoRes = simularExtraccionIA(docId, p);
-      aplicarResultadoIA(ruc, docId, demoRes);
-      btn.classList.remove('loading');
-      btn.innerHTML = '✦ Re-analizar';
+    // Sin base64 → simular en demo
+    if (!docData.b64) {
+      await new Promise(r => setTimeout(r, 1500));
+      aplicarResultadoIA(ruc, docId, simularExtraccionIA(docId, p));
+      if (btn) { btn.classList.remove('loading'); btn.innerHTML = '✦ Re-analizar'; }
       return;
     }
 
-    const res = await fetch('https://portalbeta.betayazmingps.workers.dev/analizar_doc', {
-      method: 'POST',
+    const NOMBRES_DOC = {
+      reg_brochure:'Brochure', reg_cotizacion:'Cotización', reg_carta:'Carta de presentación',
+      reg_ficha:'Ficha RUC SUNAT', reg_deuda:'Deudas coactivas', reg_ref:'Referencias comerciales',
+      reg_vigencia:'Vigencia poder rep. legal',
+    };
+
+    // Llamar al Worker con el formato correcto
+    const isImg   = (docData.tipo || '').startsWith('image/');
+    const res     = await fetch('https://portalbeta.betayazmingps.workers.dev/analizar_doc', {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ b64: docData.b64, docId })
+      body:    JSON.stringify({
+        docName:   NOMBRES_DOC[docId] || docId,
+        mediaType: docData.tipo || 'application/pdf',
+        isImg,
+        data:      docData.b64,
+        modo:      'completo'
+      })
     });
 
-    const data = await res.json();
-    if (!data.ok) throw new Error(data.error || 'Error en análisis');
-    aplicarResultadoIA(ruc, docId, data.resultado);
+    const respData = await res.json();
+    if (!respData.ok) throw new Error(respData.error || 'Error en análisis');
+
+    // Parsear la respuesta de texto JSON
+    let resultado = {};
+    try {
+      const parsed = JSON.parse((respData.texto || '{}').replace(/```json|```/g,'').trim());
+      // Mapear campos del formato completo al formato de preview
+      resultado = {
+        tipo_documento: parsed.datos?.titular    ? 'Detectado' : '',
+        estado:         parsed.datos?.observacion || '',
+        vencimiento:    parsed.datos?.vencimiento || '',
+        titular:        parsed.datos?.titular     || '',
+        domicilio:      '',
+        empresa:        parsed.datos?.titular     || '',
+        observaciones:  parsed.motivo             || '',
+        condicion:      '',
+      };
+    } catch { resultado = simularExtraccionIA(docId, p); }
+
+    aplicarResultadoIA(ruc, docId, resultado);
 
   } catch(e) {
     console.error('Error IA:', e);
@@ -1148,6 +1260,7 @@ document.addEventListener('keydown', e => {
     cerrarDetalle();
     cerrarModal('modal-aprobar');
     cerrarModal('modal-rechazar');
+    cerrarModal('modal-ver-doc');
   }
 });
 </script>
