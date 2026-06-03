@@ -106,14 +106,27 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .doc-item{position:relative;border:1.5px dashed var(--s4);border-radius:var(--r12);overflow:hidden;cursor:pointer;background:var(--pll);transition:all .15s}
 .doc-item:hover{border-color:var(--p3);border-style:solid;background:var(--pl)}
 .doc-item.has-file{border-style:solid;border-color:var(--g);background:var(--gll)}
+.doc-item.ai-checking{border-style:solid;border-color:var(--amber);background:var(--amberl);pointer-events:none}
+.doc-item.ai-rejected{border-style:solid;border-color:var(--r);background:var(--rl)}
 .doc-item input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .doc-face{padding:10px 10px 8px;pointer-events:none}
 .doc-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;background:rgba(82,18,160,.1);color:var(--p);transition:.15s}
 .doc-item.has-file .doc-icon{background:var(--g);color:#fff}
+.doc-item.ai-checking .doc-icon{background:var(--amber);color:#fff}
+.doc-item.ai-rejected .doc-icon{background:var(--r);color:#fff}
 .doc-name{font-size:11px;font-weight:600;color:var(--s1);line-height:1.3;margin-bottom:2px}
 .doc-item.has-file .doc-name{color:var(--g)}
+.doc-item.ai-rejected .doc-name{color:var(--r)}
 .doc-status{font-size:9.5px;color:var(--s3);font-family:var(--m)}
 .doc-item.has-file .doc-status{color:var(--g)}
+.doc-item.ai-rejected .doc-status{color:var(--r)}
+/* AI Badge */
+.ai-badge-reg{position:absolute;bottom:5px;left:6px;font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:999px;display:none;font-family:var(--m)}
+.doc-item.has-file .ai-badge-reg{display:block;background:rgba(91,173,30,.15);color:#2d6010;border:1px solid rgba(91,173,30,.3)}
+.doc-item.ai-checking .ai-badge-reg{display:block;background:rgba(245,158,11,.2);color:#7a4f00;border:1px solid rgba(245,158,11,.4)}
+.doc-item.ai-rejected .ai-badge-reg{display:block;background:rgba(224,32,32,.1);color:var(--r);border:1px solid rgba(224,32,32,.3)}
+.ai-spin{width:10px;height:10px;border:1.5px solid rgba(245,158,11,.3);border-top-color:var(--amber);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:2px}
+@keyframes sp{to{transform:rotate(360deg)}}
 
 /* ── BUTTONS ── */
 .btn{width:100%;padding:.85rem 1.5rem;border:none;border-radius:var(--r12);font-family:var(--f);font-size:14px;font-weight:800;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:-.01em}
@@ -394,15 +407,15 @@ footer{background:var(--s1);padding:1.25rem 1.5rem;display:flex;flex-direction:c
    CONFIGURACIÓN
    ════════════════════════════════════ */
 const CFG = {
-  /* Worker Cloudflare (OTP) */
   FLOW_ENVIAR_OTP:    'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
   FLOW_VERIFICAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/verificar_otp',
-
-  /* Google Apps Script — guarda datos + docs para que el panel los lea */
-  GSHEET_URL: 'https://script.google.com/macros/s/AKfycbxu-TP4IduJCTk-qoVrJLjCjR2i7GWK6zrC28Uxs79iUAYJmc5-99Y7JSz1Flc3hQ8WWA/exec',
-
-  // Token de SUNAT movido al Worker (no debe estar en el frontend)
-  DEMO: false  // ← cambiar a false en producción
+  FLOW_ANALIZAR_DOC:  'https://portalbeta.betayazmingps.workers.dev/analizar_doc',  // IA via Worker
+  FLOW_SUBIR_DOCS:    'https://portalbeta.betayazmingps.workers.dev/subir_docs',    // SharePoint via Power Automate
+  GSHEET_URL:         'https://script.google.com/macros/s/AKfycbxu-TP4IduJCTk-qoVrJLjCjR2i7GWK6zrC28Uxs79iUAYJmc5-99Y7JSz1Flc3hQ8WWA/exec',
+  SITIO_SP:           'https://betacompe.sharepoint.com/sites/Intranet',
+  BIBLIOTECA:         'Documentos compartidos',
+  MAX_FILE_MB:        10,
+  DEMO: false
 };
 
 let SESSION = {};
@@ -498,7 +511,12 @@ const DOCS_REGISTRO = [
   { id:'reg_ref',      name:'Referencias comerciales',     req:true },
   { id:'reg_vigencia', name:'Vigencia poder rep. legal',   req:true },
 ];
-const fileStore = {};
+const fileStore   = {};
+const aiRejected  = new Set(); // docs rechazados por IA
+
+const DOC_ICON_SVG  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+const DOC_CHECK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const DOC_X_SVG     = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 
 function renderDocGrid(containerId, docs) {
   const c = document.getElementById(containerId);
@@ -509,44 +527,135 @@ function renderDocGrid(containerId, docs) {
     div.className = 'doc-item';
     div.id = 'doc-item-' + doc.id;
     div.innerHTML = `
-      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onFileChange('${doc.id}',this)">
+      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onFileChange('${doc.id}','${doc.name.replace(/'/g,"\\'")}',this)">
       <div class="doc-face">
-        <div class="doc-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        </div>
+        <div class="doc-icon" id="reg-icon-${doc.id}">${DOC_ICON_SVG}</div>
         <div class="doc-name">${doc.req ? '★ ' : ''}${doc.name}</div>
         <div class="doc-status" id="doc-status-${doc.id}">Sin archivo</div>
       </div>
-      ${doc.req ? '<div style="position:absolute;top:6px;right:6px;font-size:9px;font-family:var(--m);font-weight:600;padding:2px 6px;border-radius:999px;background:rgba(82,18,160,.1);color:var(--p)">req</div>' : ''}`;
+      ${doc.req ? '<div style="position:absolute;top:6px;right:6px;font-size:9px;font-family:var(--m);font-weight:600;padding:2px 6px;border-radius:999px;background:rgba(82,18,160,.1);color:var(--p)">req</div>' : ''}
+      <span class="ai-badge-reg" id="reg-badge-${doc.id}"></span>`;
     c.appendChild(div);
   });
 }
 
-const MAX_FILE_MB = 10; // límite por archivo
-
-function onFileChange(docId, input) {
-  const file = input.files[0];
-  const item = document.getElementById('doc-item-' + docId);
+async function onFileChange(docId, docName, input) {
+  const file   = input.files[0];
+  const item   = document.getElementById('doc-item-'  + docId);
   const status = document.getElementById('doc-status-' + docId);
+  const icon   = document.getElementById('reg-icon-'  + docId);
+  const badge  = document.getElementById('reg-badge-' + docId);
   if (!item || !status) return;
-  if (file) {
-    // Validar tamaño máximo
-    if (file.size > MAX_FILE_MB * 1024 * 1024) {
-      input.value = '';
-      item.style.borderColor = 'var(--r)';
-      status.textContent = '⚠ Máx ' + MAX_FILE_MB + 'MB';
-      showAlert('reg-alert', 'error', `"${file.name}" supera el límite de ${MAX_FILE_MB}MB. Usa un archivo más liviano.`);
+
+  // Limpiar error previo
+  const prevErr = document.getElementById('reg-ai-err-' + docId);
+  if (prevErr) prevErr.remove();
+
+  if (!file) {
+    aiRejected.delete(docId);
+    delete fileStore[docId];
+    item.classList.remove('has-file','ai-checking','ai-rejected');
+    if (icon)  icon.innerHTML  = DOC_ICON_SVG;
+    if (badge) badge.textContent = '';
+    status.textContent = 'Sin archivo';
+    return;
+  }
+
+  // Validar tamaño
+  if (file.size > CFG.MAX_FILE_MB * 1024 * 1024) {
+    input.value = '';
+    item.style.borderColor = 'var(--r)';
+    status.textContent = '⚠ Máx ' + CFG.MAX_FILE_MB + 'MB';
+    showAlert('reg-alert', 'error', `"${file.name}" supera el límite de ${CFG.MAX_FILE_MB}MB.`);
+    return;
+  }
+
+  item.style.borderColor = '';
+
+  // Archivos que no son imagen ni PDF — aceptar sin IA
+  const isImg = file.type.startsWith('image/');
+  const isPDF = file.type === 'application/pdf';
+  if (!isImg && !isPDF) {
+    regSetAprobado(docId, file, item, icon, badge, status);
+    return;
+  }
+
+  // ── Estado: verificando con IA ──
+  item.classList.remove('has-file','ai-rejected');
+  item.classList.add('ai-checking');
+  if (icon)  icon.innerHTML = '<div class="ai-spin"></div>';
+  if (badge) badge.textContent = '⏳ verificando...';
+  status.innerHTML = '<span class="ai-spin"></span> Verificando con IA...';
+
+  try {
+    const b64  = await toBase64(file);
+    const resp = await fetch(CFG.FLOW_ANALIZAR_DOC, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ docName, mediaType: file.type, isImg, data: b64, modo: 'completo' })
+    });
+
+    if (!resp.ok) throw new Error('Worker IA ' + resp.status);
+
+    const data  = await resp.json();
+    const texto = data.texto || '{}';
+    let res;
+    try { res = JSON.parse(texto.replace(/```json|```/g,'').trim()); }
+    catch { regSetAprobado(docId, file, item, icon, badge, status); return; }
+
+    // ── Documento poco nítido ──
+    if (!res.nitido) {
+      regSetRechazado(docId, '📷 Documento poco nítido — sube una versión más clara y legible', item, icon, badge, status);
       return;
     }
-    item.style.borderColor = ''; // limpiar borde rojo previo
-    fileStore[docId] = file;
-    item.classList.add('has-file');
-    status.textContent = file.name.length > 20 ? file.name.slice(0,18) + '…' : file.name;
-  } else {
-    delete fileStore[docId];
-    item.classList.remove('has-file');
-    status.textContent = 'Sin archivo';
+    // ── Documento incorrecto ──
+    if (!res.valido) {
+      regSetRechazado(docId, '❌ ' + (res.motivo || 'El documento no corresponde a este campo'), item, icon, badge, status);
+      return;
+    }
+
+    // ── Aprobado ── mostrar vencimiento si la IA lo detectó
+    if (res.datos?.vencimiento) {
+      const dias = Math.ceil((new Date(res.datos.vencimiento) - new Date()) / 86400000);
+      if (dias < 0)   badge && (badge.textContent = `⚠️ Vencido el ${res.datos.vencimiento}`);
+      else if (dias <= 60) badge && (badge.textContent = `⏰ Vence en ${dias} días`);
+      else badge && (badge.textContent = `✓ Vigente hasta ${res.datos.vencimiento}`);
+      regSetAprobado(docId, file, item, icon, null, status); // badge ya fue puesto
+    } else {
+      regSetAprobado(docId, file, item, icon, badge, status);
+    }
+
+  } catch(e) {
+    // Si la IA falla (sin API key aún) — aprobar igual para no bloquear
+    console.warn('IA no disponible:', e.message);
+    regSetAprobado(docId, file, item, icon, badge, status);
   }
+}
+
+function regSetAprobado(docId, file, item, icon, badge, status) {
+  aiRejected.delete(docId);
+  fileStore[docId] = file;
+  item.classList.remove('ai-checking','ai-rejected');
+  item.classList.add('has-file');
+  if (icon)  icon.innerHTML   = DOC_CHECK_SVG;
+  if (badge) badge.textContent = '✓ IA verificado';
+  status.textContent = file.name.length > 20 ? file.name.slice(0,18) + '…' : file.name;
+}
+
+function regSetRechazado(docId, motivo, item, icon, badge, status) {
+  aiRejected.add(docId);
+  delete fileStore[docId];
+  item.classList.remove('ai-checking','has-file');
+  item.classList.add('ai-rejected');
+  if (icon)  icon.innerHTML   = DOC_X_SVG;
+  if (badge) badge.textContent = '✗ Rechazado';
+  status.textContent = 'Sube el documento correcto';
+  // Mensaje de error debajo del item
+  const el = document.createElement('div');
+  el.id = 'reg-ai-err-' + docId;
+  el.style.cssText = 'grid-column:1/-1;margin-top:-4px;margin-bottom:4px;padding:8px 10px;background:var(--rl);border:1px solid var(--r);border-radius:8px;font-size:11px;color:var(--r);line-height:1.4;display:flex;gap:7px;align-items:flex-start';
+  el.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><span>${motivo}</span>`;
+  if (item.parentNode) item.parentNode.insertBefore(el, item.nextSibling);
 }
 
 /* ════════════════════════════════════
@@ -814,7 +923,13 @@ async function submitRegistro() {
   if (!cat)      { reactivar(); return showAlert('reg-alert', 'error', 'Selecciona la categoría de transporte.'); }
   if (!analista) { reactivar(); return showAlert('reg-alert', 'error', 'Selecciona el analista responsable.'); }
 
-  // Validar documentos obligatorios
+  // Validar docs rechazados por IA
+  if (aiRejected.size > 0) {
+    reactivar();
+    return showAlert('reg-alert', 'error', 'Hay documentos rechazados por la IA ❌\nCorrige los documentos marcados en rojo antes de continuar.');
+  }
+
+  // Validar documentos obligatorios faltantes
   const faltantes = DOCS_REGISTRO.filter(d => d.req && !fileStore[d.id]).map(d => d.name);
   if (faltantes.length) {
     DOCS_REGISTRO.filter(d => d.req && !fileStore[d.id]).forEach(d => {
@@ -870,25 +985,11 @@ async function verificarOtp() {
       return;
     }
 
-    // OTP válido → ahora sí guardamos y enviamos al panel
+    // OTP válido → guardar datos y subir docs a SharePoint
     clearInterval(otpInterval);
-    showAlert('otp-alert', 'loading', '📊 Guardando registro...');
 
-    // 1 — Convertir archivos a base64
-    const archivos = [];
-    let totalBytes = 0;
-    for (const [docId, file] of Object.entries(fileStore)) {
-      totalBytes += file.size;
-      const b64 = await toBase64(file);
-      archivos.push({ id: docId, nombre: file.name, tipo: file.type || 'application/octet-stream', contenido: b64 });
-    }
-    // Advertir si el peso total supera ~30MB (riesgo de fallo en Google Sheets)
-    if (totalBytes > 30 * 1024 * 1024) {
-      showAlert('otp-alert', 'warning', `⚠ El total de documentos (${(totalBytes/1024/1024).toFixed(1)}MB) es muy grande. Si falla el guardado, reduce el tamaño de los archivos.`);
-      await new Promise(r => setTimeout(r, 3000)); // dar tiempo a leer el aviso
-    }
-
-    // 2 — Guardar en Google Sheet (incluye docs en base64 para que el panel los lea)
+    // 1 — Guardar datos del proveedor en Google Sheets (SIN documentos)
+    showAlert('otp-alert', 'loading', '📊 Guardando registro en el sistema...');
     await guardarEnSheet({
       ruc:         SESSION.ruc,
       razonSocial: SESSION.razonSocial,
@@ -898,13 +999,38 @@ async function verificarOtp() {
       categoria:   SESSION.categoria,
       analista:    SESSION.analista,
       obs:         SESSION.obs,
-      estadoSunat: SUNAT_DATA.estado    || '',
-      condicion:   SUNAT_DATA.condicion || '',
-      direccion:   SUNAT_DATA.direccion || SUNAT_DATA.domicilioFiscal || '',
+      estadoSunat: SUNAT_DATA.estado     || '',
+      condicion:   SUNAT_DATA.condicion  || '',
+      direccion:   SUNAT_DATA.direccion  || SUNAT_DATA.domicilioFiscal || '',
       fecha:       new Date().toLocaleString('es-PE'),
       estado:      'pendiente',
-      docs:        JSON.stringify(archivos)   // ← los docs viajan al Sheet para que el panel los analice
     });
+
+    // 2 — Subir documentos a SharePoint via Power Automate
+    const archivos = Object.entries(fileStore);
+    if (archivos.length > 0) {
+      let enviados = 0;
+      for (const [docId, file] of archivos) {
+        enviados++;
+        showAlert('otp-alert', 'loading', `📤 Subiendo documento ${enviados} de ${archivos.length}: ${file.name}...`);
+        const b64    = await toBase64(file);
+        const nombre = (DOCS_REGISTRO.find(d => d.id === docId)?.name || docId)
+          .replace(/[\/\\:*?"<>|#%]/g, '-').trim();
+        const ext    = file.name.includes('.') ? '.' + file.name.split('.').pop().toLowerCase() : '';
+        await callFlow(CFG.FLOW_SUBIR_DOCS, {
+          ruc:          SESSION.ruc,
+          razonSocial:  SESSION.razonSocial,
+          analista:     SESSION.analista,
+          categoria:    SESSION.categoria,
+          sitio_sharepoint: CFG.SITIO_SP,
+          biblioteca:   CFG.BIBLIOTECA,
+          archivos:     [{ id: docId, nombre: nombre + ext, tipo: file.type || 'application/octet-stream', contenido: b64, subcarpeta: 'Proveedor', entidad: '' }],
+          indice:       enviados,
+          es_ultimo:    enviados === archivos.length,
+          total_archivos: archivos.length,
+        });
+      }
+    }
 
     hideAlert('otp-alert');
     mostrarExito();
@@ -936,6 +1062,7 @@ function nuevoRegistro() {
   SESSION = {};
   SUNAT_DATA = {};
   Object.keys(fileStore).forEach(k => delete fileStore[k]);
+  aiRejected.clear();
   document.getElementById('reg-ruc').value = '';
   document.getElementById('reg-email').value = '';
   document.getElementById('reg-contacto').value = '';
