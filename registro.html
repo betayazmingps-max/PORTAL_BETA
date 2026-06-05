@@ -983,10 +983,11 @@ async function submitRegistro() {
       await callFlow(CFG.FLOW_ENVIAR_OTP, { ruc, email, contacto });
     }
     hideAlert('reg-alert');
+    if (btnSubmit) { btnSubmit.disabled = false; } // reactivar para que funcione si vuelve atrás
     mostrarOtp(email);
   } catch(e) {
     showAlert('reg-alert', 'error', 'No se pudo enviar el código: ' + e.message);
-    if (btnSubmit) { btnSubmit.disabled = false; } // reactivar si falla
+    if (btnSubmit) { btnSubmit.disabled = false; }
   }
 }
 
