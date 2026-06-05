@@ -19,10 +19,19 @@ const HOJA_PROVEEDORES  = 'Proveedores';
 const HOJA_VENCIMIENTOS = 'Vencimientos';
 const HOJA_LOG          = 'Historial';
 
-// Columnas de la hoja Proveedores
-const COLS = ['fecha','ruc','razonSocial','contacto','email','telefono',
-              'categoria','analista','estadoSunat','condicion','direccion',
-              'obs','estado','notas','docs','ai_extraido'];
+// Columnas de la hoja Proveedores (orden REAL de tu Sheet)
+// A=Fecha B=RUC C=Razón D=Contacto E=Email F=Tel G=Categoría
+// H=Estado SUNAT I=Condición J=Dirección K=Observaciones L=Estado
+// M=Notas N=Docs O=Notas Analista P=AI Extraído Q=Carpeta SharePoint
+const COLS = ['fecha','ruc','razonSocial','contacto','email','telefono','categoria',
+              'estadoSunat','condicion','direccion','obs','estado',
+              'notas','docs','notasAnalista','ai_extraido','carpetaSP'];
+
+// Índices de columnas (1-based para getRange)
+const COL_ESTADO          = 12; // L
+const COL_NOTAS_ANALISTA  = 15; // O
+const COL_AI_EXTRAIDO     = 16; // P
+const COL_CARPETA_SP      = 17; // Q
 
 /* ════════════ POST — guardar / actualizar ════════════ */
 function doPost(e) {
@@ -64,7 +73,8 @@ function doGet(e) {
         const fila = datos[i];
         const prov = {};
         COLS.forEach((col, idx) => { prov[col] = fila[idx] || ''; });
-        prov.fila = i + 1;
+        prov.fila     = i + 1;
+        prov.analista = fila[17] || '';  // columna R (índice 17) — opcional, fuera de COLS
 
         // Filtrar por analista (ADMIN ve todos)
         if (analista !== 'TODOS' && String(prov.analista) !== String(analista)) continue;
@@ -99,14 +109,32 @@ function guardarRegistro(ss, data) {
     return json({ ok: false, error: 'RUC ya registrado', duplicado: true });
   }
 
+  // Orden de columnas: A→Q (17 columnas)
+  // OJO: El Analista NO está en tu Sheet — si lo necesitas, agrega columna R y descomenta abajo
   sheet.appendRow([
-    data.fecha || new Date().toLocaleString('es-PE'),
-    data.ruc || '', data.razonSocial || '', data.contacto || '', data.email || '',
-    data.telefono || '', data.categoria || '', data.analista || '',
-    data.estadoSunat || '', data.condicion || '', data.direccion || '',
-    data.obs || '', data.estado || 'pendiente', '',
-    data.docs || '', data.ai_extraido || ''
+    data.fecha || new Date().toLocaleString('es-PE'),  // A Fecha
+    data.ruc || '',                                     // B RUC
+    data.razonSocial || '',                             // C Razón Social
+    data.contacto || '',                                // D Contacto
+    data.email || '',                                   // E Email
+    data.telefono || '',                                // F Teléfono
+    data.categoria || '',                               // G Categoría
+    data.estadoSunat || '',                             // H Estado SUNAT
+    data.condicion || '',                               // I Condición
+    data.direccion || '',                               // J Dirección
+    data.obs || '',                                     // K Observaciones
+    data.estado || 'pendiente',                         // L Estado
+    '',                                                  // M Notas
+    data.docs || '',                                    // N Docs (base64)
+    '',                                                  // O Notas Analista
+    data.ai_extraido || '',                             // P AI Extraído
+    ''                                                   // Q Carpeta SharePoint
   ]);
+  // Guardar analista en columna R si existe (opcional)
+  if (data.analista) {
+    const ultimaFila = sheet.getLastRow();
+    sheet.getRange(ultimaFila, 18).setValue(data.analista);  // R Analista
+  }
   return json({ ok: true });
 }
 
@@ -115,8 +143,9 @@ function accionEstado(ss, ruc, nuevoEstado, data) {
   const sheet = ss.getSheetByName(HOJA_PROVEEDORES);
   const fila  = buscarFilaPorRuc(sheet, ruc);
   if (fila < 0) return json({ ok: false, error: 'RUC no encontrado' });
-  sheet.getRange(fila, 13).setValue(nuevoEstado); // columna Estado
-  if (data.motivo) sheet.getRange(fila, 14).setValue('RECHAZO: ' + data.motivo);
+  sheet.getRange(fila, COL_ESTADO).setValue(nuevoEstado);                                          // L Estado
+  if (data.motivo) sheet.getRange(fila, COL_NOTAS_ANALISTA).setValue('RECHAZO: ' + data.motivo);   // O Notas Analista
+  if (data.carpeta) sheet.getRange(fila, COL_CARPETA_SP).setValue(data.carpeta);                   // Q Carpeta SharePoint
   return json({ ok: true });
 }
 
@@ -125,7 +154,7 @@ function accionNotas(ss, ruc, notas) {
   const sheet = ss.getSheetByName(HOJA_PROVEEDORES);
   const fila  = buscarFilaPorRuc(sheet, ruc);
   if (fila < 0) return json({ ok: false, error: 'RUC no encontrado' });
-  sheet.getRange(fila, 14).setValue(notas || ''); // columna Notas
+  sheet.getRange(fila, COL_NOTAS_ANALISTA).setValue(notas || '');  // O Notas Analista
   return json({ ok: true });
 }
 
@@ -134,7 +163,7 @@ function accionGuardarAI(ss, data) {
   const sheet = ss.getSheetByName(HOJA_PROVEEDORES);
   const fila  = buscarFilaPorRuc(sheet, data.ruc);
   if (fila < 0) return json({ ok: false, error: 'RUC no encontrado' });
-  sheet.getRange(fila, 16).setValue(JSON.stringify(data.datos || {})); // columna AI Extraído
+  sheet.getRange(fila, COL_AI_EXTRAIDO).setValue(JSON.stringify(data.datos || {}));  // P AI Extraído
   return json({ ok: true });
 }
 
