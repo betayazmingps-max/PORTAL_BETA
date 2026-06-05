@@ -762,7 +762,7 @@ function clearSunatData() {
   if (mw) mw.style.display = 'none';
 }
 
-function fillSunatData(data) {
+function fillSunatData(data, ruc) {
   SUNAT_DATA = data;
   const razon = data.razonSocial || data.nombre || '';
   const el = (id) => document.getElementById(id);
@@ -789,7 +789,7 @@ async function buscarRuc(ruc) {
     });
     if (res.ok) {
       const d = await res.json();
-      if (d && (d.razonSocial || d.nombre)) { fillSunatData(d); return; }
+      if (d && (d.razonSocial || d.nombre)) { fillSunatData(d, ruc); return; }
     }
   } catch (e) {}
   setRucState('error', 'No se pudo consultar SUNAT — ingresa la razón social abajo');
