@@ -172,32 +172,7 @@ input[type="password"]{letter-spacing:.15em;font-size:16px}
 .empty svg{width:48px;height:48px;margin:0 auto .75rem;opacity:.4}
 .empty p{font-size:13px}
 
-<!-- ══ MODAL VER DOCUMENTO ══ -->
-<div class="modal-overlay" id="modal-ver-doc">
-  <div class="modal" style="max-width:680px;width:95%;padding:0;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:var(--s5);border-bottom:1.5px solid var(--s4)">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--s1)" id="modal-doc-nombre">Documento</div>
-        <div style="font-size:11px;color:var(--s3);font-family:var(--m)" id="modal-doc-tipo"></div>
-      </div>
-      <button class="detalle-close" onclick="cerrarModal('modal-ver-doc')">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div id="modal-doc-content" style="background:#1a1a2e;min-height:420px;display:flex;align-items:center;justify-content:center;padding:1rem">
-      <p style="color:rgba(255,255,255,.4);font-size:13px">Cargando...</p>
-    </div>
-    <div style="padding:.75rem 1.25rem;background:var(--s5);border-top:1.5px solid var(--s4);display:flex;justify-content:flex-end;gap:.75rem">
-      <a id="modal-doc-descargar" download style="display:inline-flex;align-items:center;gap:6px;padding:.5rem 1rem;background:var(--p);color:#fff;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:var(--f);text-decoration:none">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Descargar
-      </a>
-      <button class="btn-outline btn-sm" onclick="cerrarModal('modal-ver-doc')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL APROBAR ── -->
+/* ── MODALES ── */
 .modal-overlay{display:none;position:fixed;inset:0;z-index:900;background:rgba(28,8,64,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:var(--w);border-radius:var(--r16);padding:2rem;max-width:420px;width:90%;box-shadow:0 24px 80px rgba(28,8,64,.3);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
@@ -394,6 +369,31 @@ body.dark .tabla-row:hover{background:var(--s5);}
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
         Guardar notas
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL VER DOCUMENTO ══ -->
+<div class="modal-overlay" id="modal-ver-doc">
+  <div class="modal" style="max-width:680px;width:95%;padding:0;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:var(--s5);border-bottom:1.5px solid var(--s4)">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--s1)" id="modal-doc-nombre">Documento</div>
+        <div style="font-size:11px;color:var(--s3);font-family:var(--m)" id="modal-doc-tipo"></div>
+      </div>
+      <button class="detalle-close" onclick="cerrarModal('modal-ver-doc')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="modal-doc-content" style="background:#1a1a2e;min-height:420px;display:flex;align-items:center;justify-content:center;padding:1rem">
+      <p style="color:rgba(255,255,255,.4);font-size:13px">Cargando...</p>
+    </div>
+    <div style="padding:.75rem 1.25rem;background:var(--s5);border-top:1.5px solid var(--s4);display:flex;justify-content:flex-end;gap:.75rem">
+      <a id="modal-doc-descargar" download style="display:inline-flex;align-items:center;gap:6px;padding:.5rem 1rem;background:var(--p);color:#fff;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:var(--f);text-decoration:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar
+      </a>
+      <button class="btn-outline btn-sm" onclick="cerrarModal('modal-ver-doc')">Cerrar</button>
     </div>
   </div>
 </div>
