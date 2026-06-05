@@ -618,31 +618,66 @@ const aiStore    = {};   // guarda datos extraídos por IA por cada docId
 
 /* ══ DOCUMENTOS ══ */
 const DOCS_EMPRESA = [
-  {id:'p01',name:'Contrato firmado',req:true},{id:'p02',name:'Ficha RUC',req:true},
-  {id:'p03',name:'Reporte Sentinel',req:true},{id:'p04',name:'Referencias comerciales',req:false},
-  {id:'p05',name:'Vigencia poder / DNI rep. legal',req:true},{id:'p06',name:'Brochure / carta presentación',req:false},
-  {id:'p07',name:'Lista Clinton',req:true},{id:'p08',name:'Carta conflictos de interés',req:true},
-  {id:'p09',name:'Carta de vinculación',req:true},{id:'p10',name:'Compromiso capacitación',req:true},
-  {id:'p11',name:'Compromiso control BUS',req:false},{id:'p12',name:'Deuda coactiva',req:true},
-  {id:'p13',name:'Carta compromiso tributario',req:true},{id:'p14',name:'Cotización',req:false},
-  {id:'p15',name:'Carta descanso transportista',req:false},{id:'p16',name:'Carta ETI',req:false},
-  {id:'p17',name:'Carta LAFT',req:false},
+  {id:'p01',name:'Contrato',                          req:true},
+  {id:'p02',name:'Ficha RUC',                         req:true},
+  {id:'p03',name:'Referencias comerciales',           req:true},
+  {id:'p04',name:'Vigencia poder rep. legal',         req:true},
+  {id:'p05',name:'Brochure',                          req:true},
+  {id:'p06',name:'DDJJ cumplimiento normas seguridad',req:true},
+  {id:'p07',name:'DDJJ políticas corporativas',       req:true},
+  {id:'p08',name:'Carta compromiso BETA',             req:true},
+  {id:'p09',name:'Deuda coactiva',                    req:true},
+  {id:'p10',name:'Cotización',                        req:true},
+  {id:'p11',name:'Antecedentes penales',              req:true},
+  {id:'p12',name:'Antecedentes judiciales',           req:true},
+  {id:'p13',name:'Antecedentes policiales',           req:true},
+  {id:'p14',name:'Foto del proveedor',                req:true},
 ];
+
 const DOCS_CONDUCTOR = [
-  {id:'c01',name:'DNI conductor',req:true},{id:'c02',name:'Licencia de conducir',req:true},
-  {id:'c03',name:'Récord MTC',req:true},{id:'c04',name:'SCTR — Seguro complementario',req:true},
-  {id:'c05',name:'Contrato de conductores',req:true},{id:'c06',name:'Antecedentes penales',req:true},
-  {id:'c07',name:'Antecedentes policiales',req:true},{id:'c08',name:'Antecedentes judiciales',req:true},
-  {id:'c09',name:'Foto del conductor',req:false},
+  {id:'c01',name:'DNI conductor',               req:true},
+  {id:'c02',name:'Licencia de conducir',        req:true},
+  {id:'c03',name:'Récord MTC',                  req:true},
+  {id:'c04',name:'SCTR',                        req:true},
+  {id:'c05',name:'Contrato de conductores',     req:true},
+  {id:'c06',name:'Antecedentes penales',        req:true},
+  {id:'c07',name:'Antecedentes judiciales',     req:true},
+  {id:'c08',name:'Antecedentes policiales',     req:true},
+  {id:'c09',name:'EMO',                         req:true},
+  {id:'c10',name:'Foto del conductor',          req:true},
 ];
-const DOCS_UNIDAD = [
-  {id:'u01',name:'Tarjeta de propiedad',req:true},{id:'u02',name:'SOAT vigente',req:true},
-  {id:'u03',name:'Revisión técnica (RTV)',req:true},{id:'u04',name:'Tarjeta de circulación',req:true},
-  {id:'u05',name:'Póliza Beta / seguro',req:false},{id:'u06',name:'Boletín informativo',req:false},
-  {id:'u07',name:'Foto exterior unidad',req:false},{id:'u08',name:'Foto interior unidad',req:false},
+
+// Docs unidades — comunes a ambas categorías
+const DOCS_UNIDAD_BASE = [
+  {id:'u01',name:'Tarjeta de propiedad',       req:true},
+  {id:'u02',name:'SOAT vigente',               req:true},
+  {id:'u03',name:'Revisión técnica (RTV)',     req:true},
+  {id:'u04',name:'Tarjeta de circulación',     req:true},
 ];
+
+// Docs adicionales SOLO para Servicios Norte y Sur
+const DOCS_UNIDAD_SERVICIOS = [
+  {id:'u05',name:'Póliza vehicular',                  req:true, condicional:'poliza_rc'},
+  {id:'u06',name:'Seguro de responsabilidad civil',   req:true, condicional:'poliza_rc'},
+  {id:'u07',name:'Seguro de carga',                   req:true},
+];
+
+// Devuelve la lista de unidades según la categoría de la sesión
+function getDocsUnidad() {
+  const cat = (SESSION.categoria || '').toLowerCase();
+  const esServicios = cat.includes('servicios') || cat.includes('norte');
+  return esServicios ? [...DOCS_UNIDAD_BASE, ...DOCS_UNIDAD_SERVICIOS] : DOCS_UNIDAD_BASE;
+}
+
+// Para compatibilidad con código existente — se reasigna después del login
+let DOCS_UNIDAD = DOCS_UNIDAD_BASE;
 const DOC_NAME_MAP = {};
-[...DOCS_EMPRESA,...DOCS_CONDUCTOR,...DOCS_UNIDAD].forEach(d=>{DOC_NAME_MAP[d.id]=d.name;});
+[...DOCS_EMPRESA,...DOCS_CONDUCTOR,...DOCS_UNIDAD_BASE,...DOCS_UNIDAD_SERVICIOS].forEach(d=>{DOC_NAME_MAP[d.id]=d.name;});
+
+/* Reconfigurar DOCS_UNIDAD según la categoría del proveedor logueado */
+function configurarDocsSegunCategoria(){
+  DOCS_UNIDAD = getDocsUnidad();
+}
 
 /* ══ ICONS ══ */
 const DOC_ICON  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>`;
@@ -775,7 +810,30 @@ function setAprobado(docId,file,icon,badge,stat,item){
   if(stat)stat.textContent=file.name.length>22?file.name.slice(0,20)+'…':file.name;
   // limpiar alerta anterior
   const prev=document.getElementById('ai-err-'+docId);if(prev)prev.remove();
+  // Lógica condicional Póliza ↔ Seguro RC en unidades (Servicios)
+  actualizarCondicional(docId);
   updateProgress();
+}
+
+/* ══ LÓGICA CONDICIONAL Póliza vehicular (u05) ↔ Seguro RC (u06) ══
+   Si suben uno → el otro se vuelve opcional automáticamente
+*/
+function actualizarCondicional(docId){
+  // Solo aplica si es u05 o u06 (con cualquier prefijo unid<n>_)
+  const m = docId.match(/^unid(\d+)_(u05|u06)$/);
+  if(!m) return;
+  const idx = m[1];
+  const otroId = m[2] === 'u05' ? `unid${idx}_u06` : `unid${idx}_u05`;
+  const otroItem = document.getElementById('docitem-'+otroId);
+  if(!otroItem) return;
+  // Si el otro NO tiene archivo, marcarlo como "opcional ahora"
+  if(!fileStore[otroId]){
+    // Quitar visualmente el "req" si lo tenía
+    const tag = otroItem.querySelector('.doc-req-tag');
+    if(tag){ tag.textContent='opcional'; tag.style.background='rgba(91,173,30,.15)'; tag.style.color='#2d6010'; }
+    // Marcarlo como ya no obligatorio
+    otroItem.dataset.opcional = '1';
+  }
 }
 function setRechazado(docId,motivo,icon,badge,stat,item){
   aiRejected.add(docId);delete fileStore[docId];
@@ -994,6 +1052,8 @@ function accederDocumentos(){
     'Docs / CADENA_DE_SUMINISTROS / 2.Compras / TRANSPORTE 2026 / <span>'+esc(SESSION.categoria)+'</span> / <span>'+esc(SESSION.analista)+'</span> / <span>'+esc(SESSION.razonSocial||SESSION.ruc)+'</span>';
   Object.keys(fileStore).forEach(k=>delete fileStore[k]);aiRejected.clear();
   Object.keys(aiStore).forEach(k=>delete aiStore[k]);
+  // Configurar lista de docs de unidad según categoría (Personal vs Servicios)
+  configurarDocsSegunCategoria();
   renderDocGrid('docs-empresa',DOCS_EMPRESA);
   condEntryCount=0;unidEntryCount=0;
   document.getElementById('conductores-lista').innerHTML='';
@@ -1130,9 +1190,11 @@ async function submitDocumentos(confirmado=false){
       await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{id:docId,nombre:getNombreArchivo(docId,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad}],indice:enviados,es_ultimo:enviados===docIds.length});
     }
 
-    // #6 — Guardar aiStore (fechas de vencimiento) en Sheet hoja "Vencimientos"
+    // #6 — Guardar aiStore en Sheet: (1) hoja Vencimientos + (2) columna AI Extraído del proveedor
     if(Object.keys(aiStore).length>0){
-      showAlert('docs-alert','loading','💾 Guardando fechas de vencimiento en el sistema...');
+      showAlert('docs-alert','loading','💾 Guardando datos de IA en el sistema...');
+
+      // (a) Hoja Vencimientos — para reporte
       try{
         await fetch('https://portalbeta.betayazmingps.workers.dev/sheet',{
           method:'POST',
@@ -1157,6 +1219,20 @@ async function submitDocumentos(confirmado=false){
           })
         });
       }catch(e){console.warn('No se pudieron guardar vencimientos:', e.message);}
+
+      // (b) Columna AI Extraído del proveedor — para que preview muestre los datos
+      try{
+        // Combinar AI de registro (ya existente) con AI de ingresar
+        await fetch('https://portalbeta.betayazmingps.workers.dev/sheet',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            action: 'guardarAI',
+            ruc:    SESSION.ruc,
+            datos:  aiStore,  // objeto completo: { p01:{...}, cond1_c01:{...}, unid1_u01:{...} }
+          })
+        });
+      }catch(e){console.warn('No se pudo guardar ai_extraido:', e.message);}
     }
 
     setTimeout(()=>{

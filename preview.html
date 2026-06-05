@@ -851,61 +851,70 @@ function switchDetallTab(tab, btn) {
    Las fechas de vencimiento se guardarán en hoja "Vencimientos" del Sheet
 */
 function renderDocumentacionCompleta(p) {
+  // ─── Listas SINCRONIZADAS con ingresar.html ───
   const SECCIONES = [
     {
       titulo: '🏢 Empresa / Proveedor',
       docs: [
-        {id:'p01',name:'Contrato firmado',req:true},
-        {id:'p02',name:'Ficha RUC',req:true},
-        {id:'p03',name:'Reporte Sentinel',req:true},
-        {id:'p04',name:'Referencias comerciales',req:false},
-        {id:'p05',name:'Vigencia poder / DNI rep. legal',req:true},
-        {id:'p06',name:'Brochure / carta presentación',req:false},
-        {id:'p07',name:'Lista Clinton',req:true},
-        {id:'p08',name:'Carta conflictos de interés',req:true},
-        {id:'p09',name:'Carta de vinculación',req:true},
-        {id:'p10',name:'Compromiso capacitación',req:true},
-        {id:'p11',name:'Compromiso control BUS',req:false},
-        {id:'p12',name:'Deuda coactiva',req:true},
-        {id:'p13',name:'Carta compromiso tributario',req:true},
-        {id:'p14',name:'Cotización',req:false},
-        {id:'p15',name:'Carta descanso transportista',req:false},
-        {id:'p16',name:'Carta ETI',req:false},
-        {id:'p17',name:'Carta LAFT',req:false},
+        {id:'p01',name:'Contrato'},
+        {id:'p02',name:'Ficha RUC'},
+        {id:'p03',name:'Referencias comerciales'},
+        {id:'p04',name:'Vigencia poder rep. legal'},
+        {id:'p05',name:'Brochure'},
+        {id:'p06',name:'DDJJ cumplimiento normas seguridad'},
+        {id:'p07',name:'DDJJ políticas corporativas'},
+        {id:'p08',name:'Carta compromiso BETA'},
+        {id:'p09',name:'Deuda coactiva'},
+        {id:'p10',name:'Cotización'},
+        {id:'p11',name:'Antecedentes penales'},
+        {id:'p12',name:'Antecedentes judiciales'},
+        {id:'p13',name:'Antecedentes policiales'},
+        {id:'p14',name:'Foto del proveedor'},
       ]
     },
     {
       titulo: '👤 Conductores',
       docs: [
-        {id:'c01',name:'DNI conductor',req:true,vence:true},
-        {id:'c02',name:'Licencia de conducir',req:true,vence:true},
-        {id:'c03',name:'Récord MTC',req:true,vence:true},
-        {id:'c04',name:'SCTR — Seguro complementario',req:true,vence:true},
-        {id:'c05',name:'Contrato de conductores',req:true,vence:true},
-        {id:'c06',name:'Antecedentes penales',req:true,vence:true},
-        {id:'c07',name:'Antecedentes policiales',req:true,vence:true},
-        {id:'c08',name:'Antecedentes judiciales',req:true,vence:true},
-        {id:'c09',name:'Foto del conductor',req:false},
+        {id:'c01',name:'DNI conductor'},
+        {id:'c02',name:'Licencia de conducir'},
+        {id:'c03',name:'Récord MTC'},
+        {id:'c04',name:'SCTR'},
+        {id:'c05',name:'Contrato de conductores'},
+        {id:'c06',name:'Antecedentes penales'},
+        {id:'c07',name:'Antecedentes judiciales'},
+        {id:'c08',name:'Antecedentes policiales'},
+        {id:'c09',name:'EMO'},
+        {id:'c10',name:'Foto del conductor'},
       ]
     },
     {
       titulo: '🚛 Unidades / Vehículos',
       docs: [
-        {id:'u01',name:'Tarjeta de propiedad',req:true},
-        {id:'u02',name:'SOAT vigente',req:true,vence:true},
-        {id:'u03',name:'Revisión técnica (RTV)',req:true,vence:true},
-        {id:'u04',name:'Tarjeta de circulación',req:true},
-        {id:'u05',name:'Póliza Beta / seguro',req:false,vence:true},
-        {id:'u06',name:'Boletín informativo',req:false},
-        {id:'u07',name:'Foto exterior unidad',req:false},
-        {id:'u08',name:'Foto interior unidad',req:false},
+        {id:'u01',name:'Tarjeta de propiedad'},
+        {id:'u02',name:'SOAT vigente'},
+        {id:'u03',name:'Revisión técnica (RTV)'},
+        {id:'u04',name:'Tarjeta de circulación'},
+        // Solo en Servicios Norte y Sur:
+        {id:'u05',name:'Póliza vehicular',                solo:'servicios'},
+        {id:'u06',name:'Seguro de responsabilidad civil', solo:'servicios'},
+        {id:'u07',name:'Seguro de carga',                 solo:'servicios'},
       ]
     },
   ];
 
-  // Leer docs de ingresar.html (guardados en p.docs_ingresar o ai_extraido con prefijo p/c/u)
-  const docsIngresar = p.docs_ingresar || {};
-  const aiIngresar   = p.ai_ingresar   || {};
+  // Filtrar docs de unidad según la categoría del proveedor
+  const catLower = (p.categoria || '').toLowerCase();
+  const esServicios = catLower.includes('servicios') || catLower.includes('norte');
+  SECCIONES[2].docs = SECCIONES[2].docs.filter(d => !d.solo || (d.solo === 'servicios' && esServicios));
+
+  // Los datos de la IA están en p.ai_extraido (mismo lugar para registro y para ingresar)
+  // Claves típicas: p01..p14 (empresa), cond1_c01.. (conductor X), unid1_u01.. (unidad Y)
+  const aiAll = p.ai_extraido || {};
+
+  // Detectar si hay docs de ingresar subidos = hay claves que empiezan con cond1_ o unid1_
+  const hayIngresar = Object.keys(aiAll).some(k => /^(cond|unid)\d+_/.test(k));
+  const docsIngresar = hayIngresar ? aiAll : {};
+  const aiIngresar   = aiAll;
 
   // Si el proveedor aún no ha sido aprobado o no tiene docs en ingresar
   if (p.estado !== 'aprobado') {
@@ -927,45 +936,92 @@ function renderDocumentacionCompleta(p) {
     </div>`;
   }
 
-  // Renderizar secciones con estado de cada documento
-  return SECCIONES.map(sec => {
-    const docsHtml = sec.docs.map(doc => {
-      const ai      = aiIngresar[doc.id] || {};
-      const subido  = !!docsIngresar[doc.id];
-      const venc    = ai.vencimiento || '';
-      let estadoHtml = '';
-      let dotColor   = subido ? 'var(--g)' : (doc.req ? 'var(--r)' : 'var(--s4)');
-
-      if (venc) {
-        const dias = diasParaVencer(venc);
-        if (dias !== null) {
-          if (dias < 0)       { dotColor = 'var(--r)';     estadoHtml = `<span class="venc-exp">Vencido ${venc}</span>`; }
-          else if (dias < 15) { dotColor = 'var(--r)';     estadoHtml = `<span class="venc-exp">⚠ ${dias}d</span>`; }
-          else if (dias < 60) { dotColor = 'var(--amber)'; estadoHtml = `<span class="venc-warn">⚡ ${dias}d</span>`; }
-          else                {                             estadoHtml = `<span class="venc-ok">✓ ${dias}d</span>`; }
-        }
+  // Helper para mostrar la "tarjeta" de un documento individual
+  const renderItemDoc = (doc, ai, subido) => {
+    const venc = ai.vencimiento || '';
+    let estadoHtml = '';
+    let dotColor   = subido ? 'var(--g)' : 'var(--r)';
+    if (venc) {
+      const dias = diasParaVencer(venc);
+      if (dias !== null) {
+        if (dias < 0)       { dotColor = 'var(--r)';     estadoHtml = `<span class="venc-exp">Vencido ${venc}</span>`; }
+        else if (dias < 15) { dotColor = 'var(--r)';     estadoHtml = `<span class="venc-exp">⚠ ${dias}d</span>`; }
+        else if (dias < 60) { dotColor = 'var(--amber)'; estadoHtml = `<span class="venc-warn">⚡ ${dias}d</span>`; }
+        else                {                             estadoHtml = `<span class="venc-ok">✓ ${dias}d</span>`; }
       }
-
-      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--w);border:1px solid var(--s5);border-radius:8px;margin-bottom:5px">
-        <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
-        <span style="flex:1;font-size:12.5px;color:var(--s1);font-weight:${doc.req?'600':'400'}">${doc.name}${doc.req?' <span style="color:var(--p);font-size:10px">★</span>':''}</span>
-        ${estadoHtml}
-        ${ai.titular ? `<span style="font-size:10.5px;color:var(--s3);font-family:var(--m)">${ai.titular}</span>` : ''}
-        ${subido ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>` :
-          doc.req ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--r)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>` :
-          `<span style="font-size:10px;color:var(--s4)">—</span>`}
-      </div>`;
-    }).join('');
-
-    return `<div style="margin-bottom:1.25rem">
-      <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${sec.titulo}</div>
-      ${docsHtml}
+    }
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--w);border:1px solid var(--s5);border-radius:8px;margin-bottom:5px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
+      <span style="flex:1;font-size:12.5px;color:var(--s1);font-weight:600">${s(doc.name)}</span>
+      ${estadoHtml}
+      ${ai.titular ? `<span style="font-size:10.5px;color:var(--s3);font-family:var(--m)">${s(ai.titular)}</span>` : ''}
+      ${ai.numero  ? `<span style="font-size:10.5px;color:var(--s3);font-family:var(--m)">${s(ai.numero)}</span>` : ''}
+      ${subido
+        ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`
+        : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--r)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
+      }
     </div>`;
-  }).join('') + `
-    <div style="margin-top:1rem;padding:.875rem 1rem;background:var(--amberl);border:1.5px solid var(--amber);border-radius:var(--r12);font-size:12px;color:#92400e;display:flex;gap:10px;align-items:center">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
-      <span>Las fechas de vencimiento se guardarán automáticamente en la hoja <strong>"Vencimientos"</strong> del Google Sheet cuando se conecte el control documentario.</span>
-    </div>`;
+  };
+
+  // Detectar cuántos conductores/unidades hay según las claves del aiAll
+  const numConductores = Math.max(0, ...Object.keys(aiAll).map(k => { const m = k.match(/^cond(\d+)_/); return m ? +m[1] : 0; }));
+  const numUnidades    = Math.max(0, ...Object.keys(aiAll).map(k => { const m = k.match(/^unid(\d+)_/); return m ? +m[1] : 0; }));
+
+  const html = [];
+
+  // ── Sección Empresa (sin prefijo) ──
+  const secEmp = SECCIONES[0];
+  html.push(`<div style="margin-bottom:1.25rem">
+    <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${secEmp.titulo}</div>
+    ${secEmp.docs.map(doc => renderItemDoc(doc, aiAll[doc.id] || {}, !!aiAll[doc.id])).join('')}
+  </div>`);
+
+  // ── Sección Conductores (uno por uno) ──
+  const secCond = SECCIONES[1];
+  if (numConductores > 0) {
+    for (let i = 1; i <= numConductores; i++) {
+      const aiCond = Object.entries(aiAll)
+        .filter(([k]) => k.startsWith(`cond${i}_`))
+        .reduce((acc, [k, v]) => { acc[k.slice(`cond${i}_`.length)] = v; return acc; }, {});
+      const nombreCond = aiCond.c01?.titular || `Conductor #${i}`;
+      html.push(`<div style="margin-bottom:1.25rem">
+        <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${secCond.titulo} — ${s(nombreCond)}</div>
+        ${secCond.docs.map(doc => renderItemDoc(doc, aiCond[doc.id] || {}, !!aiCond[doc.id])).join('')}
+      </div>`);
+    }
+  } else {
+    html.push(`<div style="margin-bottom:1.25rem">
+      <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${secCond.titulo}</div>
+      <p style="font-size:12px;color:var(--s3);font-style:italic;padding:.5rem 0">Sin conductores registrados todavía.</p>
+    </div>`);
+  }
+
+  // ── Sección Unidades (uno por uno) ──
+  const secUnid = SECCIONES[2];
+  if (numUnidades > 0) {
+    for (let i = 1; i <= numUnidades; i++) {
+      const aiUnid = Object.entries(aiAll)
+        .filter(([k]) => k.startsWith(`unid${i}_`))
+        .reduce((acc, [k, v]) => { acc[k.slice(`unid${i}_`.length)] = v; return acc; }, {});
+      const placa = aiUnid.u01?.numero || aiUnid.u01?.titular || `Unidad #${i}`;
+      html.push(`<div style="margin-bottom:1.25rem">
+        <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${secUnid.titulo} — ${s(placa)}</div>
+        ${secUnid.docs.map(doc => renderItemDoc(doc, aiUnid[doc.id] || {}, !!aiUnid[doc.id])).join('')}
+      </div>`);
+    }
+  } else {
+    html.push(`<div style="margin-bottom:1.25rem">
+      <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${secUnid.titulo}</div>
+      <p style="font-size:12px;color:var(--s3);font-style:italic;padding:.5rem 0">Sin unidades registradas todavía.</p>
+    </div>`);
+  }
+
+  html.push(`<div style="margin-top:1rem;padding:.875rem 1rem;background:var(--gl);border:1.5px solid var(--g);border-radius:var(--r12);font-size:12px;color:#2d6010;display:flex;gap:10px;align-items:center">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>
+    <span>Datos extraídos por IA — fechas de vencimiento, titulares y números detectados automáticamente.</span>
+  </div>`);
+
+  return html.join('');
 }
 
 /* ══ NORMALIZAR DOCS ══

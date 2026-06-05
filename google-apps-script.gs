@@ -158,12 +158,24 @@ function accionNotas(ss, ruc, notas) {
   return json({ ok: true });
 }
 
-/* ════════════ Guardar datos IA (desde ingresar.html) ════════════ */
+/* ════════════ Guardar datos IA (desde ingresar.html y registro.html)
+   MEZCLA con lo que ya hay (no sobrescribe), así no se pierden los del registro
+══════════════════════════════════════════════════════════════════ */
 function accionGuardarAI(ss, data) {
   const sheet = ss.getSheetByName(HOJA_PROVEEDORES);
   const fila  = buscarFilaPorRuc(sheet, data.ruc);
   if (fila < 0) return json({ ok: false, error: 'RUC no encontrado' });
-  sheet.getRange(fila, COL_AI_EXTRAIDO).setValue(JSON.stringify(data.datos || {}));  // P AI Extraído
+
+  // Leer lo que ya hay en la columna AI Extraído
+  let existente = {};
+  try {
+    const valor = sheet.getRange(fila, COL_AI_EXTRAIDO).getValue();
+    if (valor) existente = JSON.parse(valor) || {};
+  } catch(e) { existente = {}; }
+
+  // Merge con los nuevos datos
+  const merged = Object.assign({}, existente, data.datos || {});
+  sheet.getRange(fila, COL_AI_EXTRAIDO).setValue(JSON.stringify(merged));  // P AI Extraído
   return json({ ok: true });
 }
 
