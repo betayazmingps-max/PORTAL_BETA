@@ -1016,34 +1016,68 @@ async function verificarOtp() {
       return;
     }
 
-    // OTP válido → guardar TODO en Google Sheets para que el analista lo revise en preview.html
+    // OTP válido → subir documentos a SharePoint y guardar datos en Google Sheet
     clearInterval(otpInterval);
-    showAlert('otp-alert', 'loading', '📊 Guardando registro...');
 
-    // Convertir cada documento a base64 (el analista los verá en preview.html)
-    const archivos = [];
-    let totalBytes = 0;
-    for (const [docId, file] of Object.entries(fileStore)) {
-      totalBytes += file.size;
+    // ── 1) Carpeta destino en SharePoint ──
+    // Nombre seguro para SharePoint (sin caracteres prohibidos)
+    const empresaCarpeta = (SESSION.ruc + '_' + SESSION.razonSocial)
+      .replace(/[\/\\:*?"<>|#%]/g, '-')
+      .trim()
+      .slice(0, 100);
+    const rutaSP   = `Solicitudes_Proveedores/${empresaCarpeta}`;
+    const linksDocs = {};  // { reg_brochure: 'https://.../Brochure.pdf', ... }
+
+    // ── 2) Subir cada archivo al SharePoint (uno a uno para no saturar) ──
+    const archivosEntries = Object.entries(fileStore);
+    let subidos = 0;
+    for (const [docId, file] of archivosEntries) {
+      subidos++;
+      showAlert('otp-alert', 'loading', `📤 Subiendo documento ${subidos} de ${archivosEntries.length}: ${file.name}...`);
+
       const b64    = await toBase64(file);
       const nombre = (DOCS_REGISTRO.find(d => d.id === docId)?.name || docId)
         .replace(/[\/\\:*?"<>|#%]/g, '-').trim();
       const ext    = file.name.includes('.') ? '.' + file.name.split('.').pop().toLowerCase() : '';
-      archivos.push({
-        id:       docId,
-        nombre:   nombre + ext,
-        tipo:     file.type || 'application/octet-stream',
-        contenido: b64
-      });
+      const nombreFinal = nombre + ext;
+
+      try {
+        await callFlow(CFG.FLOW_SUBIR_DOCS, {
+          ruc:                  SESSION.ruc,
+          razonSocial:          SESSION.razonSocial,
+          // Para que Flow5 cree la carpeta en Solicitudes_Proveedores en vez de la ruta normal
+          ruta_categoria:       'Solicitudes_Proveedores',  // sobreescribe la categoría
+          ruta_analista:        '',                          // sin analista
+          ruta_carpeta_empresa: empresaCarpeta,
+          sitio_sharepoint:     CFG.SITIO_SP,
+          biblioteca:           CFG.BIBLIOTECA,
+          archivos: [{
+            id:         docId,
+            nombre:     nombreFinal,
+            tipo:       file.type || 'application/octet-stream',
+            contenido:  b64,
+            subcarpeta: '',   // todo plano dentro de la carpeta del proveedor
+            entidad:    ''
+          }],
+          indice:    subidos,
+          es_ultimo: subidos === archivosEntries.length,
+          total_archivos: archivosEntries.length,
+        });
+
+        // Link directo al archivo en SharePoint
+        linksDocs[docId] = {
+          nombre: nombreFinal,
+          url:    `${CFG.SITIO_SP}/${CFG.BIBLIOTECA}/${rutaSP}/${encodeURIComponent(nombreFinal)}`,
+          tipo:   file.type || 'application/octet-stream'
+        };
+      } catch(uploadErr) {
+        console.warn('No se pudo subir:', docId, uploadErr.message);
+        // Continúa con los demás, no aborta
+      }
     }
 
-    // Advertir si el total supera 25MB
-    if (totalBytes > 25 * 1024 * 1024) {
-      showAlert('otp-alert', 'warning', `⚠ El total de documentos (${(totalBytes/1024/1024).toFixed(1)}MB) es grande. Reducir el tamaño de los archivos asegura mejor rendimiento.`);
-      await new Promise(r => setTimeout(r, 2500));
-    }
-
-    // Guardar datos + docs en Google Sheets → el analista los verá en preview.html
+    // ── 3) Guardar datos + LINKS en Google Sheet (no base64) ──
+    showAlert('otp-alert', 'loading', '📊 Guardando registro en el sistema...');
     await guardarEnSheet({
       ruc:         SESSION.ruc,
       razonSocial: SESSION.razonSocial,
@@ -1058,8 +1092,8 @@ async function verificarOtp() {
       direccion:   SUNAT_DATA.direccion || SUNAT_DATA.domicilioFiscal || '',
       fecha:       new Date().toLocaleString('es-PE'),
       estado:      'pendiente',
-      docs:        JSON.stringify(archivos),       // ← documentos (b64) para visualizar en el panel
-      ai_extraido: JSON.stringify(aiDatos),        // ← datos que la IA ya extrajo (el panel NO re-analiza)
+      docs:        JSON.stringify(linksDocs),    // ← solo LINKS (no base64) → entra al Sheet
+      ai_extraido: JSON.stringify(aiDatos),      // ← datos que la IA extrajo
     });
 
     // Limpiar progreso guardado tras registro exitoso

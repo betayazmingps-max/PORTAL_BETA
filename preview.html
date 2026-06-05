@@ -975,29 +975,32 @@ function renderDocumentacionCompleta(p) {
 */
 function normalizarProveedor(p) {
   if (!p.docs) return p;
-  // Si ya es objeto (formato viejo o demo), no hacer nada
-  if (!Array.isArray(p.docs)) {
-    // Si es string JSON, parsear
-    if (typeof p.docs === 'string') {
-      try {
-        const parsed = JSON.parse(p.docs);
-        if (Array.isArray(parsed)) {
-          // Convertir array → objeto
-          p.docs = {};
-          parsed.forEach(d => {
-            p.docs[d.id] = { nombre: d.nombre, b64: d.contenido || null, tipo: d.tipo || 'application/pdf' };
-          });
-        }
-      } catch {}
-    }
-    return p;
+
+  // Si docs viene como string JSON → parsear
+  if (typeof p.docs === 'string') {
+    try { p.docs = JSON.parse(p.docs); } catch { p.docs = {}; }
   }
-  // Es array → convertir a objeto
-  const docsObj = {};
-  p.docs.forEach(d => {
-    docsObj[d.id] = { nombre: d.nombre, b64: d.contenido || null, tipo: d.tipo || 'application/pdf' };
+
+  // ai_extraido también puede venir como string
+  if (typeof p.ai_extraido === 'string') {
+    try { p.ai_extraido = JSON.parse(p.ai_extraido); } catch { p.ai_extraido = {}; }
+  }
+
+  // Si docs es array (formato viejo con base64) → convertir a objeto
+  if (Array.isArray(p.docs)) {
+    const docsObj = {};
+    p.docs.forEach(d => {
+      docsObj[d.id] = { nombre: d.nombre, b64: d.contenido || null, tipo: d.tipo || 'application/pdf' };
+    });
+    p.docs = docsObj;
+  }
+
+  // Asegurar que cada doc tenga estructura uniforme (url o b64)
+  Object.keys(p.docs || {}).forEach(docId => {
+    const d = p.docs[docId];
+    if (!d.tipo) d.tipo = 'application/pdf';
   });
-  p.docs = docsObj;
+
   return p;
 }
 
@@ -1039,7 +1042,7 @@ function renderDocsReview(p) {
   return Object.entries(docs).map(([docId, docData]) => {
     const aiData   = (p.ai_extraido || {})[docId] || {};
     const revisado = aiData._revisado || false;
-    const tieneB64 = !!(docData.b64);
+    const tieneDoc = !!(docData.b64 || docData.url);  // se puede ver si tiene b64 O link
     const validado = aiData._validado === true;
 
     // Color del card según vencimiento
@@ -1081,7 +1084,7 @@ function renderDocsReview(p) {
         <span class="doc-review-name">${NOMBRES_DOC[docId] || docId}</span>
         ${vencBadge}
         <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
-          ${tieneB64 ? `<button class="ai-btn" style="background:var(--p);color:#fff;border-color:var(--p)" onclick="verDocumento('${docId}')">
+          ${tieneDoc ? `<button class="ai-btn" style="background:var(--p);color:#fff;border-color:var(--p)" onclick="verDocumento('${docId}')">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Ver documento
           </button>` : `<span style="font-size:10px;color:var(--s3);font-family:var(--m)">sin archivo</span>`}
@@ -1121,7 +1124,16 @@ async function analizarTodos(ruc) {
 // Ver documento en modal
 function verDocumento(docId) {
   const docData = (PROVEEDOR_ACTUAL?.docs || {})[docId];
-  if (!docData?.b64) return;
+  if (!docData) return;
+
+  // Si tiene URL → abrir directo en nueva pestaña (SharePoint)
+  if (docData.url) {
+    window.open(docData.url, '_blank');
+    return;
+  }
+
+  // Si tiene base64 → mostrar en modal (compatibilidad con registros viejos)
+  if (!docData.b64) return showToast('Documento no disponible.', 'error');
 
   const esPDF = (docData.tipo || '').includes('pdf');
   const mimeType = docData.tipo || (esPDF ? 'application/pdf' : 'image/jpeg');
