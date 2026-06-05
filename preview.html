@@ -468,8 +468,7 @@ const CFG = {
   FLOW_ENVIAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
   FLOW_NOTIFICAR:  'https://portalbeta.betayazmingps.workers.dev/notificar',
 
-  // Power Automate — crear carpetas en SharePoint ← reemplaza con tu URL real
-  FLOW_CREAR_CARPETAS: 'https://default6c6f155728364f3ca89e87e334c217.08.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/4a59933c3dd442078b22db95ce8a6aa7/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=DNNNEfIlxHXc21YJIsjzhxx2Qa4IxCh_SkOuRR31ndw',
+  // El Flow CrearCarpetas vive en el Worker (no necesita estar aquí)
 
   // Link que se manda al proveedor aprobado
   LINK_INGRESAR: 'https://betayazmingps-max.github.io/PORTAL_BETA/ingresar.html',
@@ -1369,15 +1368,16 @@ async function confirmarAprobar() {
       subcarpetas: ['Proveedor', 'Conductor', 'Unidad']
     };
 
-    if (!CFG.FLOW_CREAR_CARPETAS.includes('PENDIENTE')) {
-      // Llamar via Worker para evitar CORS — con timeout de 15s
+    // Llamar via Worker (el Worker ya tiene la URL del Flow correcto en su env)
+    {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
       try {
+        // OJO: NO mandar flowUrl en el body — el Worker usa su propio Flow CrearCarpetas
         const resFlow = await fetch('https://portalbeta.betayazmingps.workers.dev/crear_carpetas', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...payload, flowUrl: CFG.FLOW_CREAR_CARPETAS }),
+          body: JSON.stringify(payload),
           signal: controller.signal
         });
         clearTimeout(timeoutId);
