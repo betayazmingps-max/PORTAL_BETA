@@ -528,6 +528,7 @@ const DOCS_REGISTRO = [
 ];
 const fileStore   = {};
 const aiRejected  = new Set(); // docs rechazados por IA
+const aiDatos     = {};        // datos extraídos por IA por cada doc (para el panel)
 
 const DOC_ICON_SVG  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
 const DOC_CHECK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
@@ -628,6 +629,9 @@ async function onFileChange(docId, docName, input) {
       regSetRechazado(docId, '❌ ' + (res.motivo || 'El documento no corresponde a este campo'), item, icon, badge, status);
       return;
     }
+
+    // ── Guardar datos extraídos por la IA (para que el panel los muestre) ──
+    aiDatos[docId] = { ...(res.datos || {}), _validado: true, _motivo: res.motivo || 'Documento verificado' };
 
     // ── Aprobado ── mostrar vencimiento si la IA lo detectó
     if (res.datos?.vencimiento) {
@@ -1053,7 +1057,8 @@ async function verificarOtp() {
       direccion:   SUNAT_DATA.direccion || SUNAT_DATA.domicilioFiscal || '',
       fecha:       new Date().toLocaleString('es-PE'),
       estado:      'pendiente',
-      docs:        JSON.stringify(archivos),  // ← el analista los revisa en preview.html
+      docs:        JSON.stringify(archivos),       // ← documentos (b64) para visualizar en el panel
+      ai_extraido: JSON.stringify(aiDatos),        // ← datos que la IA ya extrajo (el panel NO re-analiza)
     });
 
     // Limpiar progreso guardado tras registro exitoso
@@ -1090,6 +1095,7 @@ function nuevoRegistro() {
   SESSION = {};
   SUNAT_DATA = {};
   Object.keys(fileStore).forEach(k => delete fileStore[k]);
+  Object.keys(aiDatos).forEach(k => delete aiDatos[k]);
   aiRejected.clear();
   document.getElementById('reg-ruc').value = '';
   document.getElementById('reg-email').value = '';
