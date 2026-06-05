@@ -102,26 +102,26 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .btn-buscar:hover{background:var(--p2);transform:translateY(-1px)}
 
 /* ── DOCS GRID ── */
-.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;margin-top:.75rem}
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;margin-top:.75rem}
 .doc-item{position:relative;border:1.5px dashed var(--s4);border-radius:var(--r12);overflow:hidden;cursor:pointer;background:var(--pll);transition:all .15s}
 .doc-item:hover{border-color:var(--p3);border-style:solid;background:var(--pl)}
 .doc-item.has-file{border-style:solid;border-color:var(--g);background:var(--gll)}
 .doc-item.ai-checking{border-style:solid;border-color:var(--amber);background:var(--amberl);pointer-events:none}
 .doc-item.ai-rejected{border-style:solid;border-color:var(--r);background:var(--rl)}
 .doc-item input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.doc-face{padding:10px 10px 10px;pointer-events:none}
-.doc-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;background:rgba(82,18,160,.1);color:var(--p);transition:.15s}
+.doc-face{padding:13px 13px 13px;pointer-events:none}
+.doc-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:9px;background:rgba(82,18,160,.1);color:var(--p);transition:.15s}
 .doc-item.has-file .doc-icon{background:var(--g);color:#fff}
 .doc-item.ai-checking .doc-icon{background:var(--amber);color:#fff}
 .doc-item.ai-rejected .doc-icon{background:var(--r);color:#fff}
-.doc-name{font-size:11px;font-weight:600;color:var(--s1);line-height:1.3;margin-bottom:3px}
+.doc-name{font-size:12.5px;font-weight:600;color:var(--s1);line-height:1.4;margin-bottom:5px}
 .doc-item.has-file .doc-name{color:var(--g)}
 .doc-item.ai-rejected .doc-name{color:var(--r)}
-.doc-status{font-size:10px;color:var(--s3);font-family:var(--m);line-height:1.3}
+.doc-status{font-size:11px;color:var(--s3);font-family:var(--m);line-height:1.45;word-break:break-word}
 .doc-item.has-file .doc-status{color:var(--g)}
 .doc-item.ai-rejected .doc-status{color:var(--r)}
 /* AI Badge — en el flujo (no absoluto) para que no se monte */
-.ai-badge-reg{display:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;font-family:var(--m);margin:6px 10px 10px;line-height:1.3}
+.ai-badge-reg{display:none;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;font-family:var(--m);margin:8px 13px 13px;line-height:1.4}
 .doc-item.has-file .ai-badge-reg{display:inline-block;background:rgba(91,173,30,.15);color:#2d6010;border:1px solid rgba(91,173,30,.3)}
 .doc-item.ai-checking .ai-badge-reg{display:inline-block;background:rgba(245,158,11,.2);color:#7a4f00;border:1px solid rgba(245,158,11,.4)}
 .doc-item.ai-rejected .ai-badge-reg{display:inline-block;background:rgba(224,32,32,.1);color:var(--r);border:1px solid rgba(224,32,32,.3)}
