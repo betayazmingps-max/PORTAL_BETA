@@ -814,8 +814,13 @@ function abrirDetalle(idx) {
 
     <!-- ── TAB 1: REGISTRO ── -->
     <div id="tab-panel-registro" style="padding-top:1rem">
-      <div style="font-size:11px;color:var(--s3);margin-bottom:.875rem;line-height:1.6">
-        Documentos enviados durante el <strong>registro inicial</strong>. Revísalos, analiza con IA y aprueba o rechaza al proveedor.
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:.875rem;flex-wrap:wrap">
+        <div style="font-size:11px;color:var(--s3);line-height:1.6;flex:1;min-width:180px">
+          Documentos del <strong>registro inicial</strong>. Visualízalos, analiza con IA y aprueba o rechaza.
+        </div>
+        <button id="btn-analizar-todos" onclick="analizarTodos('${p.ruc}')" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:none;border-radius:var(--r8);font-family:var(--f);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">
+          ✦ Analizar todos con IA
+        </button>
       </div>
       <div id="docs-review-list">${renderDocsReview(p)}</div>
 
@@ -1083,6 +1088,26 @@ function renderDocsReview(p) {
       ${campos.length ? `<div class="ai-fields">${camposHtml}</div>` : ''}
     </div>`;
   }).join('');
+}
+
+// Analizar TODOS los documentos del registro de golpe (rápido)
+async function analizarTodos(ruc) {
+  const p = PROVEEDOR_ACTUAL;
+  const docs = Object.entries(p.docs || {}).filter(([, d]) => d.b64);
+  if (!docs.length) return showToast('No hay documentos con archivo para analizar.', 'warn');
+
+  const btn = document.getElementById('btn-analizar-todos');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<div class="ai-spin" style="width:12px;height:12px;border-color:rgba(255,255,255,.4);border-top-color:#fff"></div> Analizando...'; }
+
+  let listos = 0;
+  for (const [docId] of docs) {
+    listos++;
+    if (btn) btn.innerHTML = `<div class="ai-spin" style="width:12px;height:12px;border-color:rgba(255,255,255,.4);border-top-color:#fff"></div> Analizando ${listos}/${docs.length}...`;
+    try { await analizarDocumento(ruc, docId); } catch(e) { console.warn('Error en', docId, e.message); }
+  }
+
+  if (btn) { btn.disabled = false; btn.innerHTML = '✦ Re-analizar todos'; }
+  showToast(`✅ ${docs.length} documento(s) analizados con IA`, 'ok');
 }
 
 // Ver documento en modal
