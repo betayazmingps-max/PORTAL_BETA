@@ -425,7 +425,8 @@ const CFG = {
   FLOW_ENVIAR_OTP:    'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
   FLOW_VERIFICAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/verificar_otp',
   FLOW_ANALIZAR_DOC:  'https://portalbeta.betayazmingps.workers.dev/analizar_doc',  // IA via Worker
-  FLOW_SUBIR_DOCS:    'https://portalbeta.betayazmingps.workers.dev/subir_docs',    // SharePoint via Power Automate
+  FLOW_SUBIR_DOCS:    'https://portalbeta.betayazmingps.workers.dev/subir_docs',     // SharePoint (docs aprobados)
+  FLOW_SUBIR_SOLIC:   'https://portalbeta.betayazmingps.workers.dev/subir_solicitud',// SharePoint (solicitudes nuevas)
   GSHEET_URL:         'https://script.google.com/macros/s/AKfycbxu-TP4IduJCTk-qoVrJLjCjR2i7GWK6zrC28Uxs79iUAYJmc5-99Y7JSz1Flc3hQ8WWA/exec',
   SITIO_SP:           'https://betacompe.sharepoint.com/sites/Intranet',
   BIBLIOTECA:         'Documentos compartidos',
@@ -1019,61 +1020,45 @@ async function verificarOtp() {
     // OTP válido → subir documentos a SharePoint y guardar datos en Google Sheet
     clearInterval(otpInterval);
 
-    // ── 1) Carpeta destino en SharePoint ──
-    // Nombre seguro para SharePoint (sin caracteres prohibidos)
+    // ── 1) Carpeta destino en SharePoint (segura, sin caracteres prohibidos) ──
     const empresaCarpeta = (SESSION.ruc + '_' + SESSION.razonSocial)
       .replace(/[\/\\:*?"<>|#%]/g, '-')
       .trim()
       .slice(0, 100);
-    const rutaSP   = `Solicitudes_Proveedores/${empresaCarpeta}`;
-    const linksDocs = {};  // { reg_brochure: 'https://.../Brochure.pdf', ... }
 
-    // ── 2) Subir cada archivo al SharePoint (uno a uno para no saturar) ──
-    const archivosEntries = Object.entries(fileStore);
-    let subidos = 0;
-    for (const [docId, file] of archivosEntries) {
-      subidos++;
-      showAlert('otp-alert', 'loading', `📤 Subiendo documento ${subidos} de ${archivosEntries.length}: ${file.name}...`);
-
+    // ── 2) Preparar todos los archivos a la vez ──
+    showAlert('otp-alert', 'loading', '📤 Preparando documentos...');
+    const archivosPayload = [];
+    const linksDocs       = {};
+    for (const [docId, file] of Object.entries(fileStore)) {
       const b64    = await toBase64(file);
       const nombre = (DOCS_REGISTRO.find(d => d.id === docId)?.name || docId)
         .replace(/[\/\\:*?"<>|#%]/g, '-').trim();
       const ext    = file.name.includes('.') ? '.' + file.name.split('.').pop().toLowerCase() : '';
       const nombreFinal = nombre + ext;
 
-      try {
-        await callFlow(CFG.FLOW_SUBIR_DOCS, {
-          ruc:                  SESSION.ruc,
-          razonSocial:          SESSION.razonSocial,
-          // Para que Flow5 cree la carpeta en Solicitudes_Proveedores en vez de la ruta normal
-          ruta_categoria:       'Solicitudes_Proveedores',  // sobreescribe la categoría
-          ruta_analista:        '',                          // sin analista
-          ruta_carpeta_empresa: empresaCarpeta,
-          sitio_sharepoint:     CFG.SITIO_SP,
-          biblioteca:           CFG.BIBLIOTECA,
-          archivos: [{
-            id:         docId,
-            nombre:     nombreFinal,
-            tipo:       file.type || 'application/octet-stream',
-            contenido:  b64,
-            subcarpeta: '',   // todo plano dentro de la carpeta del proveedor
-            entidad:    ''
-          }],
-          indice:    subidos,
-          es_ultimo: subidos === archivosEntries.length,
-          total_archivos: archivosEntries.length,
-        });
+      archivosPayload.push({ nombre: nombreFinal, contenido: b64 });
 
-        // Link directo al archivo en SharePoint
-        linksDocs[docId] = {
-          nombre: nombreFinal,
-          url:    `${CFG.SITIO_SP}/${CFG.BIBLIOTECA}/${rutaSP}/${encodeURIComponent(nombreFinal)}`,
-          tipo:   file.type || 'application/octet-stream'
-        };
-      } catch(uploadErr) {
-        console.warn('No se pudo subir:', docId, uploadErr.message);
-        // Continúa con los demás, no aborta
-      }
+      // Link directo al archivo en SharePoint (lo verá el analista en preview)
+      linksDocs[docId] = {
+        nombre: nombreFinal,
+        url:    `${CFG.SITIO_SP}/${CFG.BIBLIOTECA}/Solicitudes_Proveedores/${encodeURIComponent(empresaCarpeta)}/${encodeURIComponent(nombreFinal)}`,
+        tipo:   file.type || 'application/octet-stream'
+      };
+    }
+
+    // ── 3) Subir TODO al SharePoint con UNA sola llamada ──
+    showAlert('otp-alert', 'loading', `📤 Subiendo ${archivosPayload.length} documento(s) a SharePoint...`);
+    try {
+      await callFlow(CFG.FLOW_SUBIR_SOLIC, {
+        ruc:         SESSION.ruc,
+        razonSocial: SESSION.razonSocial,
+        carpeta:     empresaCarpeta,
+        archivos:    archivosPayload,
+      });
+    } catch(uploadErr) {
+      console.warn('Error subiendo a SharePoint:', uploadErr.message);
+      // No abortamos: el registro queda guardado en el Sheet aunque la subida falle
     }
 
     // ── 3) Guardar datos + LINKS en Google Sheet (no base64) ──
