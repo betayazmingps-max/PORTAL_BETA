@@ -34,6 +34,7 @@ const COL_AI_EXTRAIDO     = 16; // P
 const COL_CARPETA_SP      = 17; // Q
 const COL_ANALISTA        = 18; // R
 const COL_DOCS_OPCIONALES = 19; // S — lista de IDs marcados como obligatorios por el analista (JSON)
+const COL_DOCS_PERSON     = 20; // T — docs personalizados pedidos por el analista (JSON)
 
 /* ════════════ POST — guardar / actualizar ════════════ */
 function doPost(e) {
@@ -82,6 +83,11 @@ function doGet(e) {
           const raw = fila[18];
           prov.docs_obligatorios = raw ? JSON.parse(raw) : [];
         } catch { prov.docs_obligatorios = []; }
+        // Lista de docs personalizados (T)
+        try {
+          const raw = fila[19];
+          prov.docs_personalizados = raw ? JSON.parse(raw) : [];
+        } catch { prov.docs_personalizados = []; }
 
         // Filtrar por analista (ADMIN ve todos)
         if (analista !== 'TODOS' && String(prov.analista) !== String(analista)) continue;
@@ -156,6 +162,10 @@ function accionEstado(ss, ruc, nuevoEstado, data) {
   // Lista de docs condicionales que el analista marcó como obligatorios
   if (data.docs_obligatorios) {
     sheet.getRange(fila, COL_DOCS_OPCIONALES).setValue(JSON.stringify(data.docs_obligatorios));    // S
+  }
+  // Lista de docs personalizados (texto libre del analista)
+  if (data.docs_personalizados) {
+    sheet.getRange(fila, COL_DOCS_PERSON).setValue(JSON.stringify(data.docs_personalizados));     // T
   }
   return json({ ok: true });
 }

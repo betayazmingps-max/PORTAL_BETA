@@ -418,6 +418,22 @@ body.dark .tabla-row:hover{background:var(--s5);}
       </p>
     </div>
 
+    <!-- ── Documentos personalizados (texto libre) ── -->
+    <div style="margin-bottom:1rem;padding:.75rem .9rem;background:var(--pll);border:1.5px dashed var(--s4);border-radius:var(--r8)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <label style="font-size:11.5px;font-weight:700;color:var(--s2)">
+          ✏️ Pedir un documento personalizado
+        </label>
+        <button type="button" id="btn-agregar-doc-extra" onclick="agregarDocExtra()" style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:var(--p);color:#fff;border:none;border-radius:6px;font-family:var(--f);font-size:11px;font-weight:700;cursor:pointer">
+          + Agregar
+        </button>
+      </div>
+      <div id="docs-personalizados-list" style="display:flex;flex-direction:column;gap:.4rem"></div>
+      <p style="font-size:10.5px;color:var(--s3);margin-top:.4rem;line-height:1.4">
+        Útil para casos especiales (ej: certificado adicional, hoja MSDS, permiso especial...)
+      </p>
+    </div>
+
     <div class="field" style="margin-bottom:1.25rem">
       <label>Mensaje adicional (opcional)</label>
       <input type="text" id="modal-msg" placeholder="Ej: Si tiene otro documento, también adjuntarlo">
@@ -1442,7 +1458,28 @@ function abrirModalAprobar() {
     wrap.style.display = 'block';
   }
 
+  // Limpiar lista de docs personalizados al abrir el modal
+  document.getElementById('docs-personalizados-list').innerHTML = '';
+
   document.getElementById('modal-aprobar').classList.add('open');
+}
+
+/* Agregar fila para pedir un documento personalizado (texto libre) */
+function agregarDocExtra() {
+  const list = document.getElementById('docs-personalizados-list');
+  const fila = document.createElement('div');
+  fila.style.cssText = 'display:flex;gap:6px;align-items:center;background:var(--w);border:1px solid var(--s4);border-radius:6px;padding:5px 8px';
+  fila.innerHTML = `
+    <input type="text" class="doc-extra-nombre" placeholder="Nombre del documento" style="flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--s4);border-radius:5px;font-family:var(--f);background:var(--pll);color:var(--s1)">
+    <select class="doc-extra-seccion" style="font-size:11.5px;padding:5px 8px;border:1px solid var(--s4);border-radius:5px;font-family:var(--f);background:var(--w);color:var(--s2);cursor:pointer">
+      <option value="empresa">🏢 Empresa</option>
+      <option value="conductor">👤 Conductor</option>
+      <option value="unidad">🚛 Unidad</option>
+    </select>
+    <button type="button" onclick="this.parentNode.remove()" style="background:var(--rl);color:var(--r);border:none;border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center" title="Quitar">×</button>
+  `;
+  list.appendChild(fila);
+  fila.querySelector('.doc-extra-nombre').focus();
 }
 
 async function confirmarAprobar() {
@@ -1452,6 +1489,14 @@ async function confirmarAprobar() {
   // Recoger los docs condicionales que el analista marcó como obligatorios
   const docsObligatorios = Array.from(document.querySelectorAll('#docs-condicionales-list input[type="checkbox"]:checked'))
     .map(cb => cb.value);
+
+  // Recoger documentos personalizados (texto libre)
+  const docsPersonalizados = Array.from(document.querySelectorAll('#docs-personalizados-list > div'))
+    .map(fila => ({
+      nombre:  fila.querySelector('.doc-extra-nombre')?.value.trim() || '',
+      seccion: fila.querySelector('.doc-extra-seccion')?.value || 'empresa',
+    }))
+    .filter(d => d.nombre.length > 0);
 
   cerrarModal('modal-aprobar');
 
@@ -1505,7 +1550,7 @@ async function confirmarAprobar() {
       await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${acortarNombre(p.razonSocial)}`, docs_obligatorios: docsObligatorios })
+        body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${acortarNombre(p.razonSocial)}`, docs_obligatorios: docsObligatorios, docs_personalizados: docsPersonalizados })
       });
     }
 

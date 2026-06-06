@@ -670,39 +670,42 @@ const DOCS_CONDICIONALES_CATALOGO = {
   // Aquí se pueden agregar más en el futuro
 };
 
-// Devuelve la lista de unidades según la categoría + docs condicionales del analista
+// Genera docs extras (catálogo + personalizados) filtrados por sección
+function getDocsExtras(seccion) {
+  const extras = [];
+
+  // 1. Docs del catálogo que el analista marcó
+  (SESSION.docs_obligatorios || []).forEach(condId => {
+    const cfg = DOCS_CONDICIONALES_CATALOGO[condId];
+    if (cfg && cfg.seccion === seccion) {
+      extras.push({ id: condId, name: cfg.name, req: true });
+    }
+  });
+
+  // 2. Docs personalizados que el analista escribió (texto libre)
+  (SESSION.docs_personalizados || []).forEach((d, idx) => {
+    if (d.seccion === seccion) {
+      extras.push({
+        id:   `extra_${seccion[0]}${idx+1}`,  // ej: extra_e1, extra_c1, extra_u1
+        name: d.nombre,
+        req:  true,
+      });
+    }
+  });
+
+  return extras;
+}
+
+// Devuelve la lista de unidades según categoría + extras del analista
 function getDocsUnidad() {
   const cat = (SESSION.categoria || '').toLowerCase();
   const esServicios = cat.includes('servicios') || cat.includes('norte');
   const base = esServicios ? [...DOCS_UNIDAD_BASE, ...DOCS_UNIDAD_SERVICIOS] : [...DOCS_UNIDAD_BASE];
-
-  // Agregar docs condicionales que el analista marcó como obligatorios
-  const condicionales = SESSION.docs_obligatorios || [];
-  condicionales.forEach(condId => {
-    const cfg = DOCS_CONDICIONALES_CATALOGO[condId];
-    if (cfg && cfg.seccion === 'unidad') {
-      base.push({ id: condId, name: cfg.name, req: true });
-    }
-  });
-  return base;
+  return [...base, ...getDocsExtras('unidad')];
 }
 
-// Devuelve docs condicionales para EMPRESA si el analista los marcó
-function getDocsEmpresaExtras() {
-  const extras = [];
-  (SESSION.docs_obligatorios || []).forEach(condId => {
-    const cfg = DOCS_CONDICIONALES_CATALOGO[condId];
-    if (cfg && cfg.seccion === 'empresa') {
-      extras.push({ id: condId, name: cfg.name, req: true });
-    }
-  });
-  return extras;
-}
-
-// Docs personalizados del analista (mensaje libre)
-function getDocsPersonalizados() {
-  return SESSION.docs_personalizados || [];  // array de strings con nombres
-}
+function getDocsEmpresaConExtras() { return [...DOCS_EMPRESA,   ...getDocsExtras('empresa')];   }
+function getDocsConductorConExtras() { return [...DOCS_CONDUCTOR, ...getDocsExtras('conductor')]; }
 
 // Para compatibilidad con código existente — se reasigna después del login
 let DOCS_UNIDAD = DOCS_UNIDAD_BASE;
@@ -711,7 +714,10 @@ const DOC_NAME_MAP = {};
 
 /* Configurar listas según la categoría + lo que el analista pidió al aprobar */
 function configurarDocsSegunCategoria(){
-  DOCS_UNIDAD = getDocsUnidad();  // ya incluye los condicionales que aplican
+  // Estas variables son las que usan los renders en todo el archivo
+  DOCS_UNIDAD             = getDocsUnidad();
+  window.DOCS_EMPRESA_USE = getDocsEmpresaConExtras();
+  window.DOCS_COND_USE    = getDocsConductorConExtras();
 }
 
 /* ══ ICONS ══ */
@@ -960,8 +966,9 @@ ${doc.req?'<span class="doc-req-tag">★ req</span>':''}
 
 function addConductorEntry(){
   condEntryCount++;
-  document.getElementById('conductores-lista').appendChild(makeEntryBlock('cond',condEntryCount,DOCS_CONDUCTOR));
-  buildEntryGrid('cond',condEntryCount,DOCS_CONDUCTOR);updateProgress();
+  const docs = window.DOCS_COND_USE || DOCS_CONDUCTOR;
+  document.getElementById('conductores-lista').appendChild(makeEntryBlock('cond',condEntryCount,docs));
+  buildEntryGrid('cond',condEntryCount,docs);updateProgress();
 }
 function addUnidadEntry(){
   unidEntryCount++;
@@ -1040,7 +1047,7 @@ async function solicitarOtpLogin(){
     const msgs={pendiente:'Tu solicitud está siendo revisada. Espera la aprobación del analista.',rechazado:'Tu solicitud fue rechazada. Contáctate con tu analista.',revision:'Tu solicitud está en revisión por el analista.'};
     if(prov.estado!=='aprobado')return showAlert('login-alert','warning',msgs[prov.estado]||'Tu acceso aún no está habilitado.');
 
-    SESSION={ruc,email,razonSocial:prov.razonSocial||'',carpeta:prov.carpeta||'',analista:prov.analista||'',categoria:prov.categoria||'',docs_obligatorios:prov.docs_obligatorios||[]};
+    SESSION={ruc,email,razonSocial:prov.razonSocial||'',carpeta:prov.carpeta||'',analista:prov.analista||'',categoria:prov.categoria||'',docs_obligatorios:prov.docs_obligatorios||[],docs_personalizados:prov.docs_personalizados||[]};
     showAlert('login-alert','loading','Acceso confirmado — enviando código de verificación...');
     await callFlow(CFG.FLOW_ENVIAR_OTP,{ruc,email,contacto:prov.razonSocial});
     hideAlert('login-alert');
@@ -1087,9 +1094,9 @@ function accederDocumentos(){
     'Docs / CADENA_DE_SUMINISTROS / 2.Compras / TRANSPORTE 2026 / <span>'+esc(SESSION.categoria)+'</span> / <span>'+esc(SESSION.analista)+'</span> / <span>'+esc(SESSION.razonSocial||SESSION.ruc)+'</span>';
   Object.keys(fileStore).forEach(k=>delete fileStore[k]);aiRejected.clear();
   Object.keys(aiStore).forEach(k=>delete aiStore[k]);
-  // Configurar lista de docs de unidad según categoría (Personal vs Servicios)
+  // Configurar lista de docs según categoría + extras del analista
   configurarDocsSegunCategoria();
-  renderDocGrid('docs-empresa',DOCS_EMPRESA);
+  renderDocGrid('docs-empresa', window.DOCS_EMPRESA_USE || DOCS_EMPRESA);
   condEntryCount=0;unidEntryCount=0;
   document.getElementById('conductores-lista').innerHTML='';
   document.getElementById('unidades-lista').innerHTML='';
