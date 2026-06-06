@@ -658,21 +658,50 @@ const DOCS_UNIDAD_BASE = [
 ];
 
 // Docs adicionales SOLO para Servicios Norte y Sur
-// "u07" (Seguro de carga) es CONDICIONAL: el analista decide al aprobar si es obligatorio
+// (NO incluye los condicionales — esos los agrega el analista al aprobar)
 const DOCS_UNIDAD_SERVICIOS = [
   {id:'u05',name:'Póliza vehicular',                  req:true, condicional:'poliza_rc'},
   {id:'u06',name:'Seguro de responsabilidad civil',   req:true, condicional:'poliza_rc'},
-  {id:'u07',name:'Seguro de carga',                   req:false, condicional:'analista'},
 ];
 
-// IDs de documentos CONDICIONALES (req depende de lo que marque el analista)
-const IDS_CONDICIONALES = ['u07'];
+// Catálogo de docs CONDICIONALES (solo aparecen si el analista los pidió al aprobar)
+const DOCS_CONDICIONALES_CATALOGO = {
+  u07: { name:'Seguro de carga',   seccion:'unidad' },
+  // Aquí se pueden agregar más en el futuro
+};
 
-// Devuelve la lista de unidades según la categoría de la sesión
+// Devuelve la lista de unidades según la categoría + docs condicionales del analista
 function getDocsUnidad() {
   const cat = (SESSION.categoria || '').toLowerCase();
   const esServicios = cat.includes('servicios') || cat.includes('norte');
-  return esServicios ? [...DOCS_UNIDAD_BASE, ...DOCS_UNIDAD_SERVICIOS] : DOCS_UNIDAD_BASE;
+  const base = esServicios ? [...DOCS_UNIDAD_BASE, ...DOCS_UNIDAD_SERVICIOS] : [...DOCS_UNIDAD_BASE];
+
+  // Agregar docs condicionales que el analista marcó como obligatorios
+  const condicionales = SESSION.docs_obligatorios || [];
+  condicionales.forEach(condId => {
+    const cfg = DOCS_CONDICIONALES_CATALOGO[condId];
+    if (cfg && cfg.seccion === 'unidad') {
+      base.push({ id: condId, name: cfg.name, req: true });
+    }
+  });
+  return base;
+}
+
+// Devuelve docs condicionales para EMPRESA si el analista los marcó
+function getDocsEmpresaExtras() {
+  const extras = [];
+  (SESSION.docs_obligatorios || []).forEach(condId => {
+    const cfg = DOCS_CONDICIONALES_CATALOGO[condId];
+    if (cfg && cfg.seccion === 'empresa') {
+      extras.push({ id: condId, name: cfg.name, req: true });
+    }
+  });
+  return extras;
+}
+
+// Docs personalizados del analista (mensaje libre)
+function getDocsPersonalizados() {
+  return SESSION.docs_personalizados || [];  // array de strings con nombres
 }
 
 // Para compatibilidad con código existente — se reasigna después del login
@@ -680,20 +709,9 @@ let DOCS_UNIDAD = DOCS_UNIDAD_BASE;
 const DOC_NAME_MAP = {};
 [...DOCS_EMPRESA,...DOCS_CONDUCTOR,...DOCS_UNIDAD_BASE,...DOCS_UNIDAD_SERVICIOS].forEach(d=>{DOC_NAME_MAP[d.id]=d.name;});
 
-/* Reconfigurar DOCS_UNIDAD según la categoría + docs obligatorios marcados por el analista */
+/* Configurar listas según la categoría + lo que el analista pidió al aprobar */
 function configurarDocsSegunCategoria(){
-  // Copia de las listas + ajuste de req según lo que dijo el analista
-  const docsObligatorios = SESSION.docs_obligatorios || [];
-  const ajustar = (docs) => docs.map(d => {
-    if (IDS_CONDICIONALES.includes(d.id)) {
-      return { ...d, req: docsObligatorios.includes(d.id) };
-    }
-    return { ...d };
-  });
-  DOCS_UNIDAD = ajustar(getDocsUnidad());
-  // Para que aiStore y validaciones también lo vean
-  window._DOCS_EMPRESA   = ajustar(DOCS_EMPRESA);
-  window._DOCS_CONDUCTOR = ajustar(DOCS_CONDUCTOR);
+  DOCS_UNIDAD = getDocsUnidad();  // ya incluye los condicionales que aplican
 }
 
 /* ══ ICONS ══ */

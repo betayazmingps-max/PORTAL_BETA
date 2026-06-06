@@ -407,20 +407,21 @@ body.dark .tabla-row:hover{background:var(--s5);}
     <div class="modal-title">Aprobar proveedor</div>
     <div class="modal-sub" id="modal-aprobar-sub">Se enviará el link de ingreso al correo del proveedor para que pueda subir sus documentos complementarios.</div>
 
-    <!-- ── Docs condicionales (el analista decide si aplican) ── -->
+    <!-- ── Docs condicionales (solo aparecen para el proveedor si los marcas) ── -->
     <div id="docs-condicionales-wrap" style="margin-bottom:1rem;display:none">
       <label style="font-size:11.5px;font-weight:700;color:var(--s2);display:block;margin-bottom:.5rem">
-        📋 Documentos adicionales obligatorios para ESTE proveedor:
+        📋 ¿Pedir documentos adicionales?
       </label>
       <div id="docs-condicionales-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
       <p style="font-size:10.5px;color:var(--s3);margin-top:.4rem;line-height:1.4">
-        Marca solo los que aplican según su tipo de servicio (ej: transporta carga, materia prima, etc.)
+        Solo los marcados aparecerán como obligatorios para el proveedor.
       </p>
     </div>
 
     <div class="field" style="margin-bottom:1.25rem">
       <label>Mensaje adicional (opcional)</label>
-      <input type="text" id="modal-msg" placeholder="Ej: Favor completar SOAT antes del viernes">
+      <input type="text" id="modal-msg" placeholder="Ej: Si tiene otro documento, también adjuntarlo">
+      <p style="font-size:10.5px;color:var(--s3);margin-top:.25rem">Este mensaje se envía en el correo al proveedor.</p>
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="cerrarModal('modal-aprobar')">Cancelar</button>
