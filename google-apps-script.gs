@@ -32,6 +32,8 @@ const COL_ESTADO          = 12; // L
 const COL_NOTAS_ANALISTA  = 15; // O
 const COL_AI_EXTRAIDO     = 16; // P
 const COL_CARPETA_SP      = 17; // Q
+const COL_ANALISTA        = 18; // R
+const COL_DOCS_OPCIONALES = 19; // S — lista de IDs marcados como obligatorios por el analista (JSON)
 
 /* ════════════ POST — guardar / actualizar ════════════ */
 function doPost(e) {
@@ -73,8 +75,13 @@ function doGet(e) {
         const fila = datos[i];
         const prov = {};
         COLS.forEach((col, idx) => { prov[col] = fila[idx] || ''; });
-        prov.fila     = i + 1;
-        prov.analista = fila[17] || '';  // columna R (índice 17) — opcional, fuera de COLS
+        prov.fila              = i + 1;
+        prov.analista          = fila[17] || '';  // columna R
+        // Lista de docs condicionales marcados como obligatorios por el analista (S)
+        try {
+          const raw = fila[18];
+          prov.docs_obligatorios = raw ? JSON.parse(raw) : [];
+        } catch { prov.docs_obligatorios = []; }
 
         // Filtrar por analista (ADMIN ve todos)
         if (analista !== 'TODOS' && String(prov.analista) !== String(analista)) continue;
@@ -146,6 +153,10 @@ function accionEstado(ss, ruc, nuevoEstado, data) {
   sheet.getRange(fila, COL_ESTADO).setValue(nuevoEstado);                                          // L Estado
   if (data.motivo) sheet.getRange(fila, COL_NOTAS_ANALISTA).setValue('RECHAZO: ' + data.motivo);   // O Notas Analista
   if (data.carpeta) sheet.getRange(fila, COL_CARPETA_SP).setValue(data.carpeta);                   // Q Carpeta SharePoint
+  // Lista de docs condicionales que el analista marcó como obligatorios
+  if (data.docs_obligatorios) {
+    sheet.getRange(fila, COL_DOCS_OPCIONALES).setValue(JSON.stringify(data.docs_obligatorios));    // S
+  }
   return json({ ok: true });
 }
 

@@ -406,6 +406,18 @@ body.dark .tabla-row:hover{background:var(--s5);}
     </div>
     <div class="modal-title">Aprobar proveedor</div>
     <div class="modal-sub" id="modal-aprobar-sub">Se enviará el link de ingreso al correo del proveedor para que pueda subir sus documentos complementarios.</div>
+
+    <!-- ── Docs condicionales (el analista decide si aplican) ── -->
+    <div id="docs-condicionales-wrap" style="margin-bottom:1rem;display:none">
+      <label style="font-size:11.5px;font-weight:700;color:var(--s2);display:block;margin-bottom:.5rem">
+        📋 Documentos adicionales obligatorios para ESTE proveedor:
+      </label>
+      <div id="docs-condicionales-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+      <p style="font-size:10.5px;color:var(--s3);margin-top:.4rem;line-height:1.4">
+        Marca solo los que aplican según su tipo de servicio (ej: transporta carga, materia prima, etc.)
+      </p>
+    </div>
+
     <div class="field" style="margin-bottom:1.25rem">
       <label>Mensaje adicional (opcional)</label>
       <input type="text" id="modal-msg" placeholder="Ej: Favor completar SOAT antes del viernes">
@@ -1394,17 +1406,51 @@ async function guardarObservaciones() {
 }
 
 /* ══ APROBAR ══ */
+// Catálogo de docs CONDICIONALES (que el analista decide caso por caso)
+const DOCS_CONDICIONALES = [
+  { id:'u07', name:'Seguro de carga',                seccion:'🚛 Unidad', soloServicios:true,
+    hint:'Si transporta carga, mercancía o materia prima' },
+  // Puedes agregar más aquí en el futuro
+];
+
 function abrirModalAprobar() {
   const p = PROVEEDOR_ACTUAL;
   document.getElementById('modal-aprobar-sub').textContent =
     `Se enviará el link de acceso a ${p.email} para que ${p.razonSocial} pueda subir sus documentos complementarios.`;
   document.getElementById('modal-msg').value = '';
+
+  // Filtrar docs condicionales según la categoría del proveedor
+  const cat = (p.categoria || '').toLowerCase();
+  const esServicios = cat.includes('servicios') || cat.includes('norte');
+  const aplican = DOCS_CONDICIONALES.filter(d => !d.soloServicios || esServicios);
+
+  const wrap = document.getElementById('docs-condicionales-wrap');
+  const list = document.getElementById('docs-condicionales-list');
+  if (!aplican.length) {
+    wrap.style.display = 'none';
+  } else {
+    list.innerHTML = aplican.map(d => `
+      <label style="display:flex;align-items:flex-start;gap:8px;padding:.6rem .75rem;background:var(--pll);border:1.5px solid var(--s4);border-radius:8px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--p3)'" onmouseout="this.style.borderColor='var(--s4)'">
+        <input type="checkbox" id="cb-${d.id}" value="${d.id}" style="margin-top:3px;cursor:pointer;accent-color:var(--p)">
+        <div style="flex:1">
+          <div style="font-size:12.5px;font-weight:700;color:var(--s1)">${d.name}</div>
+          <div style="font-size:10.5px;color:var(--s3);margin-top:2px">${d.seccion} · ${d.hint}</div>
+        </div>
+      </label>
+    `).join('');
+    wrap.style.display = 'block';
+  }
+
   document.getElementById('modal-aprobar').classList.add('open');
 }
 
 async function confirmarAprobar() {
   const p   = PROVEEDOR_ACTUAL;
   const msg = document.getElementById('modal-msg').value;
+
+  // Recoger los docs condicionales que el analista marcó como obligatorios
+  const docsObligatorios = Array.from(document.querySelectorAll('#docs-condicionales-list input[type="checkbox"]:checked'))
+    .map(cb => cb.value);
 
   cerrarModal('modal-aprobar');
 
@@ -1458,7 +1504,7 @@ async function confirmarAprobar() {
       await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${acortarNombre(p.razonSocial)}` })
+        body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${acortarNombre(p.razonSocial)}`, docs_obligatorios: docsObligatorios })
       });
     }
 

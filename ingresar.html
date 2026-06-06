@@ -658,11 +658,15 @@ const DOCS_UNIDAD_BASE = [
 ];
 
 // Docs adicionales SOLO para Servicios Norte y Sur
+// "u07" (Seguro de carga) es CONDICIONAL: el analista decide al aprobar si es obligatorio
 const DOCS_UNIDAD_SERVICIOS = [
   {id:'u05',name:'Póliza vehicular',                  req:true, condicional:'poliza_rc'},
   {id:'u06',name:'Seguro de responsabilidad civil',   req:true, condicional:'poliza_rc'},
-  {id:'u07',name:'Seguro de carga',                   req:true},
+  {id:'u07',name:'Seguro de carga',                   req:false, condicional:'analista'},
 ];
+
+// IDs de documentos CONDICIONALES (req depende de lo que marque el analista)
+const IDS_CONDICIONALES = ['u07'];
 
 // Devuelve la lista de unidades según la categoría de la sesión
 function getDocsUnidad() {
@@ -676,9 +680,20 @@ let DOCS_UNIDAD = DOCS_UNIDAD_BASE;
 const DOC_NAME_MAP = {};
 [...DOCS_EMPRESA,...DOCS_CONDUCTOR,...DOCS_UNIDAD_BASE,...DOCS_UNIDAD_SERVICIOS].forEach(d=>{DOC_NAME_MAP[d.id]=d.name;});
 
-/* Reconfigurar DOCS_UNIDAD según la categoría del proveedor logueado */
+/* Reconfigurar DOCS_UNIDAD según la categoría + docs obligatorios marcados por el analista */
 function configurarDocsSegunCategoria(){
-  DOCS_UNIDAD = getDocsUnidad();
+  // Copia de las listas + ajuste de req según lo que dijo el analista
+  const docsObligatorios = SESSION.docs_obligatorios || [];
+  const ajustar = (docs) => docs.map(d => {
+    if (IDS_CONDICIONALES.includes(d.id)) {
+      return { ...d, req: docsObligatorios.includes(d.id) };
+    }
+    return { ...d };
+  });
+  DOCS_UNIDAD = ajustar(getDocsUnidad());
+  // Para que aiStore y validaciones también lo vean
+  window._DOCS_EMPRESA   = ajustar(DOCS_EMPRESA);
+  window._DOCS_CONDUCTOR = ajustar(DOCS_CONDUCTOR);
 }
 
 /* ══ ICONS ══ */
@@ -1007,7 +1022,7 @@ async function solicitarOtpLogin(){
     const msgs={pendiente:'Tu solicitud está siendo revisada. Espera la aprobación del analista.',rechazado:'Tu solicitud fue rechazada. Contáctate con tu analista.',revision:'Tu solicitud está en revisión por el analista.'};
     if(prov.estado!=='aprobado')return showAlert('login-alert','warning',msgs[prov.estado]||'Tu acceso aún no está habilitado.');
 
-    SESSION={ruc,email,razonSocial:prov.razonSocial||'',carpeta:prov.carpeta||'',analista:prov.analista||'',categoria:prov.categoria||''};
+    SESSION={ruc,email,razonSocial:prov.razonSocial||'',carpeta:prov.carpeta||'',analista:prov.analista||'',categoria:prov.categoria||'',docs_obligatorios:prov.docs_obligatorios||[]};
     showAlert('login-alert','loading','Acceso confirmado — enviando código de verificación...');
     await callFlow(CFG.FLOW_ENVIAR_OTP,{ruc,email,contacto:prov.razonSocial});
     hideAlert('login-alert');
