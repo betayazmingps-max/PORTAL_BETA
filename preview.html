@@ -1538,10 +1538,6 @@ async function confirmarAprobar() {
         // Si es timeout o error de red, el flow igual pudo dispararse — continuamos
         if (e.name !== 'AbortError') console.warn('Flow error (puede haber funcionado igual):', e.message);
       }
-    } else {
-      // MODO DEMO — simular delay del flow
-      await new Promise(r => setTimeout(r, 1200));
-      console.log('DEMO — payload que se enviará al flow:', payload);
     }
 
     // 2 — Actualizar estado en Sheet
