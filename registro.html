@@ -120,6 +120,13 @@ textarea{resize:vertical;min-height:72px;line-height:1.5}
 .doc-status{font-size:11px;color:var(--s3);font-family:var(--m);line-height:1.45;word-break:break-word}
 .doc-item.has-file .doc-status{color:var(--g)}
 .doc-item.ai-rejected .doc-status{color:var(--r)}
+/* Botón X para quitar archivo (solo aparece cuando hay archivo o rechazado) */
+.doc-remove-btn-reg{display:none;position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;border:none;background:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;line-height:1;z-index:10;box-shadow:0 2px 6px rgba(224,32,32,.3);transition:.15s}
+.doc-remove-btn-reg:hover{background:#b81818;transform:scale(1.1)}
+.doc-item.has-file .doc-remove-btn-reg,
+.doc-item.ai-rejected .doc-remove-btn-reg{display:flex}
+.doc-item.has-file .doc-req-tag-reg,
+.doc-item.ai-rejected .doc-req-tag-reg{display:none}
 /* AI Badge — en el flujo (no absoluto) para que no se monte */
 .ai-badge-reg{display:none;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;font-family:var(--m);margin:8px 13px 13px;line-height:1.4}
 .doc-item.has-file .ai-badge-reg{display:inline-block;background:rgba(91,173,30,.15);color:#2d6010;border:1px solid rgba(91,173,30,.3)}
@@ -545,15 +552,38 @@ function renderDocGrid(containerId, docs) {
     div.id = 'doc-item-' + doc.id;
     div.innerHTML = `
       <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="onFileChange('${doc.id}','${doc.name.replace(/'/g,"\\'")}',this)">
+      <button type="button" class="doc-remove-btn-reg" onclick="event.stopPropagation();event.preventDefault();quitarArchivoReg('${doc.id}')" title="Quitar archivo">×</button>
       <div class="doc-face">
         <div class="doc-icon" id="reg-icon-${doc.id}">${DOC_ICON_SVG}</div>
         <div class="doc-name">${doc.req ? '★ ' : ''}${doc.name}</div>
         <div class="doc-status" id="doc-status-${doc.id}">Sin archivo</div>
       </div>
-      ${doc.req ? '<div style="position:absolute;top:6px;right:6px;font-size:9px;font-family:var(--m);font-weight:600;padding:2px 6px;border-radius:999px;background:rgba(82,18,160,.1);color:var(--p)">req</div>' : ''}
+      ${doc.req ? '<div class="doc-req-tag-reg" style="position:absolute;top:6px;right:6px;font-size:9px;font-family:var(--m);font-weight:600;padding:2px 6px;border-radius:999px;background:rgba(82,18,160,.1);color:var(--p)">req</div>' : ''}
       <span class="ai-badge-reg" id="reg-badge-${doc.id}"></span>`;
     c.appendChild(div);
   });
+}
+
+/* Quitar archivo de un campo (botón X) */
+function quitarArchivoReg(docId) {
+  delete fileStore[docId];
+  delete aiDatos[docId];
+  aiRejected.delete(docId);
+
+  const item = document.getElementById('doc-item-'+docId);
+  if (item) {
+    const input = item.querySelector('input[type=file]');
+    if (input) input.value = '';
+    item.classList.remove('has-file','ai-checking','ai-rejected');
+    item.style.borderColor = '';
+  }
+  const icon  = document.getElementById('reg-icon-'+docId);
+  const badge = document.getElementById('reg-badge-'+docId);
+  const stat  = document.getElementById('doc-status-'+docId);
+  if (icon)  icon.innerHTML  = DOC_ICON_SVG;
+  if (badge) badge.textContent = '';
+  if (stat)  stat.textContent  = 'Sin archivo';
+  const prev = document.getElementById('reg-ai-err-'+docId); if (prev) prev.remove();
 }
 
 async function onFileChange(docId, docName, input) {
