@@ -534,8 +534,19 @@ const DEMO_DATA = [
    ACORTAR NOMBRE — evita rutas largas en SharePoint
 ══════════════════════════════════════════ */
 function acortarNombre(nombre, max = 40) {
-  let n = nombre.replace(/\.$/, '').replace(/[.]/g, '').trim();
+  // 1. Limpiar caracteres PROHIBIDOS por SharePoint en nombres de carpeta
+  //    SharePoint NO acepta: # % * : < > ? / \ | "
+  //    Tampoco: & (causa BadGateway en la API REST)
+  let n = (nombre || '')
+    .replace(/&/g, 'Y')              // & → Y  (ej: "P & B" → "P Y B")
+    .replace(/[#%*:<>?/\\|"]/g, '')   // quitar caracteres no permitidos
+    .replace(/\.$/, '')               // quitar punto final
+    .replace(/[.]/g, '')              // quitar puntos internos
+    .replace(/\s+/g, ' ')             // colapsar espacios múltiples
+    .trim();
+
   if (n.length <= max) return n;
+
   const abrev = {
     'SOCIEDAD ANONIMA CERRADA':'SAC','SOCIEDAD ANONIMA':'SA',
     'SOCIEDAD COMERCIAL DE RESPONSABILIDAD LIMITADA':'SRL',
