@@ -1271,49 +1271,44 @@ async function submitDocumentos(confirmado=false){
       await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{id:docId,nombre:getNombreArchivo(docId,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad}],indice:enviados,es_ultimo:enviados===docIds.length});
     }
 
-    // #6 — Guardar aiStore en Sheet: (1) hoja Vencimientos + (2) columna AI Extraído del proveedor
+    // #6 — Guardar aiStore en Sheet con TIMEOUT (no bloquear si Sheets se traba)
     if(Object.keys(aiStore).length>0){
-      showAlert('docs-alert','loading','💾 Guardando datos de IA en el sistema...');
+      showAlert('docs-alert','loading','💾 Guardando datos de IA...');
 
-      // (a) Hoja Vencimientos — para reporte
-      try{
-        await fetch('https://portalbeta.betayazmingps.workers.dev/sheet',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            action:    'guardarVencimientos',
-            ruc:       SESSION.ruc,
-            razonSocial: SESSION.razonSocial,
-            analista:  SESSION.analista,
-            fecha:     new Date().toLocaleString('es-PE'),
-            conductores: conductores.map(c=>c.nombre),
-            unidades:    unidades.map(u=>u.placa),
-            vencimientos: Object.entries(aiStore)
-              .filter(([,d])=>d.vencimiento)
-              .map(([id,d])=>({
-                id,
-                docNombre:   d.docNombre||id,
-                titular:     d.titular||'',
-                vencimiento: d.vencimiento,
-                numero:      d.numero||''
-              }))
-          })
-        });
-      }catch(e){console.warn('No se pudieron guardar vencimientos:', e.message);}
+      // Helper: fetch con timeout para no quedar esperando infinito
+      const fetchConTimeout = (url, opts, ms=15000) => {
+        const ctrl = new AbortController();
+        const tid  = setTimeout(()=>ctrl.abort(), ms);
+        return fetch(url, {...opts, signal:ctrl.signal}).finally(()=>clearTimeout(tid));
+      };
 
-      // (b) Columna AI Extraído del proveedor — para que preview muestre los datos
-      try{
-        // Combinar AI de registro (ya existente) con AI de ingresar
-        await fetch('https://portalbeta.betayazmingps.workers.dev/sheet',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            action: 'guardarAI',
-            ruc:    SESSION.ruc,
-            datos:  aiStore,  // objeto completo: { p01:{...}, cond1_c01:{...}, unid1_u01:{...} }
-          })
-        });
-      }catch(e){console.warn('No se pudo guardar ai_extraido:', e.message);}
+      // Disparar AMBAS llamadas EN PARALELO (más rápido) + timeout de 15s
+      const sheetUrl = 'https://portalbeta.betayazmingps.workers.dev/sheet';
+      const headers  = {'Content-Type':'application/json'};
+
+      const promesa1 = fetchConTimeout(sheetUrl, {
+        method:'POST', headers,
+        body: JSON.stringify({
+          action:      'guardarVencimientos',
+          ruc:         SESSION.ruc,
+          razonSocial: SESSION.razonSocial,
+          analista:    SESSION.analista,
+          fecha:       new Date().toLocaleString('es-PE'),
+          conductores: conductores.map(c=>c.nombre),
+          unidades:    unidades.map(u=>u.placa),
+          vencimientos: Object.entries(aiStore)
+            .filter(([,d])=>d.vencimiento)
+            .map(([id,d])=>({ id, docNombre:d.docNombre||id, titular:d.titular||'', vencimiento:d.vencimiento, numero:d.numero||'' }))
+        })
+      }).catch(e=>console.warn('Vencimientos timeout/error:', e.message));
+
+      const promesa2 = fetchConTimeout(sheetUrl, {
+        method:'POST', headers,
+        body: JSON.stringify({ action:'guardarAI', ruc:SESSION.ruc, datos:aiStore })
+      }).catch(e=>console.warn('AI guardado timeout/error:', e.message));
+
+      // Esperar ambas pero NUNCA más de 15s
+      await Promise.allSettled([promesa1, promesa2]);
     }
 
     setTimeout(()=>{
