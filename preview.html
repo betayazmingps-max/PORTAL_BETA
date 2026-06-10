@@ -1517,24 +1517,25 @@ async function confirmarAprobar() {
 
   try {
     // 1 — Llamar al Flow de Power Automate para crear carpetas en SharePoint
+    // IMPORTANTE: usamos razonSocialCorta (sin caracteres prohibidos por SharePoint: & : * etc.)
+    const razonLimpia = acortarNombre(p.razonSocial);
     const payload = {
       ruc:              p.ruc,
-      razonSocial:      p.razonSocial,
-      razonSocialCorta: acortarNombre(p.razonSocial),
-      categoria:   p.categoria,
-      analista:    p.analista,
-      email:       p.email,
-      contacto:    p.contacto,
-      // Subcarpetas que debe crear el flow
-      subcarpetas: ['Proveedor', 'Conductor', 'Unidad']
+      razonSocial:      razonLimpia,  // ← usar la limpia (sin & : * etc.)
+      razonSocialCorta: razonLimpia,
+      categoria:        p.categoria,
+      analista:         p.analista,
+      email:            p.email,
+      contacto:         p.contacto,
+      subcarpetas:      ['Proveedor', 'Conductor', 'Unidad']
     };
 
     // Llamar via Worker (el Worker ya tiene la URL del Flow correcto en su env)
+    // Timeout largo (30s) porque el Worker hace 3 reintentos internos
     {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       try {
-        // OJO: NO mandar flowUrl en el body — el Worker usa su propio Flow CrearCarpetas
         const resFlow = await fetch('https://portalbeta.betayazmingps.workers.dev/crear_carpetas', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1544,10 +1545,15 @@ async function confirmarAprobar() {
         clearTimeout(timeoutId);
         // 202 = Accepted (flow disparado OK), 200 = OK, ambos son éxito
         if (!resFlow.ok && resFlow.status !== 202) throw new Error(`Flow respondió ${resFlow.status}`);
+        console.log('✅ Worker /crear_carpetas: Flow disparado correctamente');
       } catch(e) {
         clearTimeout(timeoutId);
-        // Si es timeout o error de red, el flow igual pudo dispararse — continuamos
-        if (e.name !== 'AbortError') console.warn('Flow error (puede haber funcionado igual):', e.message);
+        // Timeout = el Flow puede estar corriendo igual en segundo plano
+        if (e.name === 'AbortError') {
+          console.warn('⚠ Timeout (>30s) - el Flow probablemente terminará en segundo plano');
+        } else {
+          console.warn('⚠ Flow error:', e.message);
+        }
       }
     }
 
@@ -1557,7 +1563,7 @@ async function confirmarAprobar() {
       await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${acortarNombre(p.razonSocial)}`, docs_obligatorios: docsObligatorios, docs_personalizados: docsPersonalizados })
+        body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${razonLimpia}`, docs_obligatorios: docsObligatorios, docs_personalizados: docsPersonalizados })
       });
     }
 
