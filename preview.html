@@ -1436,7 +1436,7 @@ async function guardarObservaciones() {
 /* ══ APROBAR ══ */
 // Catálogo de docs CONDICIONALES (que el analista decide caso por caso)
 const DOCS_CONDICIONALES = [
-  { id:'u07', name:'Seguro de carga',                seccion:'🚛 Unidad', soloServicios:true,
+  { id:'u07', name:'Seguro de carga', seccion:'🚛 Unidad',
     hint:'Si transporta carga, mercancía o materia prima' },
   // Puedes agregar más aquí en el futuro
 ];
@@ -1447,17 +1447,13 @@ function abrirModalAprobar() {
     `Se enviará el link de acceso a ${p.email} para que ${p.razonSocial} pueda subir sus documentos complementarios.`;
   document.getElementById('modal-msg').value = '';
 
-  // Filtrar docs condicionales según la categoría del proveedor
-  const cat = (p.categoria || '').toLowerCase();
-  const esServicios = cat.includes('servicios') || cat.includes('norte');
-  const aplican = DOCS_CONDICIONALES.filter(d => !d.soloServicios || esServicios);
-
+  // Mostrar TODOS los docs condicionales para que el analista decida
   const wrap = document.getElementById('docs-condicionales-wrap');
   const list = document.getElementById('docs-condicionales-list');
-  if (!aplican.length) {
+  if (!DOCS_CONDICIONALES.length) {
     wrap.style.display = 'none';
   } else {
-    list.innerHTML = aplican.map(d => `
+    list.innerHTML = DOCS_CONDICIONALES.map(d => `
       <label style="display:flex;align-items:flex-start;gap:8px;padding:.6rem .75rem;background:var(--pll);border:1.5px solid var(--s4);border-radius:8px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor='var(--p3)'" onmouseout="this.style.borderColor='var(--s4)'">
         <input type="checkbox" id="cb-${d.id}" value="${d.id}" style="margin-top:3px;cursor:pointer;accent-color:var(--p)">
         <div style="flex:1">
