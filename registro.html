@@ -914,6 +914,7 @@ async function reenviarOtp() {
 /* ════════════════════════════════════
    ALERTAS
    ════════════════════════════════════ */
+const _alertTimers = {};
 function showAlert(id, type, msg) {
   const box = document.getElementById(id);
   if (!box) return;
@@ -924,10 +925,26 @@ function showAlert(id, type, msg) {
     loading: '<div class="spin"></div>'
   };
   box.className = 'alert ' + type;
-  box.innerHTML = (icons[type] || '') + '<span style="white-space:pre-line">' + msg + '</span>';
+  // Botón X de cierre (solo para error/warning, no para loading)
+  const btnCerrar = (type === 'error' || type === 'warning' || type === 'success')
+    ? `<button onclick="hideAlert('${id}')" style="background:none;border:none;color:inherit;cursor:pointer;padding:0 0 0 8px;margin-left:auto;font-size:18px;font-weight:700;line-height:1;opacity:.6" title="Cerrar">×</button>`
+    : '';
+  box.innerHTML = (icons[type] || '') + '<span style="white-space:pre-line;flex:1">' + msg + '</span>' + btnCerrar;
   box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Auto-cierre después de 6 segundos para errores y 4s para success
+  clearTimeout(_alertTimers[id]);
+  if (type === 'error' || type === 'warning') {
+    _alertTimers[id] = setTimeout(() => hideAlert(id), 8000);
+  } else if (type === 'success') {
+    _alertTimers[id] = setTimeout(() => hideAlert(id), 4000);
+  }
 }
-function hideAlert(id) { const b = document.getElementById(id); if (b) b.className = 'alert'; }
+function hideAlert(id) {
+  const b = document.getElementById(id);
+  if (b) b.className = 'alert';
+  clearTimeout(_alertTimers[id]);
+}
 
 /* ════════════════════════════════════
    FETCH
@@ -1295,11 +1312,24 @@ document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('beta_dark') === '1') { document.body.classList.add('dark'); const b = document.getElementById('dark-btn'); if(b) b.textContent = '☀️ Claro'; }
 
   // Guardar progreso al cambiar cualquier campo
-  ['reg-email','reg-contacto','reg-telefono','reg-obs','reg-categoria','reg-analista'].forEach(id => {
+  ['reg-email','reg-contacto','reg-telefono','reg-obs','reg-categoria','reg-analista','reg-ruc','reg-razon'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', guardarProgreso);
     if (el) el.addEventListener('change', guardarProgreso);
   });
+
+  // ── Ocultar la alerta roja automáticamente cuando el usuario corrige algo ──
+  // Cualquier interacción con campos/docs limpia el error visual
+  const camposCorregibles = ['reg-ruc','reg-razon','reg-email','reg-contacto','reg-telefono','reg-categoria','reg-analista','reg-obs'];
+  camposCorregibles.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => hideAlert('reg-alert'));
+    if (el) el.addEventListener('change', () => hideAlert('reg-alert'));
+  });
+  // También cuando suben/cambian un documento (clic en el grid de docs)
+  const grid = document.getElementById('reg-docs-grid');
+  if (grid) grid.addEventListener('change', () => hideAlert('reg-alert'));
+  if (grid) grid.addEventListener('click',  () => hideAlert('reg-alert'));
 });
 </script>
 </body>
