@@ -643,16 +643,12 @@ const DOCS_EMPRESA = [
 ];
 
 const DOCS_CONDUCTOR = [
-  {id:'c01',name:'DNI conductor',               req:true},
   {id:'c02',name:'Licencia de conducir',        req:true},
   {id:'c03',name:'Récord MTC',                  req:true},
   {id:'c04',name:'SCTR',                        req:true},
-  {id:'c05',name:'Contrato de conductores',     req:false},
-  {id:'c06',name:'Antecedentes penales',        req:true},
-  {id:'c07',name:'Antecedentes judiciales',     req:true},
-  {id:'c08',name:'Antecedentes policiales',     req:true},
+  {id:'c06',name:'Certificado de adulto',       req:true},
   {id:'c09',name:'EMO',                         req:true},
-  {id:'c10',name:'Foto del conductor',          req:true},
+  {id:'c05',name:'Contrato de conductores',     req:false},   // opcional, va al final
 ];
 
 // Docs unidades — comunes a ambas categorías
@@ -971,10 +967,7 @@ function makeEntryBlock(type,idx,docs){
   const removeBtn=idx>1?`<button onclick="removeEntry('${type}','${idx}')" style="background:none;border:1px solid var(--s4);cursor:pointer;color:var(--s3);font-size:11px;font-family:var(--f);font-weight:600;padding:2px 10px;border-radius:6px">✕ Quitar</button>`:'';
   let fields='';
   if(isCond){
-    fields=`<div class="g2" style="margin-bottom:.875rem">
-<div class="field"><label>Nombre del conductor <span style="color:var(--p)">*</span></label><input type="text" id="cond-nombre-${idx}" placeholder="Ej: SANDOVAL SUCLUPE ELMER" oninput="this.style.borderColor=this.value.trim()?'var(--g)':'var(--r)'"></div>
-<div class="field"><label>Correo electrónico</label><input type="email" id="cond-email-${idx}" placeholder="conductor@empresa.com" oninput="validarEmailCond(this)"><span class="hint" id="hint-cond-email-${idx}">Opcional</span></div>
-</div>`;
+    fields=`<div class="field" style="margin-bottom:.875rem"><label>Nombre del conductor <span style="color:var(--p)">*</span></label><input type="text" id="cond-nombre-${idx}" placeholder="Ej: SANDOVAL SUCLUPE ELMER" oninput="this.style.borderColor=this.value.trim()?'var(--g)':'var(--r)'"></div>`;
   }else{
     fields=`<div class="field" style="margin-bottom:.875rem"><label>Placa del vehículo <span style="color:var(--p)">*</span></label><input type="text" id="unid-placa-${idx}" placeholder="Ej: M4M-966" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.style.borderColor=this.value.trim()?'var(--g)':'var(--r)'"></div>`;
   }
@@ -1386,7 +1379,6 @@ function renderFaltGrid(containerId,docs,prefix){
   <div class="doc-name">${doc.name}</div>
   <div class="doc-status" id="falt-stat-${uid}">Sin archivo</div>
 </div>
-<span class="doc-req-tag" style="background:rgba(91,173,30,.12);color:var(--g)">opcional</span>
 <span class="ai-badge" id="falt-badge-${uid}"></span>`;
     c.appendChild(d);
   });
@@ -1708,18 +1700,6 @@ async function analizarRegularizacion() {
   }
 
   document.getElementById('btn-analizar-reg').disabled = false;
-}
-
-/* ══ #7 — VALIDACIÓN EMAIL CONDUCTOR ══ */
-function validarEmailCond(input){
-  const hint=document.getElementById('hint-cond-email-'+input.id.split('-').pop());
-  if(!hint)return;
-  const val=input.value.trim();
-  if(!val){hint.textContent='Opcional';hint.className='hint';input.style.borderColor='';return;}
-  const ok=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val);
-  hint.textContent=ok?'✓ Email válido':'✗ Formato inválido';
-  hint.className='hint '+(ok?'ok':'err');
-  input.style.borderColor=ok?'var(--g)':'var(--r)';
 }
 
 /* ══ #9 — VALIDAR NOMBRE/PLACA ANTES DE ENVIAR ══ */
