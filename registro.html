@@ -981,6 +981,40 @@ async function toBase64(file) {
 }
 
 /* ════════════════════════════════════
+   COMPRESIÓN DE IMÁGENES
+   Reduce JPG/PNG/WEBP a max 1280px / calidad 0.72
+   Resultado típico: 3-5 MB → 200-400 KB
+   PDFs y otros pasan sin tocar.
+   ════════════════════════════════════ */
+async function comprimirSiEsImagen(file) {
+  if (!file.type.startsWith('image/')) return file;  // PDFs y otros: sin tocar
+  // Si la imagen ya es chica (<300KB), no la toques
+  if (file.size < 300 * 1024) return file;
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const MAX = 1280;
+    let { width, height } = bitmap;
+    if (width > MAX || height > MAX) {
+      const ratio = Math.min(MAX / width, MAX / height);
+      width  = Math.round(width  * ratio);
+      height = Math.round(height * ratio);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width; canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.72));
+    if (!blob || blob.size >= file.size) return file;  // si no mejoró, devuelve original
+    console.log(`📦 ${file.name}: ${(file.size/1024).toFixed(0)}KB → ${(blob.size/1024).toFixed(0)}KB`);
+    return new File([blob], file.name.replace(/\.(png|webp|jpeg|jpg)$/i, '.jpg'), { type: 'image/jpeg' });
+  } catch (e) {
+    console.warn('No se pudo comprimir', file.name, e);
+    return file;
+  }
+}
+
+/* ════════════════════════════════════
    SUBMIT REGISTRO
    ════════════════════════════════════ */
 async function submitRegistro() {
@@ -1079,12 +1113,14 @@ async function verificarOtp() {
 
     // OTP válido → guardar TODO en Google Sheets (docs en base64 + datos IA)
     clearInterval(otpInterval);
-    showAlert('otp-alert', 'loading', '📊 Guardando registro...');
+    showAlert('otp-alert', 'loading', '🗜️ Comprimiendo documentos...');
 
     // Convertir cada documento a base64 (los verá el analista en el modal)
+    // ✅ Imágenes se comprimen antes para que el payload entre en Apps Script
     const archivos = [];
     let totalBytes = 0;
-    for (const [docId, file] of Object.entries(fileStore)) {
+    for (const [docId, fileOriginal] of Object.entries(fileStore)) {
+      const file = await comprimirSiEsImagen(fileOriginal);
       totalBytes += file.size;
       const b64    = await toBase64(file);
       const nombre = (DOCS_REGISTRO.find(d => d.id === docId)?.name || docId)
@@ -1098,10 +1134,14 @@ async function verificarOtp() {
       });
     }
 
-    if (totalBytes > 25 * 1024 * 1024) {
-      showAlert('otp-alert', 'warning', `⚠ El total de documentos (${(totalBytes/1024/1024).toFixed(1)}MB) es grande.`);
-      await new Promise(r => setTimeout(r, 2500));
+    // Apps Script tiene un límite duro alrededor de 8-10 MB de payload.
+    // Como base64 pesa ~33% más que el binario, ponemos el umbral en 6 MB de archivos.
+    if (totalBytes > 6 * 1024 * 1024) {
+      const mb = (totalBytes / 1024 / 1024).toFixed(1);
+      throw new Error(`Los documentos pesan ${mb}MB en total. El máximo es 6MB. Reduce el tamaño de los PDFs (ej: comprime en ilovepdf.com) o sube fotos en lugar de PDFs escaneados.`);
     }
+    console.log(`📊 Total docs a guardar: ${(totalBytes/1024/1024).toFixed(2)} MB`);
+    showAlert('otp-alert', 'loading', '📊 Guardando registro...');
 
     // 📊 IMPORTANTE: ai_extraido se manda como JSON string al Apps Script
     const aiExtraidoJson = JSON.stringify(aiDatos);
