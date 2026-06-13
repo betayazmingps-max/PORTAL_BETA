@@ -1134,14 +1134,14 @@ async function verificarOtp() {
       });
     }
 
-    // Apps Script tiene un límite duro alrededor de 8-10 MB de payload.
-    // Como base64 pesa ~33% más que el binario, ponemos el umbral en 6 MB de archivos.
-    if (totalBytes > 6 * 1024 * 1024) {
-      const mb = (totalBytes / 1024 / 1024).toFixed(1);
-      throw new Error(`Los documentos pesan ${mb}MB en total. El máximo es 6MB. Reduce el tamaño de los PDFs (ej: comprime en ilovepdf.com) o sube fotos en lugar de PDFs escaneados.`);
+    // Apps Script aguanta hasta ~25 MB. Como base64 pesa ~33% más que el binario,
+    // ponemos el tope en 18 MB de archivos originales (≈ 24 MB en base64).
+    const mb = (totalBytes / 1024 / 1024).toFixed(1);
+    console.log(`📊 Total docs a guardar: ${mb} MB`);
+    if (totalBytes > 18 * 1024 * 1024) {
+      throw new Error(`Los documentos pesan ${mb}MB. El máximo es 18MB. Comprime los PDFs en ilovepdf.com y vuelve a intentar.`);
     }
-    console.log(`📊 Total docs a guardar: ${(totalBytes/1024/1024).toFixed(2)} MB`);
-    showAlert('otp-alert', 'loading', '📊 Guardando registro...');
+    showAlert('otp-alert', 'loading', `📊 Guardando registro (${mb}MB)...`);
 
     // 📊 IMPORTANTE: ai_extraido se manda como JSON string al Apps Script
     const aiExtraidoJson = JSON.stringify(aiDatos);
