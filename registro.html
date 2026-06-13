@@ -1056,17 +1056,23 @@ async function verificarOtp() {
 
   try {
     let valido = false;
+    let motivoServidor = '';
     if (CFG.DEMO) {
       await new Promise(r => setTimeout(r, 800));
       valido = (otp === '123456');
     } else {
       const r = await callFlow(CFG.FLOW_VERIFICAR_OTP, { ruc: SESSION.ruc, email: SESSION.email, otp });
+      console.log('🔐 Respuesta verificar_otp:', r);  // Para debug en consola
       // Verificar explícitamente r.valido — r.ok solo indica que el servidor respondió, no que el OTP sea correcto
       valido = r.valido === true;
+      motivoServidor = r.error || '';
     }
 
     if (!valido) {
-      showAlert('otp-alert', 'error', 'Código incorrecto o expirado.');
+      const msg = motivoServidor
+        ? `Código incorrecto: ${motivoServidor}`
+        : 'Código incorrecto o expirado.';
+      showAlert('otp-alert', 'error', msg);
       clearOtp();
       return;
     }
