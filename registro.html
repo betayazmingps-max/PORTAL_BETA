@@ -501,32 +501,25 @@ async function guardarEnSheet(datos) {
     console.warn('Google Sheet URL no configurada — saltando escritura en Sheet');
     return { ok: true, skipped: true };
   }
-  // ✅ Usamos Content-Type: text/plain para que Apps Script reciba el body
-  //    SIN preflight CORS (Apps Script no responde OPTIONS).
-  //    El body sigue siendo JSON.parse-able desde e.postData.contents.
+  // Apps Script requiere no-cors, por eso no podemos leer la respuesta.
+  // Usamos AbortController para cancelar si tarda más de 30s.
   const ctrl = new AbortController();
   const tid  = setTimeout(() => ctrl.abort(), 30000);
-  let res;
   try {
-    res = await fetch(CFG.GSHEET_URL, {
+    await fetch(CFG.GSHEET_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(datos),
-      redirect: 'follow',
+      mode:    'no-cors',
       signal:  ctrl.signal
     });
     clearTimeout(tid);
+    return { ok: true };
   } catch (e) {
     clearTimeout(tid);
     if (e.name === 'AbortError') throw new Error('Tiempo agotado guardando en Google Sheets. Verifica tu conexión.');
     throw new Error('No se pudo guardar el registro: ' + e.message);
   }
-  // ✅ Ahora SÍ leemos la respuesta real de Apps Script
-  let parsed;
-  try { parsed = await res.json(); }
-  catch { throw new Error('Respuesta inválida de Google Sheets (¿implementación correcta?)'); }
-  if (!parsed.ok) throw new Error(parsed.error || 'Apps Script devolvió ok:false');
-  return parsed;
 }
 
 /* ════════════════════════════════════
@@ -981,40 +974,6 @@ async function toBase64(file) {
 }
 
 /* ════════════════════════════════════
-   COMPRESIÓN DE IMÁGENES
-   Reduce JPG/PNG/WEBP a max 1280px / calidad 0.72
-   Resultado típico: 3-5 MB → 200-400 KB
-   PDFs y otros pasan sin tocar.
-   ════════════════════════════════════ */
-async function comprimirSiEsImagen(file) {
-  if (!file.type.startsWith('image/')) return file;  // PDFs y otros: sin tocar
-  // Si la imagen ya es chica (<300KB), no la toques
-  if (file.size < 300 * 1024) return file;
-
-  try {
-    const bitmap = await createImageBitmap(file);
-    const MAX = 1280;
-    let { width, height } = bitmap;
-    if (width > MAX || height > MAX) {
-      const ratio = Math.min(MAX / width, MAX / height);
-      width  = Math.round(width  * ratio);
-      height = Math.round(height * ratio);
-    }
-    const canvas = document.createElement('canvas');
-    canvas.width = width; canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.72));
-    if (!blob || blob.size >= file.size) return file;  // si no mejoró, devuelve original
-    console.log(`📦 ${file.name}: ${(file.size/1024).toFixed(0)}KB → ${(blob.size/1024).toFixed(0)}KB`);
-    return new File([blob], file.name.replace(/\.(png|webp|jpeg|jpg)$/i, '.jpg'), { type: 'image/jpeg' });
-  } catch (e) {
-    console.warn('No se pudo comprimir', file.name, e);
-    return file;
-  }
-}
-
-/* ════════════════════════════════════
    SUBMIT REGISTRO
    ════════════════════════════════════ */
 async function submitRegistro() {
@@ -1107,14 +1066,12 @@ async function verificarOtp() {
 
     // OTP válido → guardar TODO en Google Sheets (docs en base64 + datos IA)
     clearInterval(otpInterval);
-    showAlert('otp-alert', 'loading', '🗜️ Comprimiendo documentos...');
+    showAlert('otp-alert', 'loading', '📊 Guardando registro...');
 
     // Convertir cada documento a base64 (los verá el analista en el modal)
-    // ✅ Imágenes se comprimen antes para que el payload entre en Apps Script
     const archivos = [];
     let totalBytes = 0;
-    for (const [docId, fileOriginal] of Object.entries(fileStore)) {
-      const file = await comprimirSiEsImagen(fileOriginal);
+    for (const [docId, file] of Object.entries(fileStore)) {
       totalBytes += file.size;
       const b64    = await toBase64(file);
       const nombre = (DOCS_REGISTRO.find(d => d.id === docId)?.name || docId)
@@ -1128,14 +1085,10 @@ async function verificarOtp() {
       });
     }
 
-    // Apps Script aguanta hasta ~25 MB. Como base64 pesa ~33% más que el binario,
-    // ponemos el tope en 18 MB de archivos originales (≈ 24 MB en base64).
-    const mb = (totalBytes / 1024 / 1024).toFixed(1);
-    console.log(`📊 Total docs a guardar: ${mb} MB`);
-    if (totalBytes > 18 * 1024 * 1024) {
-      throw new Error(`Los documentos pesan ${mb}MB. El máximo es 18MB. Comprime los PDFs en ilovepdf.com y vuelve a intentar.`);
+    if (totalBytes > 25 * 1024 * 1024) {
+      showAlert('otp-alert', 'warning', `⚠ El total de documentos (${(totalBytes/1024/1024).toFixed(1)}MB) es grande.`);
+      await new Promise(r => setTimeout(r, 2500));
     }
-    showAlert('otp-alert', 'loading', `📊 Guardando registro (${mb}MB)...`);
 
     // 📊 IMPORTANTE: ai_extraido se manda como JSON string al Apps Script
     const aiExtraidoJson = JSON.stringify(aiDatos);
