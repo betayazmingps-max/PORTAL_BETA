@@ -501,25 +501,32 @@ async function guardarEnSheet(datos) {
     console.warn('Google Sheet URL no configurada — saltando escritura en Sheet');
     return { ok: true, skipped: true };
   }
-  // Apps Script requiere no-cors, por eso no podemos leer la respuesta.
-  // Usamos AbortController para cancelar si tarda más de 30s.
+  // ✅ Usamos Content-Type: text/plain para que Apps Script reciba el body
+  //    SIN preflight CORS (Apps Script no responde OPTIONS).
+  //    El body sigue siendo JSON.parse-able desde e.postData.contents.
   const ctrl = new AbortController();
   const tid  = setTimeout(() => ctrl.abort(), 30000);
+  let res;
   try {
-    await fetch(CFG.GSHEET_URL, {
+    res = await fetch(CFG.GSHEET_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body:    JSON.stringify(datos),
-      mode:    'no-cors',
+      redirect: 'follow',
       signal:  ctrl.signal
     });
     clearTimeout(tid);
-    return { ok: true };
   } catch (e) {
     clearTimeout(tid);
     if (e.name === 'AbortError') throw new Error('Tiempo agotado guardando en Google Sheets. Verifica tu conexión.');
     throw new Error('No se pudo guardar el registro: ' + e.message);
   }
+  // ✅ Ahora SÍ leemos la respuesta real de Apps Script
+  let parsed;
+  try { parsed = await res.json(); }
+  catch { throw new Error('Respuesta inválida de Google Sheets (¿implementación correcta?)'); }
+  if (!parsed.ok) throw new Error(parsed.error || 'Apps Script devolvió ok:false');
+  return parsed;
 }
 
 /* ════════════════════════════════════
