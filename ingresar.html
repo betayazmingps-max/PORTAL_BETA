@@ -639,14 +639,14 @@ const DOCS_EMPRESA = [
   {id:'p11',name:'Antecedentes penales',              req:true},
   {id:'p12',name:'Antecedentes judiciales',           req:true},
   {id:'p13',name:'Antecedentes policiales',           req:true},
-  {id:'p14',name:'Foto del proveedor',                req:false},
+  {id:'p14',name:'Foto del proveedor',                req:true},
 ];
 
 const DOCS_CONDUCTOR = [
   {id:'c02',name:'Licencia de conducir',        req:true},
   {id:'c03',name:'Récord MTC',                  req:true},
   {id:'c04',name:'SCTR',                        req:true},
-  {id:'c06',name:'Certificado Único Laboral',   req:true},
+  {id:'c06',name:'Certificado único laboral',   req:true},
   {id:'c09',name:'EMO',                         req:true},
   {id:'c05',name:'Contrato de conductores',     req:false},   // opcional, va al final
 ];
@@ -657,8 +657,8 @@ const DOCS_UNIDAD_BASE = [
   {id:'u02',name:'SOAT vigente',               req:true},
   {id:'u03',name:'Revisión técnica (RTV)',     req:true},
   {id:'u04',name:'Tarjeta de circulación',     req:true},
-  {id:'u08',name:'Foto exterior de la unidad', req:false},
-  {id:'u09',name:'Foto interior de la unidad', req:false},
+  {id:'u08',name:'Foto exterior de la unidad', req:true},
+  {id:'u09',name:'Foto interior de la unidad', req:true},
 ];
 
 // Docs adicionales SOLO para Servicios Norte y Sur
@@ -1306,7 +1306,7 @@ async function submitDocumentos(confirmado=false){
 
     setTimeout(()=>{
       const meta=document.getElementById('success-meta');
-      meta.innerHTML='📁 <strong>'+(SESSION.carpeta||'SharePoint')+'</strong><br>📄 <strong>'+archivos.length+' archivo(s)</strong> enviados<br>✦ Verificados con IA<br>✅ Proceso completado — '+new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'});
+      meta.innerHTML='📁 <strong>'+(SESSION.carpeta||'SharePoint')+'</strong><br>📄 <strong>'+docIds.length+' archivo(s)</strong> enviados<br>✦ Verificados con IA<br>✅ Proceso completado — '+new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'});
       document.getElementById('screen-success').classList.add('show');
       btn.disabled=false; // reactivar tras éxito por si el usuario quiere volver a enviar
       window.scrollTo({top:0});lanzarConfeti();
