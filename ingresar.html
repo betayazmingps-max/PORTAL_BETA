@@ -1261,7 +1261,12 @@ async function submitDocumentos(confirmado=false){
       if(docId.startsWith('cond')){const m=docId.match(/^cond(\d+)_/);if(m){const idx=parseInt(m[1]);const c=conductores.find(x=>x.idx===idx);entidad=(c?c.nombre:'Conductor_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Conductor';}}
       else if(docId.startsWith('unid')){const m=docId.match(/^unid(\d+)_/);if(m){const idx=parseInt(m[1]);const u=unidades.find(x=>x.idx===idx);entidad=(u?u.placa:'Unidad_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Unidad';}}
 
-      await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{id:docId,nombre:getNombreArchivo(docId,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad}],indice:enviados,es_ultimo:enviados===docIds.length});
+      // El resultado se revisa: si el Flow falla (ej. de nuevo un esquema no válido),
+      // antes se ignoraba por completo y se seguía como si hubiera subido bien.
+      const resSubida = await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{id:docId,nombre:getNombreArchivo(docId,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad}],indice:enviados,es_ultimo:enviados===docIds.length});
+      if(resSubida && resSubida.ok===false){
+        throw new Error('No se pudo subir "'+getNombreArchivo(docId,file)+'": '+(resSubida.error||'error desconocido'));
+      }
     }
 
     // #6 — Guardar aiStore en Sheet con TIMEOUT (no bloquear si Sheets se traba)
