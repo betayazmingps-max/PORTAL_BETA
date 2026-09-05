@@ -59,6 +59,9 @@ label .req{color:var(--p);margin-left:2px}
 input,select{font-family:var(--f);font-size:13.5px;color:var(--s1);background:var(--pll);border:1.5px solid var(--s4);border-radius:var(--r8);padding:.55rem .875rem;outline:none;transition:border-color .15s,box-shadow .15s;width:100%;appearance:none}
 input:focus,select:focus{border-color:var(--p);background:var(--w);box-shadow:0 0 0 3px rgba(82,18,160,.09)}
 input[type="password"]{letter-spacing:.15em;font-size:16px}
+/* Los checkboxes/radios no deben heredar el estilo de "caja de texto" de arriba
+   (ancho 100%, relleno, appearance:none) — por eso se veían como un óvalo estirado. */
+input[type="checkbox"],input[type="radio"]{width:16px;height:16px;flex-shrink:0;padding:0;border-radius:4px;appearance:auto;background:none;box-shadow:none}
 
 /* ── BTN ── */
 .btn{width:100%;padding:.85rem;border:none;border-radius:var(--r12);font-family:var(--f);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
