@@ -428,7 +428,7 @@ body.dark .tabla-row:hover{background:var(--s5);}
           + Agregar
         </button>
       </div>
-      <div id="docs-personalizados-list" style="display:flex;flex-direction:column;gap:.4rem"></div>
+      <div id="docs-personalizados-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
       <p style="font-size:10.5px;color:var(--s3);margin-top:.4rem;line-height:1.4">
         Útil para casos especiales (ej: certificado adicional, hoja MSDS, permiso especial...)
       </p>
@@ -491,7 +491,7 @@ body.dark .tabla-row:hover{background:var(--s5);}
 ══════════════════════════════════════════ */
 const CFG = {
   // URL del Google Apps Script (mismo que registro.html)
-  GSHEET_URL: 'https://script.google.com/macros/s/AKfycbxu-TP4IduJCTk-qoVrJLjCjR2i7GWK6zrC28Uxs79iUAYJmc5-99Y7JSz1Flc3hQ8WWA/exec',
+  GSHEET_URL: 'https://script.google.com/macros/s/AKfycbxJugvYb3C_GA_TQuehnrk0U_G5_ckCbbF5emKWhDmgrVal6tuaQHtx733VNKZzGxSuGQ/exec',
 
   // Worker Cloudflare (para enviar notificaciones)
   FLOW_ENVIAR_OTP: 'https://portalbeta.betayazmingps.workers.dev/enviar_otp',
@@ -918,7 +918,7 @@ function renderDocumentacionCompleta(p) {
         {id:'c02',name:'Licencia de conducir'},
         {id:'c03',name:'Récord MTC'},
         {id:'c04',name:'SCTR'},
-        {id:'c06',name:'Certificado de adulto'},
+        {id:'c06',name:'Certificado Único Laboral'},
         {id:'c09',name:'EMO'},
         {id:'c05',name:'Contrato de conductores'},
       ]
@@ -1434,6 +1434,8 @@ async function guardarObservaciones() {
 const DOCS_CONDICIONALES = [
   { id:'u07', name:'Seguro de carga', seccion:'🚛 Unidad',
     hint:'Si transporta carga, mercancía o materia prima' },
+  { id:'u08', name:'Seguro RC', seccion:'🚛 Unidad',
+    hint:'Seguro de Responsabilidad Civil de la unidad' },
   // Puedes agregar más aquí en el futuro
 ];
 
@@ -1471,15 +1473,15 @@ function abrirModalAprobar() {
 function agregarDocExtra() {
   const list = document.getElementById('docs-personalizados-list');
   const fila = document.createElement('div');
-  fila.style.cssText = 'display:flex;gap:6px;align-items:center;background:var(--w);border:1px solid var(--s4);border-radius:6px;padding:5px 8px';
+  fila.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--w);border:1.5px solid var(--s4);border-radius:8px;padding:.6rem .75rem';
   fila.innerHTML = `
-    <input type="text" class="doc-extra-nombre" placeholder="Nombre del documento" style="flex:1;font-size:12px;padding:5px 8px;border:1px solid var(--s4);border-radius:5px;font-family:var(--f);background:var(--pll);color:var(--s1)">
-    <select class="doc-extra-seccion" style="font-size:11.5px;padding:5px 8px;border:1px solid var(--s4);border-radius:5px;font-family:var(--f);background:var(--w);color:var(--s2);cursor:pointer">
+    <input type="text" class="doc-extra-nombre" placeholder="Nombre del documento" style="flex:2;min-width:140px;font-size:12.5px;padding:7px 10px;border:1px solid var(--s4);border-radius:6px;font-family:var(--f);background:var(--pll);color:var(--s1)">
+    <select class="doc-extra-seccion" style="flex:1;min-width:110px;font-size:12px;padding:7px 10px;border:1px solid var(--s4);border-radius:6px;font-family:var(--f);background:var(--w);color:var(--s2);cursor:pointer">
       <option value="empresa">🏢 Empresa</option>
       <option value="conductor">👤 Conductor</option>
       <option value="unidad">🚛 Unidad</option>
     </select>
-    <button type="button" onclick="this.parentNode.remove()" style="background:var(--rl);color:var(--r);border:none;border-radius:5px;width:24px;height:24px;cursor:pointer;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center" title="Quitar">×</button>
+    <button type="button" onclick="this.parentNode.remove()" style="flex-shrink:0;background:var(--rl);color:var(--r);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center" title="Quitar">×</button>
   `;
   list.appendChild(fila);
   fila.querySelector('.doc-extra-nombre').focus();
@@ -1540,11 +1542,14 @@ async function confirmarAprobar() {
         console.log('✅ Worker /crear_carpetas: Flow disparado correctamente');
       } catch(e) {
         clearTimeout(timeoutId);
-        // Timeout = el Flow puede estar corriendo igual en segundo plano
+        // Timeout = el Flow puede estar corriendo igual en segundo plano (no es un error real)
         if (e.name === 'AbortError') {
           console.warn('⚠ Timeout (>30s) - el Flow probablemente terminará en segundo plano');
         } else {
-          console.warn('⚠ Flow error:', e.message);
+          // Antes esto se tragaba el error y seguía como si la carpeta sí se hubiera creado.
+          // Ahora se propaga para que NO se marque "aprobado" ni se notifique al proveedor
+          // con una carpeta que en realidad no existe.
+          throw new Error('No se pudo crear la carpeta en SharePoint: ' + e.message);
         }
       }
     }
