@@ -1543,7 +1543,11 @@ async function confirmarAprobar() {
         });
         clearTimeout(timeoutId);
         // 202 = Accepted (flow disparado OK), 200 = OK, ambos son éxito
-        if (!resFlow.ok && resFlow.status !== 202) throw new Error(`Flow respondió ${resFlow.status}`);
+        if (!resFlow.ok && resFlow.status !== 202) {
+          let detalle = '';
+          try { const dErr = await resFlow.json(); detalle = dErr?.error ? ' — ' + dErr.error : ''; } catch {}
+          throw new Error(`Flow respondió ${resFlow.status}${detalle}`);
+        }
         console.log('✅ Worker /crear_carpetas: Flow disparado correctamente');
       } catch(e) {
         clearTimeout(timeoutId);
