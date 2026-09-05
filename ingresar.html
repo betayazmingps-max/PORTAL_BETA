@@ -1258,8 +1258,12 @@ async function submitDocumentos(confirmado=false){
       // Convertir solo este archivo
       const b64=await toBase64(file);
       let subcarpeta='Proveedor',entidad='';
-      if(docId.startsWith('cond')){const m=docId.match(/^cond(\d+)_/);if(m){const idx=parseInt(m[1]);const c=conductores.find(x=>x.idx===idx);entidad=(c?c.nombre:'Conductor_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Conductor';}}
-      else if(docId.startsWith('unid')){const m=docId.match(/^unid(\d+)_/);if(m){const idx=parseInt(m[1]);const u=unidades.find(x=>x.idx===idx);entidad=(u?u.placa:'Unidad_'+idx).toUpperCase().replace(/[\/\\:*?"<>|#%]/g,'-').trim();subcarpeta='Unidad';}}
+      // Quita caracteres invisibles (espacios de ancho cero, control, BOM, etc.) que a veces
+      // se cuelan al escribir/autocompletar el nombre y que SharePoint rechaza al crear la carpeta.
+      const RX_INVISIBLES=new RegExp('[\u0000-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2028\u2029\uFEFF]','g');
+      const limpiarNombreCarpeta=s=>String(s||'').replace(RX_INVISIBLES,'').replace(/[\/\\:*?"<>|#%]/g,'-').trim();
+      if(docId.startsWith('cond')){const m=docId.match(/^cond(\d+)_/);if(m){const idx=parseInt(m[1]);const c=conductores.find(x=>x.idx===idx);entidad=limpiarNombreCarpeta(c?c.nombre:'Conductor_'+idx).toUpperCase();subcarpeta='Conductor';}}
+      else if(docId.startsWith('unid')){const m=docId.match(/^unid(\d+)_/);if(m){const idx=parseInt(m[1]);const u=unidades.find(x=>x.idx===idx);entidad=limpiarNombreCarpeta(u?u.placa:'Unidad_'+idx).toUpperCase();subcarpeta='Unidad';}}
 
       // El resultado se revisa: si el Flow falla (ej. de nuevo un esquema no válido),
       // antes se ignoraba por completo y se seguía como si hubiera subido bien.
