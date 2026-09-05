@@ -1524,7 +1524,9 @@ async function confirmarAprobar() {
       analista:         p.analista,
       email:            p.email,
       contacto:         p.contacto,
-      subcarpetas:      ['Proveedor', 'Conductor', 'Unidad']
+      // "subcarpetas" se quitó: el Flow no lo usa (las subcarpetas Proveedor/Conductor/Unidad
+      // están fijas dentro del Flow) y ese campo de más rompía la validación del disparador
+      // ("TriggerInputSchemaMismatch") — por eso nunca se creaba nada.
     };
 
     // Llamar via Worker (el Worker ya tiene la URL del Flow correcto en su env)
