@@ -1516,14 +1516,17 @@ async function confirmarAprobar() {
     // 1 — Llamar al Flow de Power Automate para crear carpetas en SharePoint
     // IMPORTANTE: usamos razonSocialCorta (sin caracteres prohibidos por SharePoint: & : * etc.)
     const razonLimpia = acortarNombre(p.razonSocial);
+    // El disparador del Flow exige que estos 7 campos sean SIEMPRE texto (string).
+    // Si alguno llega null/undefined (ej. un proveedor sin categoría o email aún),
+    // JSON.stringify lo manda como null y el Flow lo rechaza con TriggerInputSchemaMismatch.
     const payload = {
-      ruc:              p.ruc,
-      razonSocial:      razonLimpia,  // ← usar la limpia (sin & : * etc.)
-      razonSocialCorta: razonLimpia,
-      categoria:        p.categoria,
-      analista:         p.analista,
-      email:            p.email,
-      contacto:         p.contacto,
+      ruc:              String(p.ruc || ''),
+      razonSocial:      String(razonLimpia || ''),  // ← usar la limpia (sin & : * etc.)
+      razonSocialCorta: String(razonLimpia || ''),
+      categoria:        String(p.categoria || ''),
+      analista:         String(p.analista || ''),
+      email:            String(p.email || ''),
+      contacto:         String(p.contacto || ''),
       // "subcarpetas" se quitó: el Flow no lo usa (las subcarpetas Proveedor/Conductor/Unidad
       // están fijas dentro del Flow) y ese campo de más rompía la validación del disparador
       // ("TriggerInputSchemaMismatch") — por eso nunca se creaba nada.
