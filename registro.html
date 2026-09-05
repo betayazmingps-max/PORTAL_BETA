@@ -531,13 +531,13 @@ async function guardarEnSheet(datos) {
    DOCUMENTOS — con obligatorios
    ════════════════════════════════════ */
 const DOCS_REGISTRO = [
-  { id:'reg_brochure', name:'Brochure',                    req:true },
-  { id:'reg_cotizacion',name:'Cotización',                 req:true },
-  { id:'reg_carta',    name:'Carta de presentación',       req:true },
-  { id:'reg_ficha',    name:'Ficha RUC SUNAT',             req:true },
-  { id:'reg_deuda',    name:'Deudas coactivas',            req:true },
-  { id:'reg_ref',      name:'Referencias comerciales',     req:true },
-  { id:'reg_vigencia', name:'Vigencia poder rep. legal',   req:true },
+  { id:'reg_brochure', name:'Brochure',                    req:false },
+  { id:'reg_cotizacion',name:'Cotización',                 req:false },
+  { id:'reg_carta',    name:'Carta de presentación',       req:false },
+  { id:'reg_ficha',    name:'Ficha RUC SUNAT',             req:false },
+  { id:'reg_deuda',    name:'Deudas coactivas',            req:false },
+  { id:'reg_ref',      name:'Referencias comerciales',     req:false },
+  { id:'reg_vigencia', name:'Vigencia poder rep. legal',   req:false },
 ];
 const fileStore   = {};
 const aiRejected  = new Set(); // docs rechazados por IA

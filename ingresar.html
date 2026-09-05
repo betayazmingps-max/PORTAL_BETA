@@ -626,37 +626,37 @@ const aiStore    = {};   // guarda datos extraídos por IA por cada docId
 
 /* ══ DOCUMENTOS ══ */
 const DOCS_EMPRESA = [
-  {id:'p01',name:'Contrato',                          req:true},
-  {id:'p02',name:'Ficha RUC',                         req:true},
-  {id:'p03',name:'Referencias comerciales',           req:true},
-  {id:'p04',name:'Vigencia poder rep. legal',         req:true},
-  {id:'p05',name:'Brochure',                          req:true},
-  {id:'p06',name:'DDJJ cumplimiento normas seguridad',req:true},
-  {id:'p07',name:'DDJJ políticas corporativas',       req:true},
-  {id:'p08',name:'Carta compromiso BETA',             req:true},
-  {id:'p09',name:'Deuda coactiva',                    req:true},
-  {id:'p10',name:'Cotización',                        req:true},
-  {id:'p11',name:'Antecedentes penales',              req:true},
-  {id:'p12',name:'Antecedentes judiciales',           req:true},
-  {id:'p13',name:'Antecedentes policiales',           req:true},
+  {id:'p01',name:'Contrato',                          req:false},
+  {id:'p02',name:'Ficha RUC',                         req:false},
+  {id:'p03',name:'Referencias comerciales',           req:false},
+  {id:'p04',name:'Vigencia poder rep. legal',         req:false},
+  {id:'p05',name:'Brochure',                          req:false},
+  {id:'p06',name:'DDJJ cumplimiento normas seguridad',req:false},
+  {id:'p07',name:'DDJJ políticas corporativas',       req:false},
+  {id:'p08',name:'Carta compromiso BETA',             req:false},
+  {id:'p09',name:'Deuda coactiva',                    req:false},
+  {id:'p10',name:'Cotización',                        req:false},
+  {id:'p11',name:'Antecedentes penales',              req:false},
+  {id:'p12',name:'Antecedentes judiciales',           req:false},
+  {id:'p13',name:'Antecedentes policiales',           req:false},
   {id:'p14',name:'Foto del proveedor',                req:false},
 ];
 
 const DOCS_CONDUCTOR = [
-  {id:'c02',name:'Licencia de conducir',        req:true},
-  {id:'c03',name:'Récord MTC',                  req:true},
-  {id:'c04',name:'SCTR',                        req:true},
-  {id:'c06',name:'Certificado Único Laboral',   req:true},
-  {id:'c09',name:'EMO',                         req:true},
+  {id:'c02',name:'Licencia de conducir',        req:false},
+  {id:'c03',name:'Récord MTC',                  req:false},
+  {id:'c04',name:'SCTR',                        req:false},
+  {id:'c06',name:'Certificado Único Laboral',   req:false},
+  {id:'c09',name:'EMO',                         req:false},
   {id:'c05',name:'Contrato de conductores',     req:false},   // opcional, va al final
 ];
 
 // Docs unidades — comunes a ambas categorías
 const DOCS_UNIDAD_BASE = [
-  {id:'u01',name:'Tarjeta de propiedad',       req:true},
-  {id:'u02',name:'SOAT vigente',               req:true},
-  {id:'u03',name:'Revisión técnica (RTV)',     req:true},
-  {id:'u04',name:'Tarjeta de circulación',     req:true},
+  {id:'u01',name:'Tarjeta de propiedad',       req:false},
+  {id:'u02',name:'SOAT vigente',               req:false},
+  {id:'u03',name:'Revisión técnica (RTV)',     req:false},
+  {id:'u04',name:'Tarjeta de circulación',     req:false},
   {id:'u08',name:'Foto exterior de la unidad', req:false},
   {id:'u09',name:'Foto interior de la unidad', req:false},
 ];
@@ -664,8 +664,8 @@ const DOCS_UNIDAD_BASE = [
 // Docs adicionales SOLO para Servicios Norte y Sur
 // (NO incluye los condicionales — esos los agrega el analista al aprobar)
 const DOCS_UNIDAD_SERVICIOS = [
-  {id:'u05',name:'Póliza vehicular',                  req:true, condicional:'poliza_rc'},
-  {id:'u06',name:'Seguro de responsabilidad civil',   req:true, condicional:'poliza_rc'},
+  {id:'u05',name:'Póliza vehicular',                  req:false, condicional:'poliza_rc'},
+  {id:'u06',name:'Seguro de responsabilidad civil',   req:false, condicional:'poliza_rc'},
 ];
 
 // Catálogo de docs CONDICIONALES (solo aparecen si el analista los pidió al aprobar)
