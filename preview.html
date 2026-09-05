@@ -1569,11 +1569,19 @@ async function confirmarAprobar() {
     // 2 — Actualizar estado en Sheet
     p.estado = 'aprobado';
     if (!CFG.GSHEET_URL.includes('TU_DEPLOYMENT')) {
-      await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
-        method: 'POST', mode: 'no-cors',
+      // Antes usaba mode:'no-cors', que hace la respuesta opaca (no se puede leer ni
+      // detectar error) — si el RUC no se encontraba en la hoja o algo fallaba al guardar
+      // la carpeta, quedaba en silencio y el analista nunca se enteraba.
+      const resSheet = await fetch('https://portalbeta.betayazmingps.workers.dev/sheet', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'aprobar', ruc: p.ruc, mensaje: msg, linkIngresar: CFG.LINK_INGRESAR, carpeta: `CADENA_DE_SUMINISTROS/2.Compras/TRANSPORTE 2026/${p.categoria}/${p.analista}/${p.ruc}_${razonLimpia}`, docs_obligatorios: docsObligatorios, docs_personalizados: docsPersonalizados })
       });
+      let dataSheet = null;
+      try { dataSheet = await resSheet.json(); } catch {}
+      if (dataSheet && dataSheet.ok === false) {
+        throw new Error('No se pudo guardar la carpeta en la hoja: ' + (dataSheet.error || 'error desconocido'));
+      }
     }
 
     // 3 — Notificar al proveedor con el link de ingreso
