@@ -323,7 +323,13 @@ body.dark .tabla-row:hover{background:var(--s5);}
       <div class="filter-pill" onclick="setFiltro('aprobado',this)">Aprobados</div>
       <div class="filter-pill" onclick="setFiltro('por_vencer',this)" style="border-color:var(--amber);color:var(--amber)">⚠ Por vencer</div>
     </div>
-    <!-- Filtro por Sub categoría (solo aplica a Servicios Norte Y Sur) -->
+    <!-- Filtro por Sede y Sub categoría (solo aplica a Servicios Norte Y Sur) -->
+    <div class="filters" id="filters-sede">
+      <span style="font-size:11.5px;font-weight:700;color:var(--s3);text-transform:uppercase;letter-spacing:.05em;align-self:center">Sede:</span>
+      <div class="filter-pill active" onclick="setSedeFiltro('todas',this)">Todas</div>
+      <div class="filter-pill" onclick="setSedeFiltro('NORTE',this)">Norte</div>
+      <div class="filter-pill" onclick="setSedeFiltro('SUR',this)">Sur</div>
+    </div>
     <div class="filters" id="filters-subcategoria">
       <span style="font-size:11.5px;font-weight:700;color:var(--s3);text-transform:uppercase;letter-spacing:.05em;align-self:center">Sub categoría:</span>
       <div class="filter-pill active" onclick="setSubFiltro('todas',this)">Todas</div>
@@ -1779,9 +1785,21 @@ function setSubFiltro(sub, el) {
   filtrar();
 }
 
+let sedeFiltroActiva = 'todas';
+function setSedeFiltro(sede, el) {
+  sedeFiltroActiva = sede;
+  document.querySelectorAll('#filters-sede .filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  filtrar();
+}
+
 function filtrar() {
   const q = document.getElementById('search-input').value.toLowerCase();
   let lista = PROVEEDORES;
+
+  if (sedeFiltroActiva !== 'todas') {
+    lista = lista.filter(p => p.sede === sedeFiltroActiva);
+  }
 
   if (subFiltroActivo !== 'todas') {
     lista = lista.filter(p => p.subcategoria === subFiltroActivo);

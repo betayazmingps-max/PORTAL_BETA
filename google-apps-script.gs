@@ -36,6 +36,7 @@ const COL_ANALISTA        = 18; // R
 const COL_DOCS_OPCIONALES = 19; // S — lista de IDs marcados como obligatorios por el analista (JSON)
 const COL_DOCS_PERSON     = 20; // T — docs personalizados pedidos por el analista (JSON)
 const COL_SUBCATEGORIA    = 21; // U — Sub categoría (solo Servicios Norte Y Sur: Materia Prima, Carga Seca, Refrigerado, Flota Vehicular)
+const COL_SEDE            = 22; // V — Sede (solo Servicios Norte Y Sur: NORTE o SUR)
 
 /* ════════════ POST — guardar / actualizar ════════════ */
 function doPost(e) {
@@ -80,6 +81,7 @@ function doGet(e) {
         prov.fila              = i + 1;
         prov.analista          = fila[17] || '';  // columna R
         prov.subcategoria      = fila[20] || '';  // columna U
+        prov.sede              = fila[21] || '';  // columna V
         // Lista de docs condicionales marcados como obligatorios por el analista (S)
         try {
           const raw = fila[18];
@@ -153,6 +155,10 @@ function guardarRegistro(ss, data) {
   // Sub categoría (solo aplica a Servicios Norte Y Sur: Materia Prima, Carga Seca, Refrigerado, Flota Vehicular)
   if (data.subcategoria) {
     sheet.getRange(ultimaFila, COL_SUBCATEGORIA).setValue(data.subcategoria);  // U Sub categoría
+  }
+  // Sede (solo aplica a Servicios Norte Y Sur: NORTE o SUR)
+  if (data.sede) {
+    sheet.getRange(ultimaFila, COL_SEDE).setValue(data.sede);  // V Sede
   }
   return json({ ok: true });
 }
