@@ -314,16 +314,36 @@ footer{background:var(--s1);padding:1.25rem 1.5rem;display:flex;flex-direction:c
             <div class="g2">
               <div class="field">
                 <label>Categoría <span class="req">*</span></label>
-                <select id="reg-categoria" onchange="actualizarAnalistas(this.value)">
+                <select id="reg-categoria" onchange="onCategoriaChange(this.value)">
                   <option value="">Seleccionar...</option>
                   <option value="Servicios Norte Y Sur">Servicios Norte y Sur</option>
                   <option value="Transporte de Personal">Transporte de Personal</option>
                 </select>
               </div>
+              <div class="field" id="wrap-reg-sede" style="display:none">
+                <label>Sede <span class="req">*</span></label>
+                <select id="reg-sede" onchange="actualizarAnalistaPorSede(this.value)">
+                  <option value="">Seleccionar...</option>
+                  <option value="NORTE">Norte</option>
+                  <option value="SUR">Sur</option>
+                </select>
+              </div>
+            </div>
+            <div class="g2">
               <div class="field">
                 <label>Analista <span class="req">*</span></label>
                 <select id="reg-analista">
                   <option value="">— Selecciona categoría —</option>
+                </select>
+              </div>
+              <div class="field" id="wrap-reg-subcategoria" style="display:none">
+                <label>Sub categoría <span class="req">*</span></label>
+                <select id="reg-subcategoria">
+                  <option value="">Seleccionar...</option>
+                  <option value="Materia Prima">Materia Prima</option>
+                  <option value="Carga Seca">Carga Seca</option>
+                  <option value="Refrigerado">Refrigerado</option>
+                  <option value="Flota Vehicular">Flota Vehicular</option>
                 </select>
               </div>
             </div>
@@ -841,19 +861,54 @@ async function buscarRuc(ruc) {
    ANALISTAS
    ════════════════════════════════════ */
 const ANALISTAS = {
-  'Servicios Norte Y Sur':   [{ v:'NORTE',      l:'NORTE'       }, { v:'SUR',       l:'SUR'         }],
   'Transporte de Personal':  [{ v:'C. REGALADO', l:'C. REGALADO' }, { v:'E. ODAR',   l:'E. ODAR'     }, { v:'J. PADILLA', l:'J. PADILLA' }],
 };
 
-function actualizarAnalistas(cat) {
+// Servicios Norte Y Sur: primero se elige la Sede, y según la sede se arma la lista de analistas.
+// Sur tiene un solo analista fijo (se autoselecciona); Norte tiene 2 y hay que elegir cuál.
+const SEDES_NORTE_SUR = {
+  'NORTE': [{ v:'E. ODAR', l:'E. ODAR' }, { v:'EVER', l:'EVER' }],
+  'SUR':   [{ v:'WMUÑOZ',  l:'WMUÑOZ'  }],
+};
+
+function llenarSelectAnalista(opciones) {
   const sel = document.getElementById('reg-analista');
   if (!sel) return;
   sel.innerHTML = '<option value="">Seleccionar...</option>';
-  (ANALISTAS[cat] || []).forEach(a => {
+  opciones.forEach(a => {
     const o = document.createElement('option');
     o.value = a.v; o.textContent = a.l; sel.appendChild(o);
   });
+  // Si solo hay una opción (ej. Sur → WMUÑOZ), se autoselecciona
+  if (opciones.length === 1) sel.value = opciones[0].v;
 }
+
+function onCategoriaChange(cat) {
+  const wrapSede = document.getElementById('wrap-reg-sede');
+  const wrapSub  = document.getElementById('wrap-reg-subcategoria');
+  const selSede  = document.getElementById('reg-sede');
+  const selSub   = document.getElementById('reg-subcategoria');
+
+  if (cat === 'Servicios Norte Y Sur') {
+    wrapSede.style.display = '';
+    wrapSub.style.display  = '';
+    if (selSede) selSede.value = '';
+    if (selSub)  selSub.value  = '';
+    const sel = document.getElementById('reg-analista');
+    if (sel) sel.innerHTML = '<option value="">— Selecciona sede —</option>';
+  } else {
+    wrapSede.style.display = 'none';
+    wrapSub.style.display  = 'none';
+    llenarSelectAnalista(ANALISTAS[cat] || []);
+  }
+}
+
+function actualizarAnalistaPorSede(sede) {
+  llenarSelectAnalista(SEDES_NORTE_SUR[sede] || []);
+}
+
+// Compatibilidad con código existente que aún llama actualizarAnalistas(cat)
+function actualizarAnalistas(cat) { onCategoriaChange(cat); }
 
 /* ════════════════════════════════════
    OTP
@@ -1018,6 +1073,8 @@ async function submitRegistro() {
   const telefono = g('reg-telefono').value.trim();
   const obs      = g('reg-obs').value.trim();
   const cat      = g('reg-categoria').value;
+  const sede         = g('reg-sede') ? g('reg-sede').value : '';
+  const subcategoria = g('reg-subcategoria') ? g('reg-subcategoria').value : '';
 
   const reactivar = () => { if (btnSubmit) btnSubmit.disabled = false; };
 
@@ -1027,6 +1084,8 @@ async function submitRegistro() {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { reactivar(); return showAlert('reg-alert', 'error', 'Ingresa un correo válido.'); }
   if (!contacto) { reactivar(); return showAlert('reg-alert', 'error', 'El nombre de contacto es requerido.'); }
   if (!cat)      { reactivar(); return showAlert('reg-alert', 'error', 'Selecciona la categoría de transporte.'); }
+  if (cat === 'Servicios Norte Y Sur' && !sede)         { reactivar(); return showAlert('reg-alert', 'error', 'Selecciona la sede (Norte o Sur).'); }
+  if (cat === 'Servicios Norte Y Sur' && !subcategoria) { reactivar(); return showAlert('reg-alert', 'error', 'Selecciona la sub categoría.'); }
   if (!analista) { reactivar(); return showAlert('reg-alert', 'error', 'Selecciona el analista responsable.'); }
 
   // Validar docs rechazados por IA
@@ -1050,7 +1109,7 @@ async function submitRegistro() {
   setStep(3);
 
   // Guardar datos en SESSION para usarlos después del OTP
-  SESSION = { ruc, razonSocial: razon, email, contacto, telefono, categoria: cat, analista, obs };
+  SESSION = { ruc, razonSocial: razon, email, contacto, telefono, categoria: cat, sede, analista, subcategoria, obs };
 
   // Enviar OTP al correo del proveedor
   showAlert('reg-alert', 'loading', '📧 Enviando código de verificación a ' + email + '...');
@@ -1136,6 +1195,7 @@ async function verificarOtp() {
       telefono:    SESSION.telefono,
       categoria:   SESSION.categoria,
       analista:    SESSION.analista,
+      subcategoria: SESSION.subcategoria || '',
       obs:         SESSION.obs,
       estadoSunat: SUNAT_DATA.estado    || '',
       condicion:   SUNAT_DATA.condicion || '',
@@ -1189,6 +1249,10 @@ function nuevoRegistro() {
   document.getElementById('reg-obs').value = '';
   document.getElementById('reg-categoria').value = '';
   document.getElementById('reg-analista').innerHTML = '<option value="">— Selecciona categoría —</option>';
+  const wrapSede = document.getElementById('wrap-reg-sede'); if (wrapSede) wrapSede.style.display = 'none';
+  const wrapSub  = document.getElementById('wrap-reg-subcategoria'); if (wrapSub) wrapSub.style.display = 'none';
+  const selSede  = document.getElementById('reg-sede'); if (selSede) selSede.value = '';
+  const selSub   = document.getElementById('reg-subcategoria'); if (selSub) selSub.value = '';
   clearSunatData();
   setRucState('idle');       // limpiar spinner/check/error del RUC
   setStep(1);                // volver al paso 1 en el indicador visual
@@ -1275,7 +1339,9 @@ function guardarProgreso() {
     telefono: g('reg-telefono')?.value || '',
     obs:      g('reg-obs')?.value      || '',
     categoria: g('reg-categoria')?.value || '',
+    sede:      g('reg-sede')?.value      || '',
     analista:  g('reg-analista')?.value  || '',
+    subcategoria: g('reg-subcategoria')?.value || '',
   };
   localStorage.setItem(LS_KEY, JSON.stringify(datos));
 }
@@ -1292,8 +1358,15 @@ function restaurarProgreso() {
     if (datos.contacto) { if(g('reg-contacto')) g('reg-contacto').value = datos.contacto; }
     if (datos.telefono) { if(g('reg-telefono')) g('reg-telefono').value = datos.telefono; }
     if (datos.obs)      { if(g('reg-obs'))      g('reg-obs').value      = datos.obs; }
-    if (datos.categoria){ if(g('reg-categoria')){ g('reg-categoria').value = datos.categoria; actualizarAnalistas(datos.categoria); }}
-    if (datos.analista) { setTimeout(() => { if(g('reg-analista')) g('reg-analista').value = datos.analista; }, 100); }
+    if (datos.categoria){ if(g('reg-categoria')){ g('reg-categoria').value = datos.categoria; onCategoriaChange(datos.categoria); }}
+    if (datos.subcategoria) { if(g('reg-subcategoria')) g('reg-subcategoria').value = datos.subcategoria; }
+    if (datos.categoria === 'Servicios Norte Y Sur' && datos.sede) {
+      if(g('reg-sede')) g('reg-sede').value = datos.sede;
+      actualizarAnalistaPorSede(datos.sede);
+      setTimeout(() => { if(g('reg-analista')) g('reg-analista').value = datos.analista; }, 100);
+    } else if (datos.analista) {
+      setTimeout(() => { if(g('reg-analista')) g('reg-analista').value = datos.analista; }, 100);
+    }
 
     // Restaurar RUC y buscar en SUNAT
     if (datos.ruc && datos.ruc.length === 11) {
@@ -1346,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('beta_dark') === '1') { document.body.classList.add('dark'); const b = document.getElementById('dark-btn'); if(b) b.textContent = '☀️ Claro'; }
 
   // Guardar progreso al cambiar cualquier campo
-  ['reg-email','reg-contacto','reg-telefono','reg-obs','reg-categoria','reg-analista','reg-ruc','reg-razon'].forEach(id => {
+  ['reg-email','reg-contacto','reg-telefono','reg-obs','reg-categoria','reg-sede','reg-analista','reg-subcategoria','reg-ruc','reg-razon'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', guardarProgreso);
     if (el) el.addEventListener('change', guardarProgreso);

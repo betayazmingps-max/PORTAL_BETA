@@ -258,8 +258,10 @@ body.dark .tabla-row:hover{background:var(--s5);}
             <option value="">Seleccionar analista...</option>
             <option value="NORTE">NORTE</option>
             <option value="SUR">SUR</option>
-            <option value="C. REGALADO">C. REGALADO</option>
             <option value="E. ODAR">E. ODAR</option>
+            <option value="EVER">EVER</option>
+            <option value="WMUÑOZ">WMUÑOZ</option>
+            <option value="C. REGALADO">C. REGALADO</option>
             <option value="J. PADILLA">J. PADILLA</option>
             <option value="ADMIN">Administrador (todos)</option>
           </select>
@@ -313,13 +315,22 @@ body.dark .tabla-row:hover{background:var(--s5);}
     </div>
 
     <!-- Filtros -->
-    <div class="filters">
+    <div class="filters" id="filters-estado">
       <input class="search-input" type="text" placeholder="🔍 Buscar por nombre o RUC..." oninput="filtrar()" id="search-input">
       <div class="filter-pill active" onclick="setFiltro('todos',this)">Todos</div>
       <div class="filter-pill" onclick="setFiltro('pendiente',this)">Pendientes</div>
       <div class="filter-pill" onclick="setFiltro('revision',this)">En revisión</div>
       <div class="filter-pill" onclick="setFiltro('aprobado',this)">Aprobados</div>
       <div class="filter-pill" onclick="setFiltro('por_vencer',this)" style="border-color:var(--amber);color:var(--amber)">⚠ Por vencer</div>
+    </div>
+    <!-- Filtro por Sub categoría (solo aplica a Servicios Norte Y Sur) -->
+    <div class="filters" id="filters-subcategoria">
+      <span style="font-size:11.5px;font-weight:700;color:var(--s3);text-transform:uppercase;letter-spacing:.05em;align-self:center">Sub categoría:</span>
+      <div class="filter-pill active" onclick="setSubFiltro('todas',this)">Todas</div>
+      <div class="filter-pill" onclick="setSubFiltro('Materia Prima',this)">Materia Prima</div>
+      <div class="filter-pill" onclick="setSubFiltro('Carga Seca',this)">Carga Seca</div>
+      <div class="filter-pill" onclick="setSubFiltro('Refrigerado',this)">Refrigerado</div>
+      <div class="filter-pill" onclick="setSubFiltro('Flota Vehicular',this)">Flota Vehicular</div>
       <button onclick="exportarCSV()" style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:999px;font-size:12px;font-weight:600;border:1.5px solid var(--s4);background:var(--w);color:var(--s2);cursor:pointer;font-family:var(--f);transition:.15s" onmouseover="this.style.borderColor='var(--p)';this.style.color='var(--p)'" onmouseout="this.style.borderColor='var(--s4)';this.style.color='var(--s2)'">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Exportar CSV
@@ -1755,7 +1766,15 @@ function resetSesionTimer() {
 ══════════════════════════════════════════ */
 function setFiltro(filtro, el) {
   filtroActivo = filtro;
-  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#filters-estado .filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  filtrar();
+}
+
+let subFiltroActivo = 'todas';
+function setSubFiltro(sub, el) {
+  subFiltroActivo = sub;
+  document.querySelectorAll('#filters-subcategoria .filter-pill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   filtrar();
 }
@@ -1763,6 +1782,10 @@ function setFiltro(filtro, el) {
 function filtrar() {
   const q = document.getElementById('search-input').value.toLowerCase();
   let lista = PROVEEDORES;
+
+  if (subFiltroActivo !== 'todas') {
+    lista = lista.filter(p => p.subcategoria === subFiltroActivo);
+  }
 
   if (filtroActivo === 'por_vencer') {
     // Mostrar proveedores con al menos 1 doc que vence en menos de 60 días

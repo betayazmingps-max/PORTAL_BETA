@@ -35,6 +35,7 @@ const COL_CARPETA_SP      = 17; // Q
 const COL_ANALISTA        = 18; // R
 const COL_DOCS_OPCIONALES = 19; // S — lista de IDs marcados como obligatorios por el analista (JSON)
 const COL_DOCS_PERSON     = 20; // T — docs personalizados pedidos por el analista (JSON)
+const COL_SUBCATEGORIA    = 21; // U — Sub categoría (solo Servicios Norte Y Sur: Materia Prima, Carga Seca, Refrigerado, Flota Vehicular)
 
 /* ════════════ POST — guardar / actualizar ════════════ */
 function doPost(e) {
@@ -78,6 +79,7 @@ function doGet(e) {
         COLS.forEach((col, idx) => { prov[col] = fila[idx] || ''; });
         prov.fila              = i + 1;
         prov.analista          = fila[17] || '';  // columna R
+        prov.subcategoria      = fila[20] || '';  // columna U
         // Lista de docs condicionales marcados como obligatorios por el analista (S)
         try {
           const raw = fila[18];
@@ -144,9 +146,13 @@ function guardarRegistro(ss, data) {
     ''                                                   // Q Carpeta SharePoint
   ]);
   // Guardar analista en columna R si existe (opcional)
+  const ultimaFila = sheet.getLastRow();
   if (data.analista) {
-    const ultimaFila = sheet.getLastRow();
     sheet.getRange(ultimaFila, 18).setValue(data.analista);  // R Analista
+  }
+  // Sub categoría (solo aplica a Servicios Norte Y Sur: Materia Prima, Carga Seca, Refrigerado, Flota Vehicular)
+  if (data.subcategoria) {
+    sheet.getRange(ultimaFila, COL_SUBCATEGORIA).setValue(data.subcategoria);  // U Sub categoría
   }
   return json({ ok: true });
 }
