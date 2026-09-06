@@ -256,8 +256,6 @@ body.dark .tabla-row:hover{background:var(--s5);}
           <label>Analista <span class="req">*</span></label>
           <select id="login-analista">
             <option value="">Seleccionar analista...</option>
-            <option value="NORTE">NORTE</option>
-            <option value="SUR">SUR</option>
             <option value="E. ODAR">E. ODAR</option>
             <option value="EVER">EVER</option>
             <option value="WMUÑOZ">WMUÑOZ</option>
@@ -314,6 +312,12 @@ body.dark .tabla-row:hover{background:var(--s5);}
       </div>
     </div>
 
+    <!-- Vista: Registro (solicitudes nuevas) vs Proveedores en base (ya aprobados) -->
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div class="filter-pill active" id="vista-registro" onclick="setVista('registro')" style="font-size:13px;padding:8px 18px">📋 Registro</div>
+      <div class="filter-pill" id="vista-base" onclick="setVista('base')" style="font-size:13px;padding:8px 18px">✅ Proveedores en base</div>
+    </div>
+
     <!-- Filtros -->
     <div class="filters" id="filters-estado">
       <input class="search-input" type="text" placeholder="🔍 Buscar por nombre o RUC..." oninput="filtrar()" id="search-input">
@@ -331,8 +335,9 @@ body.dark .tabla-row:hover{background:var(--s5);}
       <div class="filter-pill" onclick="setSedeFiltro('SUR',this)">Sur</div>
     </div>
     <div class="filters" id="filters-subcategoria">
-      <span style="font-size:11.5px;font-weight:700;color:var(--s3);text-transform:uppercase;letter-spacing:.05em;align-self:center">Sub categoría:</span>
+      <span style="font-size:11.5px;font-weight:700;color:var(--s3);text-transform:uppercase;letter-spacing:.05em;align-self:center">Línea de negocio:</span>
       <div class="filter-pill active" onclick="setSubFiltro('todas',this)">Todas</div>
+      <div class="filter-pill" onclick="setSubFiltro('Transporte de Personal',this)">Transporte de Personal</div>
       <div class="filter-pill" onclick="setSubFiltro('Materia Prima',this)">Materia Prima</div>
       <div class="filter-pill" onclick="setSubFiltro('Carga Seca',this)">Carga Seca</div>
       <div class="filter-pill" onclick="setSubFiltro('Refrigerado',this)">Refrigerado</div>
@@ -774,12 +779,17 @@ function renderTabla(lista) {
     const proxVenc = getProxVencimiento(p);
     const rucKey   = s(p.ruc);
 
+    // Si tiene sub categoría (Servicios Norte Y Sur), mostrarla — es más específico que
+    // la categoría general y es lo que distingue a un mismo analista (ej. E. ODAR) que
+    // atiende varias líneas de negocio a la vez.
+    const etiquetaTipo = p.subcategoria || p.categoria || '—';
+
     return `<div class="tabla-row" onclick="abrirDetallePorRuc('${rucKey}')">
       <div>
         <div class="prov-name">${s(p.razonSocial)}</div>
         <div class="prov-ruc">${s(p.ruc)} · ${s(p.fecha)}</div>
       </div>
-      <div style="font-size:12px;color:var(--s2)">${s(p.categoria?.split(' ').slice(-2).join(' ') || '—')}</div>
+      <div style="font-size:12px;color:var(--s2)">${s(etiquetaTipo)}${p.subcategoria?`<div style="font-size:10px;color:var(--s3)">${s(p.categoria)}</div>`:''}</div>
       <div><span class="badge ${badgeMap[p.estado]||'pendiente'}">${badgeLbl[p.estado]||'Pendiente'}</span></div>
       <div style="font-size:12px;color:var(--s2)">${ndocs} doc${ndocs!==1?'s':''}</div>
       <div>${proxVenc}</div>
@@ -894,6 +904,12 @@ function abrirDetalle(idx) {
   registrarAccion(p.ruc, '👁 Revisado por analista');
   document.getElementById('detalle-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // Desde "Proveedores en base" ir directo a la documentación completa —
+  // el tab de "Registro" (revisión inicial) ya no aplica para un proveedor aprobado.
+  if (vistaActiva === 'base') {
+    switchDetallTab('documentacion', document.getElementById('tab-documentacion'));
+  }
 }
 
 /* ══ SWITCH TAB DETALLE ══ */
@@ -1793,15 +1809,36 @@ function setSedeFiltro(sede, el) {
   filtrar();
 }
 
+// Vista principal: "registro" = solicitudes nuevas (pendiente/revisión/rechazado),
+// "base" = proveedores ya aprobados, con acceso directo a su documentación completa.
+let vistaActiva = 'registro';
+function setVista(vista) {
+  vistaActiva = vista;
+  document.getElementById('vista-registro').classList.toggle('active', vista === 'registro');
+  document.getElementById('vista-base').classList.toggle('active', vista === 'base');
+  // Resetear el filtro de estado — "Pendientes/En revisión" no aplican dentro de
+  // "Proveedores en base" y "Aprobados" no aplica dentro de "Registro".
+  filtroActivo = 'todos';
+  document.querySelectorAll('#filters-estado .filter-pill').forEach(p => p.classList.remove('active'));
+  document.querySelector('#filters-estado .filter-pill')?.classList.add('active');
+  paginaActual = 1;
+  filtrar();
+}
+
 function filtrar() {
   const q = document.getElementById('search-input').value.toLowerCase();
-  let lista = PROVEEDORES;
+  let lista = vistaActiva === 'base'
+    ? PROVEEDORES.filter(p => p.estado === 'aprobado')
+    : PROVEEDORES.filter(p => p.estado !== 'aprobado');
 
   if (sedeFiltroActiva !== 'todas') {
     lista = lista.filter(p => p.sede === sedeFiltroActiva);
   }
 
-  if (subFiltroActivo !== 'todas') {
+  if (subFiltroActivo === 'Transporte de Personal') {
+    // Transporte de Personal no tiene sub categoría — se filtra por la categoría misma.
+    lista = lista.filter(p => p.categoria === 'Transporte de Personal');
+  } else if (subFiltroActivo !== 'todas') {
     lista = lista.filter(p => p.subcategoria === subFiltroActivo);
   }
 
