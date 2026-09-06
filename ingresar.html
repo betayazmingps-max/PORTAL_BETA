@@ -350,6 +350,11 @@ body.dark .doc-item{background:var(--s5);}
       </div>
     </div>
 
+    <div style="display:flex;align-items:flex-start;gap:8px;background:var(--pll);border:1px solid var(--p3);border-radius:var(--r12);padding:10px 14px;margin-bottom:16px;font-size:12.5px;color:var(--p);line-height:1.4">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span><strong>Los documentos (contratos, fichas, constancias, etc.) deben subirse en formato PDF.</strong> Las fotos (unidad, conductor, DNI) sí pueden ser imagen (JPG/PNG).</span>
+    </div>
+
     <div class="card" id="card-regularizacion">
       <div class="card-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -634,7 +639,6 @@ const DOCS_EMPRESA = [
   {id:'p06',name:'DDJJ cumplimiento normas seguridad',req:false},
   {id:'p07',name:'DDJJ políticas corporativas',       req:false},
   {id:'p08',name:'Carta compromiso BETA',             req:false},
-  {id:'p09',name:'Deuda coactiva',                    req:false},
   {id:'p10',name:'Cotización',                        req:false},
   {id:'p11',name:'Antecedentes penales',              req:false},
   {id:'p12',name:'Antecedentes judiciales',           req:false},
@@ -718,6 +722,13 @@ const DOC_NAME_MAP = {};
 
 /* Configurar listas según la categoría + lo que el analista pidió al aprobar */
 function configurarDocsSegunCategoria(){
+  // RUC 20 = persona jurídica (empresa, con representante legal) → pide vigencia de poder.
+  // RUC 10 = persona natural (no hay representante legal) → solo pide foto de su DNI.
+  const p04 = DOCS_EMPRESA.find(d=>d.id==='p04');
+  if(p04){
+    p04.name = String(SESSION.ruc||'').startsWith('10') ? 'Foto de DNI' : 'Vigencia poder rep. legal';
+    DOC_NAME_MAP['p04'] = p04.name;
+  }
   // Estas variables son las que usan los renders en todo el archivo
   DOCS_UNIDAD             = getDocsUnidad();
   window.DOCS_EMPRESA_USE = getDocsEmpresaConExtras();
