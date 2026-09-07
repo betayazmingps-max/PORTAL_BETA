@@ -288,3 +288,9 @@ function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+function probar() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  Logger.log('ID: ' + ss.getId());
+  Logger.log('Pestañas: ' + ss.getSheets().map(s => s.getName()).join(', '));
+}
