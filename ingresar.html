@@ -1325,6 +1325,10 @@ async function submitDocumentos(confirmado=false){
     // #4 — Convertir y subir UN archivo a la vez (no todos en RAM simultáneamente)
     const docIds=Object.keys(fileStore);
     let enviados=0;
+    // Copia en base64 de cada documento para guardar también en el Sheet (columna Docs),
+    // igual que hace registro.html — así el analista los puede ver en preview.html sin
+    // tener que entrar a SharePoint.
+    const docsParaSheet={};
     for(const docId of docIds){
       const file=fileStore[docId];
       enviados++;
@@ -1349,24 +1353,25 @@ async function submitDocumentos(confirmado=false){
       if(resSubida && resSubida.ok===false){
         throw new Error('No se pudo subir "'+getNombreArchivo(docId,file)+'": '+(resSubida.error||'error desconocido'));
       }
+      docsParaSheet[docId]={nombre:getNombreArchivo(docId,file),tipo:file.type||'application/octet-stream',contenido:b64};
     }
 
-    // #6 — Guardar aiStore en Sheet con TIMEOUT (no bloquear si Sheets se traba)
+    // #6 — Guardar aiStore + documentos en Sheet, con TIMEOUT (no bloquear si Sheets se traba)
+    showAlert('docs-alert','loading','💾 Guardando en la hoja...');
+
+    // Helper: fetch con timeout para no quedar esperando infinito
+    const fetchConTimeout = (url, opts, ms=15000) => {
+      const ctrl = new AbortController();
+      const tid  = setTimeout(()=>ctrl.abort(), ms);
+      return fetch(url, {...opts, signal:ctrl.signal}).finally(()=>clearTimeout(tid));
+    };
+
+    const sheetUrl = 'https://portalbeta.betayazmingps.workers.dev/sheet';
+    const headers  = {'Content-Type':'application/json'};
+    const promesas = [];
+
     if(Object.keys(aiStore).length>0){
-      showAlert('docs-alert','loading','💾 Guardando datos de IA...');
-
-      // Helper: fetch con timeout para no quedar esperando infinito
-      const fetchConTimeout = (url, opts, ms=15000) => {
-        const ctrl = new AbortController();
-        const tid  = setTimeout(()=>ctrl.abort(), ms);
-        return fetch(url, {...opts, signal:ctrl.signal}).finally(()=>clearTimeout(tid));
-      };
-
-      // Disparar AMBAS llamadas EN PARALELO (más rápido) + timeout de 15s
-      const sheetUrl = 'https://portalbeta.betayazmingps.workers.dev/sheet';
-      const headers  = {'Content-Type':'application/json'};
-
-      const promesa1 = fetchConTimeout(sheetUrl, {
+      promesas.push(fetchConTimeout(sheetUrl, {
         method:'POST', headers,
         body: JSON.stringify({
           action:      'guardarVencimientos',
@@ -1380,16 +1385,25 @@ async function submitDocumentos(confirmado=false){
             .filter(([,d])=>d.vencimiento)
             .map(([id,d])=>({ id, docNombre:d.docNombre||id, titular:d.titular||'', vencimiento:d.vencimiento, numero:d.numero||'' }))
         })
-      }).catch(e=>console.warn('Vencimientos timeout/error:', e.message));
+      }).catch(e=>console.warn('Vencimientos timeout/error:', e.message)));
 
-      const promesa2 = fetchConTimeout(sheetUrl, {
+      promesas.push(fetchConTimeout(sheetUrl, {
         method:'POST', headers,
         body: JSON.stringify({ action:'guardarAI', ruc:SESSION.ruc, datos:aiStore })
-      }).catch(e=>console.warn('AI guardado timeout/error:', e.message));
-
-      // Esperar ambas pero NUNCA más de 15s
-      await Promise.allSettled([promesa1, promesa2]);
+      }).catch(e=>console.warn('AI guardado timeout/error:', e.message)));
     }
+
+    // Copia de los documentos en base64 en la columna Docs — para que el analista
+    // los vea en preview.html igual que los del registro inicial, sin ir a SharePoint.
+    if(Object.keys(docsParaSheet).length>0){
+      promesas.push(fetchConTimeout(sheetUrl, {
+        method:'POST', headers,
+        body: JSON.stringify({ action:'guardarDocs', ruc:SESSION.ruc, docs:docsParaSheet })
+      }, 30000).catch(e=>console.warn('Guardar docs en Sheet timeout/error:', e.message)));
+    }
+
+    // Esperar todas pero sin bloquear el éxito del envío si Sheets se demora
+    if(promesas.length) await Promise.allSettled(promesas);
 
     setTimeout(()=>{
       const meta=document.getElementById('success-meta');

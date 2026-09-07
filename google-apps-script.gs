@@ -28,6 +28,7 @@ const COLS = ['fecha','ruc','razonSocial','contacto','email','telefono','categor
               'notas','docs','notasAnalista','ai_extraido','carpetaSP'];
 
 // Índices de columnas (1-based para getRange)
+const COL_DOCS            = 14; // N — documentos en base64 (JSON), ver accionGuardarDocs
 const COL_ESTADO          = 12; // L
 const COL_NOTAS_ANALISTA  = 15; // O
 const COL_AI_EXTRAIDO     = 16; // P
@@ -51,6 +52,7 @@ function doPost(e) {
     if (data.action === 'log')                  return accionLog(ss, data);
     if (data.action === 'guardarVencimientos')  return accionVencimientos(ss, data);
     if (data.action === 'guardarAI')            return accionGuardarAI(ss, data);
+    if (data.action === 'guardarDocs')          return accionGuardarDocs(ss, data);
 
     // ── Registro nuevo (sin action) ──
     return guardarRegistro(ss, data);
@@ -209,6 +211,37 @@ function accionGuardarAI(ss, data) {
   // Merge con los nuevos datos
   const merged = Object.assign({}, existente, data.datos || {});
   sheet.getRange(fila, COL_AI_EXTRAIDO).setValue(JSON.stringify(merged));  // P AI Extraído
+  return json({ ok: true });
+}
+
+/* ════════════ Guardar documentos subidos desde ingresar.html (base64)
+   MEZCLA con lo que ya hay en la columna Docs (no sobrescribe), así los
+   documentos del registro inicial y los subidos después conviven juntos
+   y se ven igual en preview.html sin necesidad de abrir SharePoint.
+   data.docs viene como { docId: {nombre, tipo, contenido}, ... }
+══════════════════════════════════════════════════════════════════ */
+function accionGuardarDocs(ss, data) {
+  const sheet = ss.getSheetByName(HOJA_PROVEEDORES);
+  const fila  = buscarFilaPorRuc(sheet, data.ruc);
+  if (fila < 0) return json({ ok: false, error: 'RUC no encontrado' });
+
+  // Leer lo que ya hay en la columna Docs — puede venir como array (formato viejo
+  // de registro.html) o como objeto (si ya se guardó algo desde ingresar.html antes)
+  let existente = {};
+  try {
+    const valor = sheet.getRange(fila, COL_DOCS).getValue();
+    if (valor) {
+      const parsed = JSON.parse(valor);
+      if (Array.isArray(parsed)) {
+        parsed.forEach(d => { if (d && d.id) existente[d.id] = { nombre: d.nombre, tipo: d.tipo, contenido: d.contenido }; });
+      } else if (parsed && typeof parsed === 'object') {
+        existente = parsed;
+      }
+    }
+  } catch(e) { existente = {}; }
+
+  const merged = Object.assign({}, existente, data.docs || {});
+  sheet.getRange(fila, COL_DOCS).setValue(JSON.stringify(merged));  // N Docs
   return json({ ok: true });
 }
 
