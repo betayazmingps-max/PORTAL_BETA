@@ -663,13 +663,16 @@ const DOCS_UNIDAD_BASE = [
   {id:'u04',name:'Tarjeta de circulación',     req:false},
   {id:'u08',name:'Foto exterior de la unidad', req:false},
   {id:'u09',name:'Foto interior de la unidad', req:false},
+  {id:'u11',name:'Programa de mantenimiento',  req:false},
 ];
 
-// Docs adicionales SOLO para Servicios Norte y Sur
-// (NO incluye los condicionales — esos los agrega el analista al aprobar)
+// Docs adicionales SOLO para Servicios Norte y Sur (se arman según la sub categoría
+// del proveedor — ver getDocsUnidad). Se dejan también acá para el mapeo de nombres.
 const DOCS_UNIDAD_SERVICIOS = [
-  {id:'u05',name:'Póliza vehicular',                  req:false, condicional:'poliza_rc'},
-  {id:'u06',name:'Seguro de responsabilidad civil',   req:false, condicional:'poliza_rc'},
+  {id:'u10',name:'TUC',                               req:false},
+  {id:'u05',name:'Póliza vehicular',                  req:false},
+  {id:'u06',name:'Seguro de responsabilidad civil',   req:false},
+  {id:'u07',name:'Seguro de carga',                   req:false},
 ];
 
 // Catálogo de docs CONDICIONALES (solo aparecen si el analista los pidió al aprobar)
@@ -704,11 +707,28 @@ function getDocsExtras(seccion) {
   return extras;
 }
 
-// Devuelve la lista de unidades según categoría + extras del analista
+// Devuelve la lista de unidades según categoría + sub categoría + extras del analista
 function getDocsUnidad() {
   const cat = (SESSION.categoria || '').toLowerCase();
   const esServicios = cat.includes('servicios') || cat.includes('norte');
-  const base = esServicios ? [...DOCS_UNIDAD_BASE, ...DOCS_UNIDAD_SERVICIOS] : [...DOCS_UNIDAD_BASE];
+  let base = [...DOCS_UNIDAD_BASE];
+
+  if (esServicios) {
+    base.push({id:'u10', name:'TUC', req:false});
+    const sub = SESSION.subcategoria || '';
+    if (sub === 'Carga Seca') {
+      // Carga Seca: Póliza vehicular + Seguro de carga (no Seguro de RC)
+      base.push({id:'u05', name:'Póliza vehicular', req:false});
+      base.push({id:'u07', name:'Seguro de carga',  req:false});
+    } else if (sub === 'Materia Prima') {
+      // Materia Prima no pide Póliza ni Seguro de RC — en su lugar se pide
+      // "Compromiso de materia prima" a nivel empresa (ver configurarDocsSegunCategoria).
+    } else {
+      // Refrigerado, Flota Vehicular u otras: Seguro de responsabilidad civil
+      base.push({id:'u06', name:'Seguro de responsabilidad civil', req:false});
+    }
+  }
+
   return [...base, ...getDocsExtras('unidad')];
 }
 
@@ -728,6 +748,15 @@ function configurarDocsSegunCategoria(){
   if(p04){
     p04.name = String(SESSION.ruc||'').startsWith('10') ? 'Foto de DNI' : 'Vigencia poder rep. legal';
     DOC_NAME_MAP['p04'] = p04.name;
+  }
+  // Materia Prima pide un "Compromiso de materia prima" a nivel empresa en vez de
+  // las pólizas de unidad (ver getDocsUnidad).
+  const idxP15 = DOCS_EMPRESA.findIndex(d=>d.id==='p15');
+  if(SESSION.subcategoria === 'Materia Prima'){
+    if(idxP15===-1) DOCS_EMPRESA.push({id:'p15',name:'Compromiso de materia prima',req:false});
+    DOC_NAME_MAP['p15'] = 'Compromiso de materia prima';
+  } else if(idxP15!==-1){
+    DOCS_EMPRESA.splice(idxP15,1);
   }
   // Estas variables son las que usan los renders en todo el archivo
   DOCS_UNIDAD             = getDocsUnidad();
@@ -980,7 +1009,11 @@ function makeEntryBlock(type,idx,docs){
   if(isCond){
     fields=`<div class="field" style="margin-bottom:.875rem"><label>Nombre del conductor <span style="color:var(--p)">*</span></label><input type="text" id="cond-nombre-${idx}" placeholder="Ej: SANDOVAL SUCLUPE ELMER" oninput="this.style.borderColor=this.value.trim()?'var(--g)':'var(--r)'"></div>`;
   }else{
-    fields=`<div class="field" style="margin-bottom:.875rem"><label>Placa del vehículo <span style="color:var(--p)">*</span></label><input type="text" id="unid-placa-${idx}" placeholder="Ej: M4M-966" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.style.borderColor=this.value.trim()?'var(--g)':'var(--r)'"></div>`;
+    fields=`<div style="display:flex;gap:10px;margin-bottom:.875rem;flex-wrap:wrap">
+      <div class="field" style="flex:1;min-width:130px"><label>Placa del vehículo <span style="color:var(--p)">*</span></label><input type="text" id="unid-placa-${idx}" placeholder="Ej: M4M-966" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase();this.style.borderColor=this.value.trim()?'var(--g)':'var(--r)'"></div>
+      <div class="field" style="flex:1;min-width:130px"><label>Tipo de vehículo</label><select id="unid-tipo-${idx}" onchange="actualizarDocsUnidadPorTipo(${idx})"><option value="">Seleccionar...</option><option value="Moto">Moto</option><option value="Camioneta">Camioneta</option><option value="Camión">Camión</option><option value="Otro">Otro</option></select></div>
+      <div class="field" style="flex:0 0 100px"><label>Año</label><input type="number" id="unid-anio-${idx}" placeholder="2024" min="1990" max="2030" oninput="actualizarDocsUnidadPorTipo(${idx})"></div>
+    </div>`;
   }
   div.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
 <span style="font-size:11px;font-weight:700;color:var(--p);letter-spacing:.06em;text-transform:uppercase">${label}</span>${removeBtn}</div>
@@ -1018,6 +1051,39 @@ function addUnidadEntry(){
   document.getElementById('unidades-lista').appendChild(makeEntryBlock('unid',unidEntryCount,DOCS_UNIDAD));
   buildEntryGrid('unid',unidEntryCount,DOCS_UNIDAD);updateProgress();
 }
+
+/* ══ EXCEPCIONES POR TIPO DE VEHÍCULO Y AÑO (solo Servicios Norte Y Sur) ══
+   Moto: no aplica RTV, TUC ni Póliza vehicular.
+   Camioneta: no aplica TUC.
+   Año 2024 en adelante: no aplica RTV (unidad nueva).
+*/
+function actualizarDocsUnidadPorTipo(idx){
+  const cat=(SESSION.categoria||'').toLowerCase();
+  const esServicios=cat.includes('servicios')||cat.includes('norte');
+  if(!esServicios)return;
+
+  const tipo=document.getElementById('unid-tipo-'+idx)?.value||'';
+  const anio=parseInt(document.getElementById('unid-anio-'+idx)?.value||'',10);
+
+  const noAplica=new Set();
+  if(tipo==='Moto'){noAplica.add('u03');noAplica.add('u10');noAplica.add('u05');}
+  if(tipo==='Camioneta'){noAplica.add('u10');}
+  if(!isNaN(anio)&&anio>=2024){noAplica.add('u03');}
+
+  DOCS_UNIDAD.forEach(doc=>{
+    const item=document.getElementById(`docitem-unid${idx}_${doc.id}`);
+    if(!item)return;
+    if(noAplica.has(doc.id)){
+      item.style.display='none';
+      // Si ya tenía un archivo cargado para un doc que ahora "no aplica", se descarta
+      const uid=`unid${idx}_${doc.id}`;
+      if(fileStore[uid]){delete fileStore[uid];}
+    }else{
+      item.style.display='';
+    }
+  });
+  updateProgress();
+}
 function removeEntry(type,idx){
   const el=document.getElementById(`${type}-entry-${idx}`);
   if(el){Object.keys(fileStore).filter(k=>k.startsWith(`${type}${idx}_`)).forEach(k=>delete fileStore[k]);el.remove();updateProgress();}
@@ -1025,12 +1091,13 @@ function removeEntry(type,idx){
 
 /* ══ PROGRESS ══ */
 function updateProgress(){
-  // Contar entradas activas leyendo el DOM real (no el contador, que no decrece al quitar)
-  const condActivos=document.querySelectorAll('[id^="cond-entry-"]').length;
-  const unidActivos=document.querySelectorAll('[id^="unid-entry-"]').length;
-  const total=DOCS_EMPRESA.length+condActivos*DOCS_CONDUCTOR.length+unidActivos*DOCS_UNIDAD.length;
-  // Solo contar archivos del screen-docs (no faltantes ni vencidos)
-  const loaded=Object.keys(fileStore).filter(k=>!k.startsWith('f')&&!k.startsWith('v')).length;
+  // Contar los doc-item VISIBLES (no display:none) de empresa/conductores/unidades —
+  // ya no se puede usar una fórmula fija porque cada unidad puede tener documentos
+  // distintos ocultos según su tipo de vehículo y año (ver actualizarDocsUnidadPorTipo).
+  const items=Array.from(document.querySelectorAll('#docs-empresa .doc-item,#conductores-lista .doc-item,#unidades-lista .doc-item'))
+    .filter(el=>el.style.display!=='none');
+  const total=items.length;
+  const loaded=items.filter(el=>el.classList.contains('has-file')).length;
   const pct=total>0?Math.round(loaded/total*100):0;
   const fill=document.getElementById('prog-fill');const count=document.getElementById('prog-count');
   if(fill)fill.style.width=pct+'%';
