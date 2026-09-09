@@ -1389,7 +1389,7 @@ async function submitDocumentos(confirmado=false){
 
       promesas.push(fetchConTimeout(sheetUrl, {
         method:'POST', headers,
-        body: JSON.stringify({ action:'guardarAI', ruc:SESSION.ruc, datos:aiStore })
+        body: JSON.stringify({ action:'guardarAI', ruc:SESSION.ruc, analista:SESSION.analista, datos:aiStore })
       }).catch(e=>console.warn('AI guardado timeout/error:', e.message)));
     }
 
@@ -1398,7 +1398,7 @@ async function submitDocumentos(confirmado=false){
     if(Object.keys(docsParaSheet).length>0){
       promesas.push(fetchConTimeout(sheetUrl, {
         method:'POST', headers,
-        body: JSON.stringify({ action:'guardarDocs', ruc:SESSION.ruc, docs:docsParaSheet })
+        body: JSON.stringify({ action:'guardarDocs', ruc:SESSION.ruc, analista:SESSION.analista, docs:docsParaSheet })
       }, 30000).catch(e=>console.warn('Guardar docs en Sheet timeout/error:', e.message)));
     }
 
