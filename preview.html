@@ -1009,30 +1009,48 @@ function renderDocumentacionCompleta(p) {
     </div>`;
   }
 
-  // Helper para mostrar la "tarjeta" de un documento individual
-  const renderItemDoc = (doc, ai, subido) => {
-    const venc = ai.vencimiento || '';
-    let estadoHtml = '';
-    let dotColor   = subido ? 'var(--g)' : 'var(--r)';
-    if (venc) {
-      const dias = diasParaVencer(venc);
+  // Helper para mostrar la "tarjeta" de un documento individual — mismo estilo que
+  // la pestaña "Registro" (renderDocsReview): tarjeta con botón Ver documento,
+  // sello de IA y fecha de vencimiento destacada.
+  const renderItemDoc = (doc, ai, uid) => {
+    const docData  = (p.docs || {})[uid];
+    const tieneDoc = !!(docData && (docData.b64 || docData.url || docData.contenido));
+    const validado = ai._validado === true || (ai && ai.valido === true);
+
+    let claseDoc = tieneDoc ? '' : '';
+    let vencBadge = '';
+    if (ai.vencimiento) {
+      const dias = diasParaVencer(ai.vencimiento);
       if (dias !== null) {
-        if (dias < 0)       { dotColor = 'var(--r)';     estadoHtml = `<span class="venc-exp">Vencido ${venc}</span>`; }
-        else if (dias < 15) { dotColor = 'var(--r)';     estadoHtml = `<span class="venc-exp">⚠ ${dias}d</span>`; }
-        else if (dias < 60) { dotColor = 'var(--amber)'; estadoHtml = `<span class="venc-warn">⚡ ${dias}d</span>`; }
-        else                {                             estadoHtml = `<span class="venc-ok">✓ ${dias}d</span>`; }
+        if (dias < 0)       { claseDoc = 'error'; vencBadge = `<span class="venc-exp">⚠ Vencido hace ${Math.abs(dias)}d</span>`; }
+        else if (dias < 15) { claseDoc = 'error'; vencBadge = `<span class="venc-exp">⚠ Vence en ${dias}d</span>`; }
+        else if (dias < 60) { claseDoc = 'warn';  vencBadge = `<span class="venc-warn">⚡ Vence en ${dias}d</span>`; }
+        else                {                      vencBadge = `<span class="venc-ok">✓ Vigente</span>`; }
       }
     }
-    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--w);border:1px solid var(--s5);border-radius:8px;margin-bottom:5px">
-      <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0"></div>
-      <span style="flex:1;font-size:12.5px;color:var(--s1);font-weight:600">${s(doc.name)}</span>
-      ${estadoHtml}
-      ${ai.titular ? `<span style="font-size:10.5px;color:var(--s3);font-family:var(--m)">${s(ai.titular)}</span>` : ''}
-      ${ai.numero  ? `<span style="font-size:10.5px;color:var(--s3);font-family:var(--m)">${s(ai.numero)}</span>` : ''}
-      ${subido
-        ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`
-        : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--r)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`
-      }
+    if (!tieneDoc) claseDoc = 'error';
+
+    const selloIA = validado
+      ? `<span style="font-size:10px;font-weight:700;color:#2d6010;background:rgba(91,173,30,.15);border:1px solid rgba(91,173,30,.3);padding:2px 8px;border-radius:999px;font-family:var(--m)">✓ Validado por IA</span>`
+      : '';
+
+    return `<div class="doc-review ${claseDoc}" id="doc-review-${uid}">
+      <div class="doc-review-head">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--p)" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span class="doc-review-name">${s(doc.name)}</span>
+        ${vencBadge}
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px">
+          ${tieneDoc ? `<button class="ai-btn" style="background:var(--p);color:#fff;border-color:var(--p)" onclick="verDocumento('${uid}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Ver documento
+          </button>` : `<span style="font-size:10px;color:var(--s3);font-family:var(--m)">sin archivo</span>`}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--s3);font-family:var(--m);margin-top:3px">
+        ${ai.titular ? `<span>${s(ai.titular)}</span>` : ''}
+        ${ai.numero  ? `<span>${s(ai.numero)}</span>` : ''}
+        ${selloIA}
+      </div>
     </div>`;
   };
 
@@ -1046,7 +1064,7 @@ function renderDocumentacionCompleta(p) {
   const secEmp = SECCIONES[0];
   html.push(`<div style="margin-bottom:1.25rem">
     <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${secEmp.titulo}</div>
-    ${secEmp.docs.map(doc => renderItemDoc(doc, aiAll[doc.id] || {}, !!aiAll[doc.id])).join('')}
+    ${secEmp.docs.map(doc => renderItemDoc(doc, aiAll[doc.id] || {}, doc.id)).join('')}
   </div>`);
 
   // ── Sección Conductores (uno por uno) ──
@@ -1059,7 +1077,7 @@ function renderDocumentacionCompleta(p) {
       const nombreCond = aiCond.c01?.titular || `Conductor #${i}`;
       html.push(`<div style="margin-bottom:1.25rem">
         <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${secCond.titulo} — ${s(nombreCond)}</div>
-        ${secCond.docs.map(doc => renderItemDoc(doc, aiCond[doc.id] || {}, !!aiCond[doc.id])).join('')}
+        ${secCond.docs.map(doc => renderItemDoc(doc, aiCond[doc.id] || {}, `cond${i}_${doc.id}`)).join('')}
       </div>`);
     }
   } else {
@@ -1079,7 +1097,7 @@ function renderDocumentacionCompleta(p) {
       const placa = aiUnid.u01?.numero || aiUnid.u01?.titular || `Unidad #${i}`;
       html.push(`<div style="margin-bottom:1.25rem">
         <div style="font-size:11px;font-weight:700;color:var(--s2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">${secUnid.titulo} — ${s(placa)}</div>
-        ${secUnid.docs.map(doc => renderItemDoc(doc, aiUnid[doc.id] || {}, !!aiUnid[doc.id])).join('')}
+        ${secUnid.docs.map(doc => renderItemDoc(doc, aiUnid[doc.id] || {}, `unid${i}_${doc.id}`)).join('')}
       </div>`);
     }
   } else {
@@ -1123,10 +1141,12 @@ function normalizarProveedor(p) {
     p.docs = docsObj;
   }
 
-  // Asegurar que cada doc tenga estructura uniforme (url o b64)
+  // Asegurar que cada doc tenga estructura uniforme (url o b64) — los guardados desde
+  // ingresar.html (accionGuardarDocs) llegan como objeto con "contenido" en vez de "b64".
   Object.keys(p.docs || {}).forEach(docId => {
     const d = p.docs[docId];
     if (!d.tipo) d.tipo = 'application/pdf';
+    if (!d.b64 && d.contenido) d.b64 = d.contenido;
   });
 
   return p;
