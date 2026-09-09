@@ -18,6 +18,7 @@
 const HOJA_PROVEEDORES  = 'Proveedores';
 const HOJA_VENCIMIENTOS = 'Vencimientos';
 const HOJA_LOG          = 'Historial';
+const HOJA_DOCUMENTOS   = 'Documentos'; // un documento por fila/celda — ver accionGuardarDocs
 
 // Columnas de la hoja Proveedores (orden REAL de tu Sheet)
 // A=Fecha B=RUC C=Razón D=Contacto E=Email F=Tel G=Categoría
@@ -28,7 +29,7 @@ const COLS = ['fecha','ruc','razonSocial','contacto','email','telefono','categor
               'notas','docs','notasAnalista','ai_extraido','carpetaSP'];
 
 // Índices de columnas (1-based para getRange)
-const COL_DOCS            = 14; // N — documentos en base64 (JSON), ver accionGuardarDocs
+const COL_DOCS            = 14; // N — solo metadata de documentos (JSON), contenido real en hoja "Documentos"
 const COL_ESTADO          = 12; // L
 const COL_NOTAS_ANALISTA  = 15; // O
 const COL_AI_EXTRAIDO     = 16; // P
@@ -107,6 +108,24 @@ function doGet(e) {
       return json({ ok: true, proveedores });
     }
 
+    // Trae el contenido (base64) de UN documento a demanda — Proveedores!Docs
+    // ya no guarda el contenido, solo metadata, así que preview.html pide el
+    // archivo real acá, solo cuando el analista hace clic en "Ver documento"
+    if (action === 'verDoc') {
+      const ruc   = e.parameter.ruc || '';
+      const docId = e.parameter.docId || '';
+      const sheetDocs = ss.getSheetByName(HOJA_DOCUMENTOS);
+      if (!sheetDocs || sheetDocs.getLastRow() < 2) return json({ ok: false, error: 'Documento no encontrado' });
+
+      const datos = sheetDocs.getDataRange().getValues();
+      for (let i = 1; i < datos.length; i++) {
+        if (String(datos[i][0]) === String(ruc) && String(datos[i][1]) === String(docId)) {
+          return json({ ok: true, nombre: datos[i][2], tipo: datos[i][3], contenido: datos[i][4] });
+        }
+      }
+      return json({ ok: false, error: 'Documento no encontrado' });
+    }
+
     return json({ ok: false, error: 'Acción GET desconocida' });
   } catch (err) {
     return json({ ok: false, error: String(err) });
@@ -128,6 +147,13 @@ function guardarRegistro(ss, data) {
     return json({ ok: false, error: 'RUC ya registrado', duplicado: true });
   }
 
+  // Documentos del registro inicial (registro.html manda un JSON string con
+  // [{id, nombre, tipo, contenido}, ...]) — se guardan uno por celda en la hoja
+  // "Documentos" (ver guardarDocumentosIndividuales); acá solo queda metadata liviana.
+  let docsArray = [];
+  try { docsArray = data.docs ? JSON.parse(data.docs) : []; } catch(e) { docsArray = []; }
+  const guardado = guardarDocumentosIndividuales(ss, data.ruc, docsArray);
+
   // Orden de columnas: A→Q (17 columnas)
   // OJO: El Analista NO está en tu Sheet — si lo necesitas, agrega columna R y descomenta abajo
   sheet.appendRow([
@@ -144,7 +170,7 @@ function guardarRegistro(ss, data) {
     data.obs || '',                                     // K Observaciones
     data.estado || 'pendiente',                         // L Estado
     '',                                                  // M Notas
-    data.docs || '',                                    // N Docs (base64)
+    JSON.stringify(guardado.resumen),                   // N Docs (solo metadata)
     '',                                                  // O Notas Analista
     data.ai_extraido || '',                             // P AI Extraído
     ''                                                   // Q Carpeta SharePoint
@@ -162,7 +188,7 @@ function guardarRegistro(ss, data) {
   if (data.sede) {
     sheet.getRange(ultimaFila, COL_SEDE).setValue(data.sede);  // V Sede
   }
-  return json({ ok: true });
+  return json({ ok: true, omitidos: guardado.omitidos });
 }
 
 /* ════════════ Aprobar / Rechazar ════════════ */
@@ -214,35 +240,98 @@ function accionGuardarAI(ss, data) {
   return json({ ok: true });
 }
 
-/* ════════════ Guardar documentos subidos desde ingresar.html (base64)
-   MEZCLA con lo que ya hay en la columna Docs (no sobrescribe), así los
-   documentos del registro inicial y los subidos después conviven juntos
-   y se ven igual en preview.html sin necesidad de abrir SharePoint.
-   data.docs viene como { docId: {nombre, tipo, contenido}, ... }
+/* ════════════ Guardar documentos — un documento por fila/celda ════════════
+   Usada por guardarRegistro (registro inicial) y accionGuardarDocs (subidas
+   posteriores desde ingresar.html). Cada documento vive en su PROPIA celda
+   de la hoja "Documentos" (upsert por RUC+DocId) — así un documento grande
+   nunca se acumula junto a los demás en una sola celda.
+   Google Sheets no permite más de 50,000 caracteres en una celda: si el
+   base64 de un documento no cabe, se guarda igual su metadata (para que
+   preview.html sepa que SÍ se subió) pero con muy_grande=true y sin
+   contenido — ese documento se queda visible solo en SharePoint.
+   docsArray: [{id, nombre, tipo, contenido}, ...]
+   Devuelve { resumen, omitidos } — resumen es SOLO metadata (nombre/tipo/
+   flags, nunca el contenido), pensado para guardarse en Proveedores!Docs,
+   que por eso siempre cabe sin importar cuántos documentos tenga el proveedor.
 ══════════════════════════════════════════════════════════════════ */
+const LIMITE_CELDA_DOC = 49000; // margen de seguridad bajo el límite real de 50,000
+
+function guardarDocumentosIndividuales(ss, ruc, docsArray) {
+  let sheetDocs = ss.getSheetByName(HOJA_DOCUMENTOS);
+  if (!sheetDocs) {
+    sheetDocs = ss.insertSheet(HOJA_DOCUMENTOS);
+    sheetDocs.appendRow(['RUC', 'DocId', 'Nombre', 'Tipo', 'Contenido', 'Fecha']);
+  }
+
+  // Índice RUC+DocId → nº de fila, para actualizar (upsert) sin duplicar filas
+  const indice = {};
+  if (sheetDocs.getLastRow() > 1) {
+    sheetDocs.getRange(2, 1, sheetDocs.getLastRow() - 1, 2).getValues()
+      .forEach((f, i) => { indice[f[0] + '|' + f[1]] = i + 2; });
+  }
+
+  const resumen  = {};
+  const omitidos = [];
+  (docsArray || []).forEach(doc => {
+    if (!doc || !doc.id) return;
+    const contenido = doc.contenido || '';
+    const cabe      = contenido.length <= LIMITE_CELDA_DOC;
+    const key       = ruc + '|' + doc.id;
+    const valores   = [ruc, doc.id, doc.nombre || '', doc.tipo || '', cabe ? contenido : '', new Date().toLocaleString('es-PE')];
+
+    if (indice[key]) {
+      sheetDocs.getRange(indice[key], 1, 1, 6).setValues([valores]);
+    } else {
+      sheetDocs.appendRow(valores);
+      indice[key] = sheetDocs.getLastRow();
+    }
+
+    resumen[doc.id] = { nombre: doc.nombre || '', tipo: doc.tipo || '', guardado: true, muy_grande: !cabe };
+    if (!cabe) omitidos.push(doc.nombre || doc.id);
+  });
+
+  return { resumen: resumen, omitidos: omitidos };
+}
+
 function accionGuardarDocs(ss, data) {
-  const sheet = ss.getSheetByName(HOJA_PROVEEDORES);
-  const fila  = buscarFilaPorRuc(sheet, data.ruc);
+  const sheetProv = ss.getSheetByName(HOJA_PROVEEDORES);
+  const fila      = buscarFilaPorRuc(sheetProv, data.ruc);
   if (fila < 0) return json({ ok: false, error: 'RUC no encontrado' });
 
-  // Leer lo que ya hay en la columna Docs — puede venir como array (formato viejo
-  // de registro.html) o como objeto (si ya se guardó algo desde ingresar.html antes)
+  // Metadata previa de Proveedores!Docs, para no perder registro de documentos
+  // guardados en llamadas anteriores (mezcla, no sobrescribe)
   let existente = {};
   try {
-    const valor = sheet.getRange(fila, COL_DOCS).getValue();
+    const valor = sheetProv.getRange(fila, COL_DOCS).getValue();
     if (valor) {
       const parsed = JSON.parse(valor);
-      if (Array.isArray(parsed)) {
-        parsed.forEach(d => { if (d && d.id) existente[d.id] = { nombre: d.nombre, tipo: d.tipo, contenido: d.contenido }; });
-      } else if (parsed && typeof parsed === 'object') {
-        existente = parsed;
-      }
+      existente = Array.isArray(parsed) ? {} : (parsed || {});
     }
   } catch(e) { existente = {}; }
 
-  const merged = Object.assign({}, existente, data.docs || {});
-  sheet.getRange(fila, COL_DOCS).setValue(JSON.stringify(merged));  // N Docs
-  return json({ ok: true });
+  // Migración: filas viejas (de antes de este cambio) pueden traer el base64
+  // completo embebido dentro de Proveedores!Docs. Si eso sigue ahí, se muda a la
+  // hoja "Documentos" junto con los nuevos, para que la celda deje de estar
+  // sobrecargada y no vuelva a fallar el próximo guardado de este proveedor.
+  const docsArray = Object.keys(data.docs || {}).map(id => Object.assign({ id: id }, data.docs[id]));
+  Object.keys(existente).forEach(id => {
+    if (existente[id] && existente[id].contenido && !docsArray.some(d => d.id === id)) {
+      docsArray.push(Object.assign({ id: id }, existente[id]));
+    }
+  });
+
+  const guardado = guardarDocumentosIndividuales(ss, data.ruc, docsArray);
+
+  // Reconstruir el resumen: metadata vieja SIN contenido embebido + lo recién guardado
+  const existenteLimpio = {};
+  Object.keys(existente).forEach(id => {
+    const d = existente[id] || {};
+    existenteLimpio[id] = { nombre: d.nombre || '', tipo: d.tipo || '', guardado: true, muy_grande: !!d.muy_grande };
+  });
+
+  const resumen = Object.assign({}, existenteLimpio, guardado.resumen);
+  sheetProv.getRange(fila, COL_DOCS).setValue(JSON.stringify(resumen));  // N Docs (solo metadata)
+  return json({ ok: true, omitidos: guardado.omitidos });
 }
 
 /* ════════════ Vencimientos (hoja aparte) ════════════ */

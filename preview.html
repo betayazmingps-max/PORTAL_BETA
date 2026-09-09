@@ -1014,12 +1014,14 @@ function renderDocumentacionCompleta(p) {
   // sello de IA y fecha de vencimiento destacada.
   const renderItemDoc = (doc, ai, uid) => {
     const docData  = (p.docs || {})[uid];
-    const tieneDoc = !!(docData && (docData.b64 || docData.url || docData.contenido));
+    const tieneDoc = !!(docData && (docData.b64 || docData.url || docData.contenido || docData.guardado));
     const validado = ai._validado === true || (ai && ai.valido === true);
 
     let claseDoc = tieneDoc ? '' : '';
     let vencBadge = '';
-    if (ai.vencimiento) {
+    // El badge de vencimiento solo tiene sentido si el archivo existe de verdad —
+    // mostrar "Vigente" de un documento sin archivo confunde más de lo que ayuda.
+    if (tieneDoc && ai.vencimiento) {
       const dias = diasParaVencer(ai.vencimiento);
       if (dias !== null) {
         if (dias < 0)       { claseDoc = 'error'; vencBadge = `<span class="venc-exp">⚠ Vencido hace ${Math.abs(dias)}d</span>`; }
@@ -1143,6 +1145,9 @@ function normalizarProveedor(p) {
 
   // Asegurar que cada doc tenga estructura uniforme (url o b64) — los guardados desde
   // ingresar.html (accionGuardarDocs) llegan como objeto con "contenido" en vez de "b64".
+  // Desde que cada documento vive en su propia celda (hoja "Documentos"), lo que llega
+  // acá en Proveedores!Docs es solo metadata ({nombre, tipo, guardado, muy_grande}) —
+  // sin b64/contenido. verDocumento() pide el contenido real a demanda.
   Object.keys(p.docs || {}).forEach(docId => {
     const d = p.docs[docId];
     if (!d.tipo) d.tipo = 'application/pdf';
@@ -1190,7 +1195,7 @@ function renderDocsReview(p) {
   return Object.entries(docs).map(([docId, docData]) => {
     const aiData   = (p.ai_extraido || {})[docId] || {};
     const revisado = aiData._revisado || false;
-    const tieneDoc = !!(docData.b64 || docData.url);  // se puede ver si tiene b64 O link
+    const tieneDoc = !!(docData.b64 || docData.url || docData.guardado);  // se puede ver si tiene b64, link, o está guardado (se pide a demanda)
     const validado = aiData._validado === true;
 
     // Color del card según vencimiento
@@ -1252,7 +1257,7 @@ function renderDocsReview(p) {
 // Analizar TODOS los documentos del registro de golpe (rápido)
 async function analizarTodos(ruc) {
   const p = PROVEEDOR_ACTUAL;
-  const docs = Object.entries(p.docs || {}).filter(([, d]) => d.b64);
+  const docs = Object.entries(p.docs || {}).filter(([, d]) => d.b64 || (d.guardado && !d.muy_grande));
   if (!docs.length) return showToast('No hay documentos con archivo para analizar.', 'warn');
 
   const btn = document.getElementById('btn-analizar-todos');
@@ -1269,8 +1274,30 @@ async function analizarTodos(ruc) {
   showToast(`✅ ${docs.length} documento(s) analizados con IA`, 'ok');
 }
 
+// Trae el base64 de un documento a demanda desde la hoja "Documentos" y lo
+// cachea en docData.b64 para no volver a pedirlo. Devuelve null si no se pudo
+// (y ya se encarga de avisar con un toast).
+async function cargarContenidoDoc(docData, docId) {
+  if (docData.b64) return docData.b64;
+  if (!docData.guardado) return null;
+
+  try {
+    const res  = await fetch('https://portalbeta.betayazmingps.workers.dev/ver_doc', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ruc: PROVEEDOR_ACTUAL.ruc, docId })
+    });
+    const data = await res.json();
+    if (!data.ok || !data.contenido) { showToast('No se pudo cargar el documento: ' + (data.error || 'no encontrado'), 'error'); return null; }
+    docData.b64 = data.contenido; // cachear en memoria
+    return docData.b64;
+  } catch(e) {
+    showToast('No se pudo cargar el documento: ' + e.message, 'error');
+    return null;
+  }
+}
+
 // Ver documento en modal
-function verDocumento(docId) {
+async function verDocumento(docId) {
   const docData = (PROVEEDOR_ACTUAL?.docs || {})[docId];
   if (!docData) return;
 
@@ -1280,12 +1307,19 @@ function verDocumento(docId) {
     return;
   }
 
-  // Si tiene base64 → mostrar en modal (compatibilidad con registros viejos)
-  if (!docData.b64) return showToast('Documento no disponible.', 'error');
+  // Documento subido pero demasiado grande para guardarse en una celda del Sheet
+  // (límite de Google Sheets: 50,000 caracteres) — no hay dónde previsualizarlo acá.
+  if (docData.muy_grande) {
+    return showToast('Este documento se subió correctamente, pero es muy pesado para previsualizarlo aquí. Revísalo directamente en SharePoint.', 'warn');
+  }
+
+  if (!docData.b64) showToast('Cargando documento...', 'info');
+  const b64 = await cargarContenidoDoc(docData, docId);
+  if (!b64) return;
 
   const esPDF = (docData.tipo || '').includes('pdf');
   const mimeType = docData.tipo || (esPDF ? 'application/pdf' : 'image/jpeg');
-  const dataUrl  = `data:${mimeType};base64,${docData.b64}`;
+  const dataUrl  = `data:${mimeType};base64,${b64}`;
 
   document.getElementById('modal-doc-nombre').textContent = docData.nombre || docId;
   document.getElementById('modal-doc-tipo').textContent   = mimeType;
@@ -1323,6 +1357,9 @@ async function analizarDocumento(ruc, docId) {
   if (btn) { btn.classList.add('loading'); btn.innerHTML = '<div class="ai-spin"></div> Analizando...'; }
 
   try {
+    // Documento real guardado pero aún no descargado (formato nuevo: un doc por celda) → traerlo
+    if (!docData.b64 && docData.guardado && !docData.muy_grande) await cargarContenidoDoc(docData, docId);
+
     // Sin base64 → simular en demo
     if (!docData.b64) {
       await new Promise(r => setTimeout(r, 1500));

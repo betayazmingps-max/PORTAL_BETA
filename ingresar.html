@@ -1393,13 +1393,21 @@ async function submitDocumentos(confirmado=false){
       }).catch(e=>console.warn('AI guardado timeout/error:', e.message)));
     }
 
-    // Copia de los documentos en base64 en la columna Docs — para que el analista
-    // los vea en preview.html igual que los del registro inicial, sin ir a SharePoint.
+    // Copia de los documentos en base64 en la hoja "Documentos" (un doc por celda) —
+    // para que el analista los vea en preview.html igual que los del registro inicial,
+    // sin ir a SharePoint. Se espera la respuesta (no fire-and-forget) para poder avisar
+    // si algún documento no cupo en el Sheet (muy grande) — antes ese fallo era invisible.
+    let omitidosDocs=[];
     if(Object.keys(docsParaSheet).length>0){
-      promesas.push(fetchConTimeout(sheetUrl, {
-        method:'POST', headers,
-        body: JSON.stringify({ action:'guardarDocs', ruc:SESSION.ruc, analista:SESSION.analista, docs:docsParaSheet })
-      }, 30000).catch(e=>console.warn('Guardar docs en Sheet timeout/error:', e.message)));
+      try{
+        const resDocs=await fetchConTimeout(sheetUrl, {
+          method:'POST', headers,
+          body: JSON.stringify({ action:'guardarDocs', ruc:SESSION.ruc, analista:SESSION.analista, docs:docsParaSheet })
+        }, 30000);
+        const dataDocs=await resDocs.json().catch(()=>({}));
+        if(dataDocs.ok===false) console.warn('Guardar docs en Sheet falló:', dataDocs.error);
+        else if(Array.isArray(dataDocs.omitidos)&&dataDocs.omitidos.length) omitidosDocs=dataDocs.omitidos;
+      }catch(e){console.warn('Guardar docs en Sheet timeout/error:', e.message);}
     }
 
     // Esperar todas pero sin bloquear el éxito del envío si Sheets se demora
@@ -1407,7 +1415,8 @@ async function submitDocumentos(confirmado=false){
 
     setTimeout(()=>{
       const meta=document.getElementById('success-meta');
-      meta.innerHTML='📁 <strong>'+(SESSION.carpeta||'SharePoint')+'</strong><br>📄 <strong>'+docIds.length+' archivo(s)</strong> enviados<br>✦ Verificados con IA<br>✅ Proceso completado — '+new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'});
+      meta.innerHTML='📁 <strong>'+(SESSION.carpeta||'SharePoint')+'</strong><br>📄 <strong>'+docIds.length+' archivo(s)</strong> enviados<br>✦ Verificados con IA<br>✅ Proceso completado — '+new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'})
+        +(omitidosDocs.length?'<br><span style="color:#b45309">⚠ '+omitidosDocs.length+' documento(s) muy pesado(s) para previsualizar en el sistema ('+omitidosDocs.join(', ')+'), pero se subieron bien a SharePoint.</span>':'');
       document.getElementById('screen-success').classList.add('show');
       btn.disabled=false; // reactivar tras éxito por si el usuario quiere volver a enviar
       window.scrollTo({top:0});lanzarConfeti();
@@ -1512,6 +1521,7 @@ async function submitFaltantes(){
   const btn=document.getElementById('btn-falt-submit');btn.disabled=true;
   const obs=document.getElementById('falt-obs').value.trim();
   const base={ruc:SESSION.ruc,razonSocial:SESSION.razonSocial,email:SESSION.email,analista:SESSION.analista,categoria:SESSION.categoria,obs,tipo_envio:'faltantes',sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:archivos.length};
+  const docsParaSheet={};
   try{
     let i=0;
     for(const[uid,obj]of archivos){
@@ -1521,9 +1531,34 @@ async function submitFaltantes(){
       const nombre=(DOC_NAME_MAP[baseId]||baseId).replace(/[\/\\:*?"<>|#%]/g,'-').trim();
       const ext=obj.file.name.includes('.')?'.'+obj.file.name.split('.').pop().toLowerCase():'';
       let subcarpeta='Proveedor';if(uid.startsWith('fcond'))subcarpeta='Conductor';if(uid.startsWith('funid'))subcarpeta='Unidad';
-      await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{id:uid,nombre:nombre+ext,tipo:obj.file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad:''}],indice:i,es_ultimo:i===archivos.length});
+      const resSubida=await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{id:uid,nombre:nombre+ext,tipo:obj.file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad:''}],indice:i,es_ultimo:i===archivos.length});
+      if(resSubida && resSubida.ok===false){
+        throw new Error('No se pudo subir "'+nombre+ext+'": '+(resSubida.error||'error desconocido'));
+      }
+      // Usa baseId (mismo esquema que la pantalla principal: p01, cond1_c02, unid1_u01)
+      // para que preview.html reconozca el documento igual que los de "Enviar documentos".
+      docsParaSheet[baseId]={nombre:nombre+ext,tipo:obj.file.type||'application/octet-stream',contenido:b64};
     }
-    showAlert('falt-alert','success','✅ '+archivos.length+' documento(s) enviados correctamente.');
+
+    // Guardar también en el Sheet (hoja "Documentos", un doc por celda) para poder verlos en preview.html
+    let omitidosFalt=[];
+    if(Object.keys(docsParaSheet).length>0){
+      const fetchConTimeout=(url,opts,ms=30000)=>{
+        const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),ms);
+        return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(tid));
+      };
+      try{
+        const resDocs=await fetchConTimeout('https://portalbeta.betayazmingps.workers.dev/sheet',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'guardarDocs',ruc:SESSION.ruc,analista:SESSION.analista,docs:docsParaSheet})
+        },30000);
+        const dataDocs=await resDocs.json().catch(()=>({}));
+        if(dataDocs.ok===false) console.warn('Guardar docs (faltantes) en Sheet falló:', dataDocs.error);
+        else if(Array.isArray(dataDocs.omitidos)&&dataDocs.omitidos.length) omitidosFalt=dataDocs.omitidos;
+      }catch(e){console.warn('Guardar docs (faltantes) en Sheet timeout/error:', e.message);}
+    }
+
+    showAlert('falt-alert','success','✅ '+archivos.length+' documento(s) enviados correctamente.'+(omitidosFalt.length?' ⚠ '+omitidosFalt.length+' muy pesado(s) para previsualizar en el sistema, pero se subieron bien a SharePoint.':''));
     btn.disabled=false;Object.keys(faltStore).forEach(k=>delete faltStore[k]);renderFaltantes();
   }catch(e){showAlert('falt-alert','error','No se pudo enviar: '+e.message);btn.disabled=false;}
 }
@@ -1638,6 +1673,7 @@ async function submitVencidos(){
   if(!archivos.length)return showAlert('venc-alert','warning','Selecciona al menos un documento para renovar.');
   const btn=document.getElementById('btn-venc-submit');btn.disabled=true;
   const base={ruc:SESSION.ruc,razonSocial:SESSION.razonSocial,email:SESSION.email,analista:SESSION.analista,categoria:SESSION.categoria,tipo_envio:'vencidos',sitio_sharepoint:CFG.SITIO_SP,biblioteca:CFG.BIBLIOTECA,total_archivos:archivos.length};
+  const docsParaSheet={};
   try{
     let i=0;
     for(const[uid,file]of archivos){
@@ -1646,9 +1682,35 @@ async function submitVencidos(){
       let subcarpeta='Proveedor';
       if(uid.startsWith('vcond'))subcarpeta='Conductor';
       if(uid.startsWith('vunid'))subcarpeta='Unidad';
-      await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{nombre:getNombreArchivo(uid,file),tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad:''}],indice:i,es_ultimo:i===archivos.length});
+      const nombre=getNombreArchivo(uid,file);
+      const resSubida=await callFlowDirecto(CFG.FLOW_SUBIR_DOCS,{...base,archivos:[{nombre,tipo:file.type||'application/octet-stream',contenido:b64,subcarpeta,entidad:''}],indice:i,es_ultimo:i===archivos.length});
+      if(resSubida && resSubida.ok===false){
+        throw new Error('No se pudo subir "'+nombre+'": '+(resSubida.error||'error desconocido'));
+      }
+      // "vemp_p01" -> "p01" | "vcond1_c02" -> "cond1_c02" | "vunid1_u01" -> "unid1_u01"
+      // (mismo esquema que la pantalla principal, para que preview.html lo reconozca)
+      const baseId=uid.startsWith('vemp_')?uid.slice(5):uid.replace(/^v(cond|unid)/,'$1');
+      docsParaSheet[baseId]={nombre,tipo:file.type||'application/octet-stream',contenido:b64};
     }
-    showAlert('venc-alert','success','✅ '+archivos.length+' documento(s) renovados enviados correctamente.');
+
+    let omitidosVenc=[];
+    if(Object.keys(docsParaSheet).length>0){
+      const fetchConTimeout=(url,opts,ms=30000)=>{
+        const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),ms);
+        return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(tid));
+      };
+      try{
+        const resDocs=await fetchConTimeout('https://portalbeta.betayazmingps.workers.dev/sheet',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'guardarDocs',ruc:SESSION.ruc,analista:SESSION.analista,docs:docsParaSheet})
+        },30000);
+        const dataDocs=await resDocs.json().catch(()=>({}));
+        if(dataDocs.ok===false) console.warn('Guardar docs (vencidos) en Sheet falló:', dataDocs.error);
+        else if(Array.isArray(dataDocs.omitidos)&&dataDocs.omitidos.length) omitidosVenc=dataDocs.omitidos;
+      }catch(e){console.warn('Guardar docs (vencidos) en Sheet timeout/error:', e.message);}
+    }
+
+    showAlert('venc-alert','success','✅ '+archivos.length+' documento(s) renovados enviados correctamente.'+(omitidosVenc.length?' ⚠ '+omitidosVenc.length+' muy pesado(s) para previsualizar en el sistema, pero se subieron bien a SharePoint.':''));
     btn.disabled=false;
     Object.keys(vencStore).forEach(k=>delete vencStore[k]);
     renderVencidos();
