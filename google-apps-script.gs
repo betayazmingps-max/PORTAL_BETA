@@ -299,15 +299,21 @@ function accionGuardarDocs(ss, data) {
   if (fila < 0) return json({ ok: false, error: 'RUC no encontrado' });
 
   // Metadata previa de Proveedores!Docs, para no perder registro de documentos
-  // guardados en llamadas anteriores (mezcla, no sobrescribe)
+  // guardados en llamadas anteriores (mezcla, no sobrescribe).
+  // OJO: si la celda existe pero no se puede parsear (ej. una celda vieja de
+  // antes de este fix, demasiado larga para leerse completa con getValue()),
+  // NO se debe seguir — sobrescribir a ciegas borraría esa metadata para
+  // siempre. Mejor cortar y avisar que se necesita revisión manual.
   let existente = {};
-  try {
-    const valor = sheetProv.getRange(fila, COL_DOCS).getValue();
-    if (valor) {
+  const valor = sheetProv.getRange(fila, COL_DOCS).getValue();
+  if (valor) {
+    try {
       const parsed = JSON.parse(valor);
       existente = Array.isArray(parsed) ? {} : (parsed || {});
+    } catch(e) {
+      return json({ ok: false, error: 'No se pudo leer el contenido previo de Docs para RUC ' + data.ruc + ' (celda dañada o demasiado larga). No se modificó nada — revisa esa celda manualmente en el Sheet antes de reintentar.' });
     }
-  } catch(e) { existente = {}; }
+  }
 
   // Migración: filas viejas (de antes de este cambio) pueden traer el base64
   // completo embebido dentro de Proveedores!Docs. Si eso sigue ahí, se muda a la

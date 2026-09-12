@@ -1398,6 +1398,7 @@ async function submitDocumentos(confirmado=false){
     // sin ir a SharePoint. Se espera la respuesta (no fire-and-forget) para poder avisar
     // si algún documento no cupo en el Sheet (muy grande) — antes ese fallo era invisible.
     let omitidosDocs=[];
+    let errorGuardarDocs='';
     if(Object.keys(docsParaSheet).length>0){
       try{
         const resDocs=await fetchConTimeout(sheetUrl, {
@@ -1405,7 +1406,7 @@ async function submitDocumentos(confirmado=false){
           body: JSON.stringify({ action:'guardarDocs', ruc:SESSION.ruc, analista:SESSION.analista, docs:docsParaSheet })
         }, 30000);
         const dataDocs=await resDocs.json().catch(()=>({}));
-        if(dataDocs.ok===false) console.warn('Guardar docs en Sheet falló:', dataDocs.error);
+        if(dataDocs.ok===false){console.warn('Guardar docs en Sheet falló:', dataDocs.error);errorGuardarDocs=dataDocs.error||'error desconocido';}
         else if(Array.isArray(dataDocs.omitidos)&&dataDocs.omitidos.length) omitidosDocs=dataDocs.omitidos;
       }catch(e){console.warn('Guardar docs en Sheet timeout/error:', e.message);}
     }
@@ -1416,7 +1417,8 @@ async function submitDocumentos(confirmado=false){
     setTimeout(()=>{
       const meta=document.getElementById('success-meta');
       meta.innerHTML='📁 <strong>'+(SESSION.carpeta||'SharePoint')+'</strong><br>📄 <strong>'+docIds.length+' archivo(s)</strong> enviados<br>✦ Verificados con IA<br>✅ Proceso completado — '+new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'})
-        +(omitidosDocs.length?'<br><span style="color:#b45309">⚠ '+omitidosDocs.length+' documento(s) muy pesado(s) para previsualizar en el sistema ('+omitidosDocs.join(', ')+'), pero se subieron bien a SharePoint.</span>':'');
+        +(omitidosDocs.length?'<br><span style="color:#b45309">⚠ '+omitidosDocs.length+' documento(s) muy pesado(s) para previsualizar en el sistema ('+omitidosDocs.join(', ')+'), pero se subieron bien a SharePoint.</span>':'')
+        +(errorGuardarDocs?'<br><span style="color:#b45309">⚠ No se pudo guardar la vista previa en el sistema ('+errorGuardarDocs+'). Los archivos SÍ se subieron a SharePoint — avisa a soporte para revisar el Sheet.</span>':'');
       document.getElementById('screen-success').classList.add('show');
       btn.disabled=false; // reactivar tras éxito por si el usuario quiere volver a enviar
       window.scrollTo({top:0});lanzarConfeti();
